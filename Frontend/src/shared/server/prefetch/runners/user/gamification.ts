@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { getRuntimePoliciesAction } from '@/shared/application/actions/runtime-policies';
+import { getRuntimePoliciesAction } from '@/shared/actions/runtime-policies';
 import {
  fetchGamificationAchievements,
  fetchGamificationLeaderboard,

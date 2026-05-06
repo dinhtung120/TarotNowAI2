@@ -5,17 +5,17 @@ import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePathname } from '@/i18n/routing';
 import { useAuthStore } from '@/features/auth/session/authStore';
-import type { ActionResult } from '@/shared/domain/actionResult';
-import { isTerminalAuthError } from '@/shared/domain/authErrors';
+import type { ActionResult } from '@/shared/models/actionResult';
+import { isTerminalAuthError } from '@/shared/models/authErrors';
 import type { UserProfile } from '@/features/auth/session/types';
-import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
-import { performClientLogoutCleanup } from '@/shared/infrastructure/auth/clientLogoutCleanup';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/auth/clientSessionSnapshot';
+import { performClientLogoutCleanup } from '@/shared/auth/clientLogoutCleanup';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import {
  isAuthlessPath,
  isLegalPath,
  normalizePathname,
-} from '@/shared/infrastructure/navigation/normalizePathname';
+} from '@/shared/navigation/normalizePathname';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
 
 const DEFAULT_REFRESH_INTERVAL_MS = 5 * 60 * 1000;

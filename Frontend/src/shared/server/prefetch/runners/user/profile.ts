@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { getMyReaderRequest } from '@/features/reader/shared';
 import { fetchProfileDetail, profileDetailQueryKey } from '@/features/profile/overview/profileDetailQuery';
 import { getMfaStatus } from '@/features/profile/mfa/actions/actions/status';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 
 export async function prefetchProfilePage(qc: QueryClient): Promise<void> {
  await Promise.all([

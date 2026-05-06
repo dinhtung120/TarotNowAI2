@@ -3,9 +3,9 @@
 import { useEffect, type ReactNode } from 'react';
 import { usePathname } from '@/i18n/routing';
 import { useAuth } from '@/shared/hooks/useAuth';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import { AUTH_ENTRY_PATHS } from '@/shared/config/authRoutes';
-import { normalizePathname } from '@/shared/infrastructure/navigation/normalizePathname';
+import { normalizePathname } from '@/shared/navigation/normalizePathname';
 
 interface AuthGuardProps {
  children: ReactNode;

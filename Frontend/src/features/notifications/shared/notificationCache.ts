@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { NotificationListResponse } from '@/features/notifications/shared/actions';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 interface ApplyNotificationReadPatchOptions {
  id: string;

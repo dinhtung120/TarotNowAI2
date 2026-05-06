@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useChatRoomPageState } from '@/features/chat/room/useChatRoomPageState';
 import type { ChatRoomViewProps } from '@/features/chat/room/ChatRoomView.types';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 
 interface UseChatRoomPageViewModelParams extends Pick<
   ChatRoomViewProps,

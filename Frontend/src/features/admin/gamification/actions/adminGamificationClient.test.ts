@@ -13,9 +13,9 @@ import {
 import {
  fetchJsonOrThrow,
  fetchWithTimeout,
-} from '@/shared/application/gateways/clientFetch';
+} from '@/shared/gateways/clientFetch';
 
-vi.mock('@/shared/application/gateways/clientFetch', () => ({
+vi.mock('@/shared/gateways/clientFetch', () => ({
  fetchJsonOrThrow: vi.fn(),
  fetchWithTimeout: vi.fn(),
 }));

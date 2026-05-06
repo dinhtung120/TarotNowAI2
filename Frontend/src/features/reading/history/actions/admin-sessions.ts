@@ -1,12 +1,12 @@
 'use server';
 
 import { getTranslations } from 'next-intl/server';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
 import type { AdminHistoryPaginatedResponse, AdminHistorySessionItem } from './types';
-import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { AUTH_ERROR } from "@/shared/models/authErrors";
 
 export async function getAllHistorySessionsAdminAction(params: {
  page: number;

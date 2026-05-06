@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeader } from '@/shared/ui';
 import { useNotificationMarkRead } from '@/features/notifications/list/hooks/useNotificationMarkRead';
 import { useNotificationsPage } from '@/features/notifications/list/useNotificationsPage';
-import { useRelativeTimeNow } from '@/shared/application/hooks/useRelativeTimeNow';
+import { useRelativeTimeNow } from '@/shared/hooks/useRelativeTimeNow';
 import {
  NotificationFilters,
  NotificationsContent,

@@ -12,8 +12,8 @@ import {
  type MyDepositOrderResponse,
 } from '@/features/wallet/deposit/actions';
 import { useWalletBalanceQuery } from '@/features/wallet/overview/useWalletBalanceQuery';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 type DepositOrderView = MyDepositOrderResponse;
 type CreateOrderPayload = { packageCode: string; idempotencyKey: string };

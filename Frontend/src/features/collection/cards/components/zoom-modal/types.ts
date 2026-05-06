@@ -1,5 +1,5 @@
 import type { UserCollectionDto } from "@/features/collection/cards/actions/actions";
-import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import type { TarotCardMeta } from "@/shared/models/tarotData";
 
 export interface CollectionZoomLabels {
   closeLabel: string;

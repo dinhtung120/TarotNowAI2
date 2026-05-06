@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_COOKIE } from '@/shared/auth/authConstants';
 import {
  PROTECTED_ROUTE_AUTH_DECISION,
  resolveProtectedRouteAuthDecision,

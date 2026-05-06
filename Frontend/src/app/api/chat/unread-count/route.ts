@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { getServerAccessToken } from '@/shared/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 
 export async function GET(): Promise<NextResponse> {
  const token = await getServerAccessToken();

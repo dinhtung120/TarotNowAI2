@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { resolveErrorMessage } from '@/shared/application/utils/resolveErrorMessage';
+import { resolveErrorMessage } from '@/shared/utils/resolveErrorMessage';
 import { useGacha } from '@/features/gacha/shared/useGacha';
 import { usePullGacha } from '@/features/gacha/shared/usePullGacha';
 import type { PullGachaResult } from '@/features/gacha/shared/gachaTypes';

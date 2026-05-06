@@ -1,5 +1,5 @@
 import { AlertCircle } from 'lucide-react';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import { Button } from '@/shared/ui';
 import { cn } from '@/lib/utils';
 

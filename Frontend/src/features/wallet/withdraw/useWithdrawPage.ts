@@ -6,9 +6,9 @@ import { useLocale, useTranslations } from 'next-intl';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/withdraw/actions';
 import { fetchProfileDetail, profileDetailQueryKey } from '@/features/profile/overview/profileDetailQuery';
 import { useWalletBalanceQuery } from '@/features/wallet/overview/useWalletBalanceQuery';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { getWithdrawalStatusBadge } from '@/features/wallet/shared/withdrawalStatus';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 const HISTORY_QUERY_KEY = userStateQueryKeys.wallet.withdrawalsMine();
 

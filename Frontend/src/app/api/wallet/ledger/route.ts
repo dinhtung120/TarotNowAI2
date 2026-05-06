@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/shared/types';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { getServerAccessToken } from '@/shared/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
  const token = await getServerAccessToken();

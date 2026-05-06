@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import type { UserProfile } from '@/features/auth/session/types';
 import { cn } from '@/lib/utils';
-import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 
 interface NavbarAvatarTriggerProps {
   open: boolean;

@@ -5,7 +5,7 @@ import type {
  UseInventoryItemPayload,
  UseInventoryItemResponse,
 } from '@/features/inventory/shared/inventoryTypes';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 
 interface InventoryEffectSummaryPayload {
  EffectType?: unknown;

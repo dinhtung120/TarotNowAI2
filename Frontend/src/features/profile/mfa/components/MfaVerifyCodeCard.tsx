@@ -7,7 +7,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, GlassCard } from '@/shared/ui';
 import { cn } from '@/lib/utils';
-import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
+import type { TypedSubmitHandler } from '@/shared/utils/typedSubmit';
 
 interface MfaVerifyCodeCardProps {
  code: string;

@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { getLedger } from '@/features/wallet/shared/actions';
 import { listDepositPackages, listMyDepositOrders } from '@/features/wallet/deposit/actions';
 import { listMyWithdrawals } from '@/features/wallet/withdraw/actions';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 
 export async function prefetchWalletOverviewPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({

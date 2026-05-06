@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/auth/authConstants';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 export { buildProblemResponse };
 

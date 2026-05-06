@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useHistorySessionsPage } from "@/features/reading/history/useHistorySessionsPage";
-import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
+import { useOptimizedNavigation } from "@/shared/navigation/useOptimizedNavigation";
 import { useAuthStore } from "@/features/auth/public";
 import { HistoryEmptyState, HistoryErrorBanner, HistoryLoadingGrid, HistoryPaginationDock, HistoryPageHeader, HistorySessionsGrid } from "./components";
 import { resolveSpreadName } from "./spreadLabels";

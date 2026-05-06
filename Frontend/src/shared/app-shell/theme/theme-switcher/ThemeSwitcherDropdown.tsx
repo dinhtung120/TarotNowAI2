@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { THEME_OPTIONS, type ThemeId } from "@/shared/domain/theme";
+import { THEME_OPTIONS, type ThemeId } from "@/shared/models/theme";
 import { cn } from "@/lib/utils";
 
 interface ThemeSwitcherDropdownProps {

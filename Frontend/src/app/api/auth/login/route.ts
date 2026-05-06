@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { AuthResponse } from '@/features/auth/session/types';
-import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { AUTH_HEADER } from '@/shared/auth/authConstants';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 import {
  buildProblemResponse,
  clearAuthCookies,

@@ -17,8 +17,8 @@ import type { ProfileFormValues } from '@/features/profile/overview/useProfilePa
 import { createProfileSchema } from '@/features/profile/overview/useProfilePage.validation';
 import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useRouter } from '@/i18n/routing';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { useHydrateFormOnce } from '@/shared/application/hooks/useHydrateFormOnce';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { useHydrateFormOnce } from '@/shared/hooks/useHydrateFormOnce';
 import { useAuthStore } from '@/features/auth/public';
 
 export function useProfilePage() {

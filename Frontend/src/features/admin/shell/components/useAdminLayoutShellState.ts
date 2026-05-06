@@ -13,7 +13,7 @@ import {
  Users,
 } from 'lucide-react';
 import { usePathname } from '@/i18n/routing';
-import { acquirePageScrollLock } from '@/shared/infrastructure/dom/scrollLock';
+import { acquirePageScrollLock } from '@/shared/dom/scrollLock';
 import type { AdminLayoutLabels, MenuConfigItem } from './AdminLayout.types';
 
 const MENU_CONFIG: MenuConfigItem[] = [

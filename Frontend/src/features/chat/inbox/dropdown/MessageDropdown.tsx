@@ -3,13 +3,13 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import { useChatUnreadNotifications } from '@/features/chat/inbox/hooks/useChatUnreadNotifications';
 import { useMessageDropdown } from '@/features/chat/inbox/hooks/useMessageDropdown';
 import MessageBellButton from '@/features/chat/inbox/dropdown/message-dropdown/MessageBellButton';
 import MessageDropdownPanel from '@/features/chat/inbox/dropdown/message-dropdown/MessageDropdownPanel';
 import { useMessageDropdownState } from '@/features/chat/inbox/dropdown/message-dropdown/useMessageDropdownState';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { cn } from '@/lib/utils';
 
 interface MessageDropdownProps {

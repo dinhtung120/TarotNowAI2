@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { cn, formatCardStat } from '@/lib/utils';
 import type { CardOption } from '@/features/inventory/shared/cardOption';
-import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 
 interface UseItemCardPreviewProps {
   card: CardOption | null;

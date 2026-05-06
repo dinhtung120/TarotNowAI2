@@ -2,7 +2,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 import bundleAnalyzer from '@next/bundle-analyzer';
 import os from 'node:os';
 import type { NextConfig } from 'next';
-import { resolveRewriteBackendOrigin } from './src/shared/infrastructure/http/apiUrl';
+import { resolveRewriteBackendOrigin } from './src/shared/http/apiUrl';
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 

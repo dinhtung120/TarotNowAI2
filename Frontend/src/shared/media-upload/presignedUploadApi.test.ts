@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { postJsonToApiV1 } from '@/shared/infrastructure/http/clientJsonRequest';
+import { postJsonToApiV1 } from '@/shared/http/clientJsonRequest';
 import {
  confirmAvatarUpload,
  confirmCommunityImageUpload,
@@ -8,7 +8,7 @@ import {
  presignConversationMediaUpload,
 } from '@/shared/media-upload/presignedUploadApi';
 
-vi.mock('@/shared/infrastructure/http/clientJsonRequest', () => ({
+vi.mock('@/shared/http/clientJsonRequest', () => ({
  postJsonToApiV1: vi.fn(),
 }));
 

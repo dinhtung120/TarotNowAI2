@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
 import type { ListAdminDisputesResult } from '@/features/chat/shared/actions/conversations.types';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { invokeDomainCommand } from '@/shared/gateways/domainCommandRegistry';
 
 function unauthorized<T>() { return actionFail(AUTH_ERROR.UNAUTHORIZED) as ActionResult<T>; }
 

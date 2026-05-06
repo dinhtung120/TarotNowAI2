@@ -7,9 +7,9 @@ import {
  respondConversationAddMoney,
  type ChatMessageDto,
 } from '@/features/chat/shared/actions';
-import { logger } from '@/shared/application/gateways/logger';
-import type { ActionResult } from '@/shared/domain/actionResult';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { logger } from '@/shared/gateways/logger';
+import type { ActionResult } from '@/shared/models/actionResult';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 
 interface UsePaymentOfferActionsParams {
  conversationId: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 
 interface AuthLayoutProps {

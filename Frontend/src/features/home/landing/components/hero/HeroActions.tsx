@@ -1,4 +1,4 @@
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { Compass, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui";

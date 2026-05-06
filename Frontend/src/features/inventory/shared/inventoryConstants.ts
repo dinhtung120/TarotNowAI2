@@ -1,4 +1,4 @@
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 
 export const INVENTORY_API_ROUTE = '/api/inventory';
 export const INVENTORY_IDEMPOTENCY_HEADER = 'x-idempotency-key';

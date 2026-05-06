@@ -8,13 +8,13 @@ import {
  logoutAction,
  refreshAccessTokenAction,
 } from '@/features/auth/shared';
-import type { ActionResult } from '@/shared/domain/actionResult';
+import type { ActionResult } from '@/shared/models/actionResult';
 import {
  getClientSessionSnapshot,
  invalidateClientSessionSnapshot,
-} from '@/shared/application/gateways/clientSessionSnapshot';
-import { performClientLogoutCleanup } from '@/shared/application/gateways/clientLogoutCleanup';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+} from '@/shared/gateways/clientSessionSnapshot';
+import { performClientLogoutCleanup } from '@/shared/gateways/clientLogoutCleanup';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/features/auth/session/authStore';
 
 interface LoginPayload {

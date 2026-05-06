@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { AUTH_HEADER } from '@/shared/auth/authConstants';
+import { getServerAccessToken } from '@/shared/auth/serverAuth';
+import { internalApiUrl } from '@/shared/http/apiUrl';
+import { logger } from '@/shared/logging/logger';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { forwardUpstreamJsonWithTimeout } from '@/app/api/_shared/forwardUpstreamJsonWithTimeout';
 import {

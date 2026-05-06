@@ -7,7 +7,7 @@ import {
   type MyReaderRequest,
   type SubmitReaderApplicationPayload,
 } from '@/features/reader/shared';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 

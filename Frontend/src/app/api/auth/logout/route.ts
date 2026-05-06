@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { AUTH_HEADER } from '@/shared/auth/authConstants';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 import { buildProblemResponse, clearAuthCookies, resolveDeviceIdFromRequest } from '@/app/api/auth/_shared';
 
 interface LogoutPayload {

@@ -20,7 +20,7 @@ import {
   writeCollectionDetailCache,
   writeCollectionManifestCache,
 } from '@/features/collection/shared/gateways/collectionCatalogCacheGateway';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 const DEFAULT_VISIBLE_CHUNK_WINDOW = 1;
 const CHUNK_WINDOW_EXPAND_COOLDOWN_MS = 600;

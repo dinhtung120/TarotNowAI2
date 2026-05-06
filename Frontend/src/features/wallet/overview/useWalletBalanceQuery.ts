@@ -3,8 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { getWalletBalanceClient } from '@/features/wallet/overview/getWalletBalanceClient';
 import type { WalletBalance } from '@/features/wallet/shared/types';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 export function useWalletBalanceQuery() {
  return useQuery<WalletBalance>({

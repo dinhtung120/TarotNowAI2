@@ -2,10 +2,10 @@
 
 import type { CardCatalogItemDto } from '@/features/reading/tarot-catalog/actions/cards-catalog';
 import type { WalletBalance } from '@/features/wallet/shared/types';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { AUTH_ERROR } from "@/shared/models/authErrors";
 
 export interface ReadingSetupSnapshotDto {
  wallet: WalletBalance;

@@ -22,11 +22,11 @@ export default defineConfig({
     branches: 55,
     functions: 75,
     lines: 72,
-    'src/shared/infrastructure/http/clientFetch.ts': {
+    'src/shared/http/clientFetch.ts': {
      statements: 75,
      branches: 65,
     },
-    'src/shared/infrastructure/http/clientJsonRequest.ts': {
+    'src/shared/http/clientJsonRequest.ts': {
      statements: 90,
      branches: 80,
     },
@@ -34,23 +34,23 @@ export default defineConfig({
      statements: 75,
      branches: 60,
     },
-    'src/shared/infrastructure/auth/serverAuth.ts': {
+    'src/shared/auth/serverAuth.ts': {
      statements: 70,
      branches: 55,
     },
-    'src/shared/infrastructure/auth/deviceId.ts': {
+    'src/shared/auth/deviceId.ts': {
      statements: 80,
      branches: 75,
     },
-    'src/shared/infrastructure/auth/refreshClient.ts': {
+    'src/shared/auth/refreshClient.ts': {
      statements: 90,
      branches: 80,
     },
-    'src/shared/infrastructure/http/apiUrl.ts': {
+    'src/shared/http/apiUrl.ts': {
      statements: 75,
      branches: 50,
     },
-    'src/shared/infrastructure/http/serverHttpClient.ts': {
+    'src/shared/http/serverHttpClient.ts': {
      statements: 75,
      branches: 60,
     },

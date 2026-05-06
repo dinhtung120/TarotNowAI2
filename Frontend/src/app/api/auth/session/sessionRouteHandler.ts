@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { UserProfile } from '@/features/auth/session/types';
-import { AUTH_ERROR, isTerminalAuthError } from '@/shared/domain/authErrors';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_ERROR, isTerminalAuthError } from '@/shared/models/authErrors';
+import { AUTH_COOKIE } from '@/shared/auth/authConstants';
 import {
  getServerAccessTokenOrRefresh,
  getServerSessionSnapshot,
-} from '@/shared/infrastructure/auth/serverAuth';
+} from '@/shared/auth/serverAuth';
 import {
  appendSetCookieHeaders,
  buildProblemResponse,

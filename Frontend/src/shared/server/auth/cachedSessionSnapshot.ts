@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { getServerSessionSnapshot, type ServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
+import { getServerSessionSnapshot, type ServerSessionSnapshot } from '@/shared/auth/serverAuth';
 
 /**
  * Request-scoped snapshot cache for Server Components/layouts.

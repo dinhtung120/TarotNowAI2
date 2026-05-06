@@ -1,8 +1,8 @@
 'use server';
 
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
 import { normalizeReaderStatus } from '@/features/reader/shared/readerStatus';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 

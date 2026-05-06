@@ -3,7 +3,7 @@ import type { CollectionFilter } from "@/features/collection/cards/useCollection
 import { CollectionDeckCard } from "@/features/collection/cards/components/CollectionDeckCard";
 import { CollectionEmptyState } from "@/features/collection/cards/components/CollectionEmptyState";
 import CollectionDeckError from "@/features/collection/cards/components/collection-grid/CollectionDeckError";
-import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import type { TarotCardMeta } from "@/shared/models/tarotData";
 import { useEffect, useRef } from "react";
 
 interface CollectionDeckGridProps {

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { checkinQueryKeys } from '@/features/checkin/streak/checkinQueryKeys';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
 import type { StreamMessage } from './types';
 
 interface UseAiStreamSessionOptions {

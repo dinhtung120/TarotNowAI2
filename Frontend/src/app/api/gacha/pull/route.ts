@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 import { GACHA_IDEMPOTENCY_HEADER } from '@/features/gacha/shared/gachaConstants';
 import type { PullGachaResult } from '@/features/gacha/shared/gachaTypes';
 import { buildProblemResponse, requireServerAccessToken } from '@/app/api/gacha/_shared';

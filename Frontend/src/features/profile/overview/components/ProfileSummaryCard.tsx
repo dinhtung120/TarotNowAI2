@@ -1,7 +1,7 @@
 'use client';
 
 import type { useProfilePage } from '@/features/profile/overview/useProfilePage';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import { GlassCard } from '@/shared/ui';
 import { cn } from '@/lib/utils';
 import { ProfileAvatarUploader } from './profile-summary/ProfileAvatarUploader';

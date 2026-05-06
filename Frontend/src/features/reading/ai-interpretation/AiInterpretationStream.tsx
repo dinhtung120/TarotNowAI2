@@ -7,7 +7,7 @@ import { AiStreamMessages } from "./components/ai-stream/AiStreamMessages";
 import { useAiStreamSession } from "./components/ai-stream/useAiStreamSession";
 import { AiStreamNotReadyState } from "./AiStreamNotReadyState";
 import type { RevealedReadingCard } from "@/features/reading/shared/actions/types";
-import { useRuntimePolicies } from "@/shared/application/hooks/useRuntimePolicies";
+import { useRuntimePolicies } from "@/shared/hooks/useRuntimePolicies";
 
 interface AiInterpretationStreamProps {
  sessionId: string;

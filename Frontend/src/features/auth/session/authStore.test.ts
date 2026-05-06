@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import type { UserProfile } from '@/features/auth/session/types';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import { registerAuthQueryBridge, useAuthStore } from '@/features/auth/session/authStore';
 
 const AUTH_SESSION_QUERY_KEY = userStateQueryKeys.auth.session();

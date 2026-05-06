@@ -6,13 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { resolveLoginIdentityPrefill } from '@/features/auth/verify-email/authFlowEmail';
-import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/gateways/useOptimizedNavigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import {
  getLocalStorageItem,
  removeLocalStorageItem,
  setLocalStorageItem,
-} from '@/shared/application/gateways/browserStorage';
+} from '@/shared/gateways/browserStorage';
 import { createLoginSchema, type LoginFormValues } from '@/features/auth/shared/validation/schemas';
 
 export function useLoginPage() {

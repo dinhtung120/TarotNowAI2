@@ -3,8 +3,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
-import { getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
+import { AUTH_COOKIE } from '@/shared/auth/authConstants';
+import { getServerSessionSnapshot } from '@/shared/auth/serverAuth';
 import {
  PROTECTED_ROUTE_AUTH_DECISION,
  resolveProtectedRouteAuthDecision,
@@ -19,7 +19,7 @@ vi.mock('next/navigation', () => ({
  redirect: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/auth/serverAuth', () => ({
+vi.mock('@/shared/auth/serverAuth', () => ({
  getServerSessionSnapshot: vi.fn(),
 }));
 

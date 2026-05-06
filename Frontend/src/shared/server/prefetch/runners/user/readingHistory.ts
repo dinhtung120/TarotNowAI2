@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
+import { AUTH_ERROR, isUnauthorizedError } from '@/shared/models/authErrors';
 import {
  getHistoryDetailAction,
  getHistorySessionsAction,

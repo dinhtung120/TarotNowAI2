@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 
 interface RevealedCardItemProps {
  cardId: number;

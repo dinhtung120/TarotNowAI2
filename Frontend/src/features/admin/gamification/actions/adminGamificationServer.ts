@@ -1,5 +1,5 @@
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { getServerAccessToken } from '@/shared/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 import type {
  AdminAchievementDefinition,
  AdminQuestDefinition,

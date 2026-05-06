@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAdminDashboardSummary } from '@/features/admin/dashboard/actions/dashboard';
 import { ADMIN_QUERY_POLICY } from '@/features/admin/shared/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 interface AdminStats {
   users: number;

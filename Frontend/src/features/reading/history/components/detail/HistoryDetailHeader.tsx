@@ -1,7 +1,7 @@
 import { ArrowLeft, Calendar, Clock, Sparkles } from 'lucide-react';
 import type { HistoryDetailResponse } from '@/features/reading/history/actions';
 import { cn } from '@/lib/utils';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 
 interface HistoryDetailHeaderProps {
  locale: string;

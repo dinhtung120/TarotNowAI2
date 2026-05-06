@@ -2,10 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { applyNotificationReadPatch } from '@/features/notifications/shared/notificationCache';
-import { parseApiError } from '@/shared/application/gateways/parseApiError';
-import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/application/gateways/clientFetch';
+import { parseApiError } from '@/shared/gateways/parseApiError';
+import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/gateways/clientFetch';
 import type { NotificationListResponse } from '@/features/notifications/shared/actions';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/features/auth/public';
 
 interface UseNotificationDropdownOptions {

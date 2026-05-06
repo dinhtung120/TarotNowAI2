@@ -1,4 +1,4 @@
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import StreakBadge from "@/features/checkin/streak/StreakBadge";
 import { cn } from "@/lib/utils";
 import { WalletWidget } from "@/features/wallet/public";

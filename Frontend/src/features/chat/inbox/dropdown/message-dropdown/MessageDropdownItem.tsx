@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { ConversationDto } from '@/features/chat/shared/actions';
 import { isSameParticipantId } from '@/features/chat/shared/participantId';
-import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 
 interface MessageDropdownItemProps {
  awaitingReplyLabel: string;

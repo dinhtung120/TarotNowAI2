@@ -9,9 +9,9 @@ import {
  listAdminDisputes,
  resolveAdminDispute,
 } from '@/features/chat/shared/actions';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 

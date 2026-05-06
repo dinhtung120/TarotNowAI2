@@ -1,4 +1,4 @@
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import type { NavbarNavItem } from '@/shared/app-shell/navigation/navbar/config';
 import { cn } from '@/lib/utils';
 

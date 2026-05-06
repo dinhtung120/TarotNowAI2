@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import {
   getSessionStorageItem,
   getSessionStorageNumber,
-} from "@/shared/infrastructure/storage/browserStorage";
+} from "@/shared/storage/browserStorage";
 
 export function useSessionSetup(sessionId: string) {
   return useMemo(

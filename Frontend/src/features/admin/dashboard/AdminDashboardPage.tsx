@@ -3,7 +3,7 @@
 import { CreditCard, Gift, History, Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAdminDashboard } from '@/features/admin/dashboard/hooks/useAdminDashboard';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import {
  AdminDashboardHeader,
  AdminDashboardInsights,

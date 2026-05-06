@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 import type { ListConversationsResult } from '@/features/chat/shared/actions';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { getServerAccessToken } from '@/shared/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 
 const INBOX_PREVIEW_LIMIT = 8;
 

@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { UserCollectionDto } from '@/features/collection/cards/actions/actions';
 import type { CardOption } from '@/features/inventory/shared/cardOption';
 import { useCardsCatalog } from '@/features/reading/tarot-catalog/useCardsCatalog';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 
 function resolveCardName(
  locale: string,

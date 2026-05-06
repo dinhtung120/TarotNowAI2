@@ -1,4 +1,4 @@
-import type { RuntimePoliciesDto } from '@/shared/application/actions/runtime-policies';
+import type { RuntimePoliciesDto } from '@/shared/actions/runtime-policies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 type RuntimePolicyStoreState = {

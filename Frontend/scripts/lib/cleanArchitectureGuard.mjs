@@ -6,8 +6,8 @@ export const layerOrder = {
 };
 
 const PUBLIC_API_ACCESS_ALLOWLIST = new Set([
- 'src/shared/infrastructure/http/apiUrl.ts',
- 'src/shared/infrastructure/http/clientJsonRequest.ts',
+ 'src/shared/http/apiUrl.ts',
+ 'src/shared/http/clientJsonRequest.ts',
 ]);
 
 const forbiddenFeatureLayerFolders = new Set(['application', 'presentation', 'domain', 'infrastructure']);
@@ -45,8 +45,18 @@ export function findForbiddenFeatureLayerFolder(filePath) {
  return null;
 }
 
+const forbiddenSharedLayerFolders = new Set(['application', 'components', 'domain', 'infrastructure']);
+
+export function findForbiddenSharedLayerFolder(filePath) {
+ const normalized = normalizePath(filePath);
+ const parts = normalized.split('/');
+ if (parts[0] !== 'src' || parts[1] !== 'shared' || parts.length < 4) return null;
+
+ return forbiddenSharedLayerFolders.has(parts[2]) ? parts[2] : null;
+}
+
 export function isSharedComponentsPath(filePath) {
- return normalizePath(filePath).startsWith('src/shared/components/');
+ return findForbiddenSharedLayerFolder(filePath) === 'components';
 }
 
 export function isSharedImportingFeature(filePath, importPath) {
@@ -60,12 +70,12 @@ export function isAllowedSharedFeatureImport(filePath) {
   || normalized === 'src/shared/server/auth/sessionHandshake.ts'
   || normalized === 'src/shared/providers/AuthProvider.tsx'
   || normalized === 'src/shared/hooks/useAuth.ts'
-  || normalized.startsWith('src/shared/infrastructure/auth/')
-  || normalized.startsWith('src/shared/infrastructure/navigation/')
-  || normalized.startsWith('src/shared/infrastructure/query/')
-  || normalized.startsWith('src/shared/application/actions/')
-  || normalized.startsWith('src/shared/application/gateways/')
-  || normalized.startsWith('src/shared/application/hooks/usePresenceConnection')
+  || normalized.startsWith('src/shared/auth/')
+  || normalized.startsWith('src/shared/navigation/')
+  || normalized.startsWith('src/shared/query/')
+  || normalized.startsWith('src/shared/actions/')
+  || normalized.startsWith('src/shared/gateways/')
+  || normalized.startsWith('src/shared/hooks/usePresenceConnection')
   || normalized.startsWith('src/shared/app-shell/navigation/');
 }
 
@@ -80,9 +90,19 @@ export function resolveLayer(filePath) {
 
  if (normalized.startsWith('src/features/')) return 'application';
 
- if (normalized.startsWith('src/shared/domain/')) return 'domain';
- if (normalized.startsWith('src/shared/application/')) return 'application';
- if (normalized.startsWith('src/shared/infrastructure/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/models/')) return 'domain';
+ if (normalized.startsWith('src/shared/auth/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/dom/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/error/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/http/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/logging/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/navigation/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/query/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/realtime/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/storage/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/theme/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/actions/')) return 'application';
+ if (normalized.startsWith('src/shared/gateways/')) return 'application';
  if (normalized.startsWith('src/shared/ui/')) return 'presentation';
  if (normalized.startsWith('src/shared/app-shell/')) return 'presentation';
  if (normalized.startsWith('src/shared/providers/')) return 'presentation';
@@ -123,7 +143,7 @@ export function findClientBoundaryViolation(relativePath, sourceCode) {
   return {
    file: relativePath,
    line: findLine(sourceCode, 'NEXT_PUBLIC_API_URL'),
-   message: 'reads NEXT_PUBLIC_API_URL directly outside shared/infrastructure/http/apiUrl.ts.',
+   message: 'reads NEXT_PUBLIC_API_URL directly outside shared/http/apiUrl.ts.',
   };
  }
 

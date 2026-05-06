@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { CommunityPost } from "@/features/community/shared/types";
 import { cn } from "@/lib/utils";
-import { resolveAvatarUrl, shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from "@/shared/http/assetUrl";
 
 interface PostCardHeaderProps {
  post: CommunityPost;

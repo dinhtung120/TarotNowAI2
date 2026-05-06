@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import { applyNotificationReadPatch } from '@/features/notifications/shared/notificationCache';
 import type { NotificationListResponse } from '@/features/notifications/shared/actions';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 function createNotificationList(items: NotificationListResponse['items']): NotificationListResponse {
  return {

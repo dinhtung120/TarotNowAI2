@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { createConversation } from '@/features/chat/public';
 import type { ReaderProfile } from '@/features/reader/shared';
-import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/gateways/useOptimizedNavigation';
 import toast from 'react-hot-toast';
 
 interface UseReaderConversationModalOptions {

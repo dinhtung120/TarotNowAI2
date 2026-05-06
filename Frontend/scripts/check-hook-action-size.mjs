@@ -23,7 +23,10 @@ function isTrackedFile(relativePath) {
   return false;
  }
 
- return relativePath.startsWith('src/shared/application/')
+ return relativePath.startsWith('src/shared/actions/')
+  || relativePath.startsWith('src/shared/gateways/')
+  || relativePath.startsWith('src/shared/hooks/')
+  || relativePath.startsWith('src/shared/utils/')
   || /^src\/features\/[^/]+\/application\/.+/.test(relativePath);
 }
 

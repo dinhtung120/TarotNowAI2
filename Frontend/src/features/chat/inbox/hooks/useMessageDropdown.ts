@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/features/auth/session/authStore';
 import type { ConversationDto, ListConversationsResult } from '@/features/chat/shared/actions';
 

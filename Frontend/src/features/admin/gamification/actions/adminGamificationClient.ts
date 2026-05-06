@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/application/gateways/clientFetch';
+import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/gateways/clientFetch';
 import type {
  AdminAchievementDefinition,
  AdminQuestDefinition,

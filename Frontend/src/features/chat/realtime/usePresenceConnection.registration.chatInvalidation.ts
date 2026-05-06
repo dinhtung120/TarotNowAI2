@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 const INVALIDATE_CHAT_DELAY_MS = 1_000;
 

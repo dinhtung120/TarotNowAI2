@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { ADMIN_QUERY_POLICY } from '@/features/admin/shared/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
-import { isUnauthorizedError } from '@/shared/domain/authErrors';
+import { isUnauthorizedError } from '@/shared/models/authErrors';
 
 export interface AdminReading {
  id: string;

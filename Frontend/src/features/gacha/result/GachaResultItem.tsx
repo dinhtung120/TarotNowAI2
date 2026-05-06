@@ -4,7 +4,7 @@ import { memo, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { PullGachaReward } from '@/features/gacha/shared/gachaTypes';
-import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 import {
  gachaResultRarityConfig,
  resolveGachaResultName,

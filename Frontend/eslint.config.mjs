@@ -9,8 +9,8 @@ const eslintConfig = defineConfig([
     files: ["src/**/*.{ts,tsx}"],
     ignores: [
       "src/**/*.test.{ts,tsx}",
-      "src/shared/infrastructure/http/apiUrl.ts",
-      "src/shared/infrastructure/http/clientJsonRequest.ts",
+      "src/shared/http/apiUrl.ts",
+      "src/shared/http/clientJsonRequest.ts",
     ],
     rules: {
       "no-restricted-imports": [
@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
         {
           paths: [
             {
-              name: "@/shared/infrastructure/http/apiUrl",
+              name: "@/shared/http/apiUrl",
               importNames: ["getPublicApiBaseUrl"],
               message:
                 "Use local BFF routes or shared clientJsonRequest helpers instead of reading NEXT_PUBLIC_API_URL directly.",
@@ -32,7 +32,7 @@ const eslintConfig = defineConfig([
           selector:
             "MemberExpression[object.object.name='process'][object.property.name='env'][property.name='NEXT_PUBLIC_API_URL']",
           message:
-            "Read NEXT_PUBLIC_API_URL only inside shared/infrastructure/http/apiUrl.ts.",
+            "Read NEXT_PUBLIC_API_URL only inside shared/http/apiUrl.ts.",
         },
         {
           selector: "CallExpression[callee.name='useAuthStore'][arguments.length=0]",

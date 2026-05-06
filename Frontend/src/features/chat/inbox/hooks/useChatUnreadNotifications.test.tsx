@@ -5,8 +5,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useQuery } from '@tanstack/react-query';
 import { useChatUnreadNotifications } from '@/features/chat/inbox/hooks/useChatUnreadNotifications';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/features/auth/session/authStore';
 
 vi.mock('@tanstack/react-query', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/features/auth/session/authStore', () => ({
  useAuthStore: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/clientFetch', () => ({
+vi.mock('@/shared/gateways/clientFetch', () => ({
  fetchJsonOrThrow: vi.fn(),
 }));
 

@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { markLocalInventoryCacheSynced } from '@/features/inventory/shared/inventoryRealtimeDedup';
 import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
 import type { InventoryResponse, UseInventoryItemPayload } from '@/features/inventory/shared/inventoryTypes';
-import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
+import { invalidateUserStateQueries } from '@/shared/query/invalidateUserStateQueries';
 import { createIdempotencyKey, normalizeIntentKey } from '@/features/inventory/use-item/use-use-item/idempotency';
 import { sendUseItemRequest } from '@/features/inventory/use-item/use-use-item/normalizer';
 import {

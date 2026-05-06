@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useNotificationDropdown } from '@/features/notifications/dropdown/hooks/useNotificationDropdown';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import NotificationBellButton from '@/features/notifications/dropdown/notification-dropdown/NotificationBellButton';
 import NotificationDropdownPanel from '@/features/notifications/dropdown/notification-dropdown/NotificationDropdownPanel';
 import { useNotificationDropdownState } from '@/features/notifications/dropdown/notification-dropdown/useNotificationDropdownState';

@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePullGacha } from '@/features/gacha/shared/usePullGacha';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 vi.mock('@tanstack/react-query', () => ({
@@ -12,7 +12,7 @@ vi.mock('@tanstack/react-query', () => ({
  useQueryClient: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/http/clientFetch', () => ({
+vi.mock('@/shared/http/clientFetch', () => ({
  fetchJsonOrThrow: vi.fn(),
 }));
 

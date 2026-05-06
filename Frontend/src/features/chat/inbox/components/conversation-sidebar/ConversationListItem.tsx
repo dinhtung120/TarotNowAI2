@@ -2,8 +2,8 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { ConversationDto } from '@/features/chat/shared/actions';
 import { formatAgo, getOther, previewText, statusLabel } from './utils';
-import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 
 interface ConversationListItemProps {
  conversation: ConversationDto;

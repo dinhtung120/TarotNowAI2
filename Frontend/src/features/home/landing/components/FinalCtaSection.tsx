@@ -1,4 +1,4 @@
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { ChevronRight, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";

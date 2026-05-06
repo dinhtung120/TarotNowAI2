@@ -4,7 +4,7 @@ import { Bell } from 'lucide-react';
 import type { useTranslations } from 'next-intl';
 import { NotificationDropdownItem } from '@/features/notifications/dropdown/notification-dropdown/NotificationDropdownItem';
 import { formatRelativeTime } from '@/features/notifications/dropdown/notification-dropdown/notificationTime';
-import { useRelativeTimeNow } from '@/shared/application/hooks/useRelativeTimeNow';
+import { useRelativeTimeNow } from '@/shared/hooks/useRelativeTimeNow';
 import type { NotificationItem } from '@/features/notifications/shared/actions';
 import { cn } from '@/lib/utils';
 

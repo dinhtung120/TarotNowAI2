@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import type { WalletBalance } from '@/features/wallet/shared/types';
-import { actionFail, actionOk } from '@/shared/domain/actionResult';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { actionFail, actionOk } from '@/shared/models/actionResult';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import {
  registerWalletQueryBridge,
  setWalletBalanceFetcher,

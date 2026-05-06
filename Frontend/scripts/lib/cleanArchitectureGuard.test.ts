@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
  findClientBoundaryViolation,
  findForbiddenFeatureLayerFolder,
+ findForbiddenSharedLayerFolder,
  findSensitiveStreamViolation,
  findUnclassifiedRuntimeFiles,
  isAllowedSharedFeatureImport,
@@ -19,6 +20,11 @@ describe('cleanArchitectureGuard', () => {
   expect(resolveLayer('src/features/admin/system-configs/system-config.types.ts')).toBe('application');
   expect(resolveLayer('src/i18n/routing.tsx')).toBe('application');
   expect(resolveLayer('src/shared/server/auth/redirectAuthenticatedAuthEntry.ts')).toBe('infrastructure');
+  expect(resolveLayer('src/shared/actions/followRequest.ts')).toBe('application');
+  expect(resolveLayer('src/shared/gateways/domainCommandRegistry.ts')).toBe('application');
+  expect(resolveLayer('src/shared/models/actionResult.ts')).toBe('domain');
+  expect(resolveLayer('src/shared/auth/serverAuth.ts')).toBe('infrastructure');
+  expect(resolveLayer('src/shared/query/queryClient.ts')).toBe('infrastructure');
   expect(resolveLayer('src/shared/config/runtimePolicyFallbacks.ts')).toBe('application');
   expect(resolveLayer('src/shared/ui/Button.tsx')).toBe('presentation');
   expect(resolveLayer('src/shared/app-shell/navigation/navbar/Navbar.tsx')).toBe('presentation');
@@ -65,7 +71,13 @@ describe('cleanArchitectureGuard', () => {
    expect(findForbiddenFeatureLayerFolder('src/features/admin/gamification/actions/adminGamificationServer.ts')).toBeNull();
   });
 
-  it('flags removed shared components paths', () => {
+  it('flags removed shared layer folders', () => {
+   expect(findForbiddenSharedLayerFolder('src/shared/application/hooks/useAuth.ts')).toBe('application');
+   expect(findForbiddenSharedLayerFolder('src/shared/components/ui/Button.tsx')).toBe('components');
+   expect(findForbiddenSharedLayerFolder('src/shared/domain/actionResult.ts')).toBe('domain');
+   expect(findForbiddenSharedLayerFolder('src/shared/infrastructure/auth/serverAuth.ts')).toBe('infrastructure');
+   expect(findForbiddenSharedLayerFolder('src/shared/actions/followRequest.ts')).toBeNull();
+   expect(findForbiddenSharedLayerFolder('src/shared/models/actionResult.ts')).toBeNull();
    expect(isSharedComponentsPath('src/shared/components/ui/Button.tsx')).toBe(true);
    expect(isSharedComponentsPath('src/shared/ui/Button.tsx')).toBe(false);
    expect(isSharedComponentsPath('src/shared/app-shell/navigation/navbar/Navbar.tsx')).toBe(false);

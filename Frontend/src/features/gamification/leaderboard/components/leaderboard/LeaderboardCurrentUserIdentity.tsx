@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { LeaderboardEntry } from "@/features/gamification/shared/gamification.types";
 import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
+import { resolveAvatarUrl } from "@/shared/http/assetUrl";
 
 interface LeaderboardCurrentUserIdentityProps {
   userRank: LeaderboardEntry;

@@ -10,10 +10,10 @@ import type { InitReadingResponse } from '@/features/reading/shared/actions/type
 import {
  type ReadingSetupSnapshotDto,
 } from '@/features/reading/setup/reading-setup-snapshot';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
-import { setSessionStorageItem } from '@/shared/application/gateways/browserStorage';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { useOptimizedNavigation } from '@/shared/gateways/useOptimizedNavigation';
+import { setSessionStorageItem } from '@/shared/gateways/browserStorage';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 interface ReadingSetupFormData {
  question?: string;

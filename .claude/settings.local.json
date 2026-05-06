@@ -12,6 +12,7 @@
       "Bash(curl *)",
       "Bash(*)",
       "Read(*)",
+      "Edit(*)",
       "Bash(/usr/bin/find *)"
     ]
   }

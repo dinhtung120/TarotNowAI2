@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/routing";
 import { useAuthStore } from "@/features/auth/public";
 import { useWalletStore } from "@/features/wallet/shared/walletStore";
-import { normalizePathname, shouldEnableRealtimeForPath } from "@/shared/infrastructure/navigation/normalizePathname";
+import { normalizePathname, shouldEnableRealtimeForPath } from "@/shared/navigation/normalizePathname";
 
 export function useWalletWidgetState() {
  const t = useTranslations("Wallet");

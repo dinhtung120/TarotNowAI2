@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { DepositPackagePicker } from '@/features/wallet/deposit/DepositPackagePicker';
 import { DepositPaymentPanel } from '@/features/wallet/deposit/DepositPaymentPanel';
 import { useDepositPageViewModel } from '@/features/wallet/deposit/useDepositPageViewModel';
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 
 const DepositPage = memo(function DepositPage() {

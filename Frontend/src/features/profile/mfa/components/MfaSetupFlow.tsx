@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { MfaBackupCodesCard } from './MfaBackupCodesCard';
 import { MfaQrCodeCard } from './MfaQrCodeCard';
 import { MfaVerifyCodeCard } from './MfaVerifyCodeCard';
-import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
+import type { TypedSubmitHandler } from '@/shared/utils/typedSubmit';
 
 interface MfaSetupFlowProps {
  code: string;

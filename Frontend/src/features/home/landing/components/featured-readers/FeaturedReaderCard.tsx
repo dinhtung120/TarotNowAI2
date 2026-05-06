@@ -1,4 +1,4 @@
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { normalizeReaderStatus } from "@/features/reader/shared/readerStatus";
 import FeaturedReaderAvatar from "@/features/home/landing/components/featured-readers/FeaturedReaderAvatar";
 import FeaturedReaderMeta from "@/features/home/landing/components/featured-readers/FeaturedReaderMeta";

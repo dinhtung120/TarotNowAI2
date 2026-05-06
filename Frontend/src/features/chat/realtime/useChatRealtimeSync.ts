@@ -8,19 +8,19 @@ import type {
   ChatMessageDto,
   ListConversationsResult,
 } from '@/features/chat/shared/actions';
-import { logger } from '@/shared/application/gateways/logger';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
-import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
-import { useReconnectWakeup } from '@/shared/application/hooks/useReconnectWakeup';
+import { logger } from '@/shared/gateways/logger';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { getSignalRHubUrl } from '@/shared/gateways/signalRUrl';
+import { ensureRealtimeSession } from '@/shared/gateways/realtimeSessionGuard';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
+import { useReconnectWakeup } from '@/shared/hooks/useReconnectWakeup';
 import {
   hasSameNumberArray,
   isUnauthorizedNegotiationError,
   shouldStopConnection,
   startConnectionWithTimeout,
   stopConnectionSafely,
-} from '@/shared/application/hooks/signalRConnectionUtils';
+} from '@/shared/hooks/signalRConnectionUtils';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 interface UseChatRealtimeSyncOptions {

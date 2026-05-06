@@ -1,5 +1,5 @@
 import { LogOut } from 'lucide-react';
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import type { UserProfile } from '@/features/auth/session/types';
 import type { NavbarNavItem } from '@/shared/app-shell/navigation/navbar/config';
 import NavbarAvatarDropdownHeader from '@/features/app-shell/navigation/navbar/avatar-menu/NavbarAvatarDropdownHeader';

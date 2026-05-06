@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { listReaders, getMyReaderRequest, getReaderProfile } from '@/features/reader/shared';
 import { getProfileAction } from '@/features/profile/overview/actions/actions/get-profile';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import {
  READERS_DIRECTORY_PAGE_SIZE,
  readersDirectoryQueryKey,

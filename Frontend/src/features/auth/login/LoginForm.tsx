@@ -2,7 +2,7 @@
 
 import type { FieldErrors, UseFormHandleSubmit, UseFormRegister } from 'react-hook-form';
 import { Mail } from 'lucide-react';
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { AuthErrorBanner } from '@/features/auth/shared/AuthErrorBanner';
 import { LoginPasswordField } from '@/features/auth/login/LoginPasswordField';
 import { LoginRememberField } from '@/features/auth/login/LoginRememberField';

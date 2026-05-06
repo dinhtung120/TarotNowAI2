@@ -58,21 +58,21 @@ vi.mock('@/features/chat/shared/actions', () => ({
  listMessages: (...args: unknown[]) => listMessages(...args),
 }));
 
-vi.mock('@/shared/application/gateways/realtimeSessionGuard', () => ({
+vi.mock('@/shared/gateways/realtimeSessionGuard', () => ({
  ensureRealtimeSession: () => ensureRealtimeSession(),
 }));
 
-vi.mock('@/shared/application/gateways/logger', () => ({
+vi.mock('@/shared/gateways/logger', () => ({
  logger: {
   warn: vi.fn(),
  },
 }));
 
-vi.mock('@/shared/application/gateways/signalRUrl', () => ({
+vi.mock('@/shared/gateways/signalRUrl', () => ({
  getSignalRHubUrl: vi.fn(() => 'http://localhost/api/v1/chat'),
 }));
 
-vi.mock('@/shared/application/hooks/useReconnectWakeup', () => ({
+vi.mock('@/shared/hooks/useReconnectWakeup', () => ({
  useReconnectWakeup: () => ({
   wakeupVersion: wakeupState.wakeupVersion,
   scheduleWakeup,
@@ -80,7 +80,7 @@ vi.mock('@/shared/application/hooks/useReconnectWakeup', () => ({
  }),
 }));
 
-vi.mock('@/shared/application/hooks/useRuntimePolicies', () => ({
+vi.mock('@/shared/hooks/useRuntimePolicies', () => ({
  useRuntimePolicies: () => ({
   data: {
    realtime: {

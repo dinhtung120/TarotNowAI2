@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { GACHA_API_ROUTES, gachaQueryKeys } from '@/features/gacha/shared/gachaConstants';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 import type { GachaHistoryPage, GachaPool, GachaPoolOdds } from '@/features/gacha/shared/gachaTypes';
 
 interface UseGachaArgs {

@@ -1,13 +1,13 @@
 'use server';
 
 import { getTranslations } from 'next-intl/server';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
 import {
  actionFail,
  actionOk,
  type ActionResult,
-} from '@/shared/domain/actionResult';
+} from '@/shared/models/actionResult';
 
 export async function forgotPasswordAction(
  data: { email: string }

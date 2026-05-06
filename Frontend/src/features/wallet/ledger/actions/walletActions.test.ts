@@ -1,21 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 import { getWalletBalance } from '@/features/wallet/shared/actions/balance';
 import { createDepositOrder } from '@/features/wallet/deposit/actions/user-orders';
-import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
+import { EVENT_CONTRACTS } from '@/shared/models/eventContracts';
 
-vi.mock('@/shared/application/gateways/serverAuth', () => ({
+vi.mock('@/shared/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
+vi.mock('@/shared/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/logger', () => ({
+vi.mock('@/shared/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },

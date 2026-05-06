@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/shared/types';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { useWalletBalanceQuery } from '@/features/wallet/overview/useWalletBalanceQuery';
 import { useAuthStore } from '@/features/auth/public';
 import { useLocale, useTranslations } from 'next-intl';

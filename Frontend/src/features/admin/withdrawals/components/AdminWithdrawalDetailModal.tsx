@@ -4,7 +4,7 @@ import { memo } from 'react';
 import Image from 'next/image';
 import Modal from '@/shared/ui/Modal';
 import type { WithdrawalDetailResult } from '@/features/wallet/public';
-import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 import { cn } from '@/lib/utils';
 
 interface AdminWithdrawalDetailModalProps {

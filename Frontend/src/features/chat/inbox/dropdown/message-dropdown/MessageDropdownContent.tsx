@@ -2,7 +2,7 @@
 
 import { MessageCircle } from 'lucide-react';
 import type { useTranslations } from 'next-intl';
-import { useRelativeTimeNow } from '@/shared/application/hooks/useRelativeTimeNow';
+import { useRelativeTimeNow } from '@/shared/hooks/useRelativeTimeNow';
 import type { ConversationDto } from '@/features/chat/shared/actions';
 import MessageDropdownItem from '@/features/chat/inbox/dropdown/message-dropdown/MessageDropdownItem';
 import { formatMessageRelativeTime } from '@/features/chat/inbox/dropdown/message-dropdown/messageTime';

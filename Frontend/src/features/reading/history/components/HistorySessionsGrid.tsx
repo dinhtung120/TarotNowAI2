@@ -1,6 +1,6 @@
 import type { HistorySessionDto } from '@/features/reading/history/actions';
 import { cn } from '@/lib/utils';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import { HistorySessionCard } from './HistorySessionCard';
 
 interface HistorySessionsGridProps {

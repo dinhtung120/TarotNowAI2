@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { getReaderProfile } from '@/features/reader/shared';
-import { resolveActionFailureStatus } from '@/shared/domain/actionResult';
+import { resolveActionFailureStatus } from '@/shared/models/actionResult';
 
 export async function GET(
  _request: NextRequest,

@@ -1,5 +1,5 @@
 import type { UserCollectionDto } from "@/features/collection/cards/actions/actions";
-import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import type { TarotCardMeta } from "@/shared/models/tarotData";
 import CollectionDeckCardFooter from "@/features/collection/cards/components/deck-card/CollectionDeckCardFooter";
 import CollectionDeckCardHeader from "@/features/collection/cards/components/deck-card/CollectionDeckCardHeader";
 import CollectionDeckCardVisual from "@/features/collection/cards/components/deck-card/CollectionDeckCardVisual";

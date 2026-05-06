@@ -1,4 +1,4 @@
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { getProfileAction, type ProfileDto } from '@/features/profile/overview/actions/actions';
 
 export interface ProfileDetailQueryData {

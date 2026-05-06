@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getInitialMetadata } from '@/shared/application/actions/metadata';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { getInitialMetadata } from '@/shared/actions/metadata';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 
 export async function GET() {
   const result = await getInitialMetadata();

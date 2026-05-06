@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { requireAdminSession } from '@/app/api/admin/gamification/_shared';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 
 export async function DELETE(
  _request: Request,

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 import {
  getServerAccessToken,
  getServerSessionSnapshot,
-} from '@/shared/infrastructure/auth/serverAuth';
+} from '@/shared/auth/serverAuth';
 import type { UserProfile } from '@/features/auth/session/types';
 
 function normalizeRole(role: string | undefined): string {

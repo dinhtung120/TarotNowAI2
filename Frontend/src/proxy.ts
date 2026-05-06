@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
-import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
+import { AUTH_COOKIE } from '@/shared/auth/authConstants';
+import { getPublicApiOrigin } from '@/shared/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getStreakStatus } from './actions';
 import { checkinQueryKeys } from '@/features/checkin/streak/checkinQueryKeys';
 import { useAuthStore } from '@/features/auth/public';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 
 export const useStreakStatus = (enabled: boolean = true) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

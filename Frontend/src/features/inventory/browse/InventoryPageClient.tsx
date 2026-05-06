@@ -7,7 +7,7 @@ import InventoryGrid from '@/features/inventory/browse/InventoryGrid';
 import InventoryPageHero from '@/features/inventory/browse/InventoryPageHero';
 import InventoryQueryState from '@/features/inventory/browse/InventoryQueryState';
 import UseItemModal from '@/features/inventory/use-item/UseItemModal';
-import { resolveErrorMessage } from '@/shared/application/utils/resolveErrorMessage';
+import { resolveErrorMessage } from '@/shared/utils/resolveErrorMessage';
 import { useInventory } from '@/features/inventory/shared/useInventory';
 import { useOwnedInventoryCards } from '@/features/inventory/shared/useOwnedInventoryCards';
 import { useUseItem } from '@/features/inventory/use-item/useUseItem';

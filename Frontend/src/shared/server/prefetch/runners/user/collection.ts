@@ -3,7 +3,7 @@ import { getUserCollection } from '@/features/collection/cards/actions/actions';
 import { getReadingSetupSnapshotAction } from '@/features/reading/setup/reading-setup-snapshot';
 import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
 import { fetchInventoryServer } from '@/features/inventory/shared/inventoryServerActions';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 
 export async function prefetchCollectionPage(qc: QueryClient): Promise<void> {

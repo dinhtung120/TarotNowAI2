@@ -1,6 +1,6 @@
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
 import type { WalletBalance } from '@/features/wallet/shared/types';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
 
 const WALLET_BALANCE_API_ROUTE = '/api/wallet/balance';
 

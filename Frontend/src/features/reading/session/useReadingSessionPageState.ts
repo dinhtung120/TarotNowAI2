@@ -8,8 +8,8 @@ import { useDeckSelection } from '@/features/reading/session/components/useDeckS
 import { useRevealReading } from '@/features/reading/session/components/useRevealReading';
 import { useSessionSetup } from '@/features/reading/session/components/useSessionSetup';
 import { useCardsCatalog } from '@/features/reading/tarot-catalog/useCardsCatalog';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
-import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
+import { invalidateUserStateQueries } from '@/shared/query/invalidateUserStateQueries';
 import { useAuthStore } from '@/features/auth/public';
 
 interface UseReadingSessionPageStateResult {

@@ -11,8 +11,8 @@ import {
 } from '@/features/reader/apply/readerApplyFormSchema';
 import { resolveReaderApplyHydrationIdentity } from '@/features/reader/apply/readerApplyHydration';
 import { normalizeOptionalSocialUrl } from '@/features/reader/shared/readerSocialLinks';
-import { useHydrateFormOnce } from '@/shared/application/hooks/useHydrateFormOnce';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useHydrateFormOnce } from '@/shared/hooks/useHydrateFormOnce';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
 

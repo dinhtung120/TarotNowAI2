@@ -1,25 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTranslations } from 'next-intl/server';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
 import { initReadingSession } from '@/features/reading/shared/actions/init-session';
 import { revealReadingSession } from '@/features/reading/shared/actions/reveal-session';
-import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
+import { EVENT_CONTRACTS } from '@/shared/models/eventContracts';
 
 vi.mock('next-intl/server', () => ({
  getTranslations: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/serverAuth', () => ({
+vi.mock('@/shared/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
+vi.mock('@/shared/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/logger', () => ({
+vi.mock('@/shared/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },

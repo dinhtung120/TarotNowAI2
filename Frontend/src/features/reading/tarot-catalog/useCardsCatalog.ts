@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
  type CardCatalogItemDto,
 } from '@/features/reading/tarot-catalog/actions/cards-catalog';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 interface UseCardsCatalogOptions {
  enabled?: boolean;

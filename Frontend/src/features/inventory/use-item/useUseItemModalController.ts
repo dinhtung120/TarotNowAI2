@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { resolveErrorMessage } from '@/shared/application/utils/resolveErrorMessage';
+import { resolveErrorMessage } from '@/shared/utils/resolveErrorMessage';
 import { useUseItemModalState } from '@/features/inventory/use-item/useUseItemModalState';
 import type { UseItemModalLabels } from '@/features/inventory/use-item/UseItemModal.types';
 import type { CardOption } from '@/features/inventory/shared/cardOption';

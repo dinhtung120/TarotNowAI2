@@ -8,8 +8,8 @@ import {
   markNotificationAsRead,
   type NotificationListResponse,
 } from '@/features/notifications/shared/actions';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 export function useNotificationsPage() {
   const queryClient = useQueryClient();

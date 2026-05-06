@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import type { PublicRuntimePoliciesDto } from '@/shared/application/actions/runtime-policies';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import type { PublicRuntimePoliciesDto } from '@/shared/actions/runtime-policies';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 
 export async function GET(): Promise<NextResponse> {
   const result = await serverHttpRequest<PublicRuntimePoliciesDto>('/legal/runtime-policies', {

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { ADMIN_QUERY_POLICY } from '@/features/admin/shared/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
 import { getWithdrawalDetail, listWithdrawalQueue, processWithdrawal, type WithdrawalDetailResult, type WithdrawalResult } from '@/features/wallet/public';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 type ProcessAction = 'approve' | 'reject';

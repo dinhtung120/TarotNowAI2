@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { AiStreamFollowupBadge } from "./AiStreamFollowupBadge";
-import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
+import type { TypedSubmitHandler } from '@/shared/utils/typedSubmit';
 
 interface AiStreamFollowupFormProps {
  isStreaming: boolean;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import type { CardCatalogItemDto } from '@/features/reading/tarot-catalog/actions/cards-catalog';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { serverHttpRequest } from '@/shared/http/serverHttpClient';
 
 export async function GET(): Promise<NextResponse> {
  const result = await serverHttpRequest<CardCatalogItemDto[]>('/reading/cards-catalog', {

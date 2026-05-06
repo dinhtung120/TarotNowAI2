@@ -10,7 +10,7 @@ import {
  HISTORY_PAGE_SIZE,
  historySessionsListQueryKey,
 } from '@/features/reading/history/historyQueryKeys';
-import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
+import { AUTH_ERROR, isUnauthorizedError } from '@/shared/models/authErrors';
 
 interface UseHistorySessionsPageParams {
  isAuthenticated: boolean;

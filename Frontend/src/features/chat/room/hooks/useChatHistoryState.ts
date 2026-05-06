@@ -7,9 +7,9 @@ import {
  type ConversationDto,
 } from '@/features/chat/shared/actions';
 import { appendUniqueMessage, mergeHistoryWithRealtimeMessages } from '@/features/chat/shared/mergeMessages';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
-import { createCancellableLoadTask } from '@/shared/application/utils/queryPolicy';
+import { createCancellableLoadTask } from '@/shared/utils/queryPolicy';
 
 interface UseChatHistoryStateOptions {
  conversationId?: string | null;

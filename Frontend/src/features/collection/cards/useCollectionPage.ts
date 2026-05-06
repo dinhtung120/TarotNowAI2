@@ -3,9 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { UserCollectionDto } from '@/features/collection/cards/actions/actions';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { TAROT_CARD_COUNT, TAROT_DECK } from '@/shared/domain/tarotData';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { TAROT_CARD_COUNT, TAROT_DECK } from '@/shared/models/tarotData';
 
 export type CollectionFilter = 'all' | 'owned' | 'unowned';
 export type CollectionSortOrder = 'id' | 'level' | 'atk' | 'def';

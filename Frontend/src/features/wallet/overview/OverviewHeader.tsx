@@ -1,5 +1,5 @@
 import { ArrowDownToLine, Plus, Sparkles } from 'lucide-react';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import { Button, SectionHeader } from '@/shared/ui';
 import { cn } from '@/lib/utils';
 

@@ -8,7 +8,7 @@ import {
   gachaQueryKeys,
 } from '@/features/gacha/shared/gachaConstants';
 import { markLocalGachaCacheSynced } from '@/features/gacha/shared/gachaRealtimeDedup';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 import type {
  GachaHistoryEntry,
  GachaHistoryPage,

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { cn, formatCardStat } from '@/lib/utils';
 import { gachaRewardKinds } from '@/features/gacha/shared/gachaConstants';
 import type { GachaPoolRewardRate } from '@/features/gacha/shared/gachaTypes';
-import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 import Badge from '@/shared/ui/Badge';
 
 interface GachaRewardPreviewProps {

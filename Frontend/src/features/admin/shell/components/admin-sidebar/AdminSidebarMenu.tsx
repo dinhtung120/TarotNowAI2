@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight } from 'lucide-react';
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 import type { AdminSidebarMenuItem } from '../AdminLayout.types';
 import { isRouteActive } from './isRouteActive';

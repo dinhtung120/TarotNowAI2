@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentProps } from "react";
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 
 export interface BottomTabSubItem {
   labelKey: string;

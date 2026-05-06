@@ -1,6 +1,6 @@
 import { Coins, Gem } from "lucide-react";
 import type { WalletBalance } from "@/features/wallet/shared/types";
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { cn } from "@/lib/utils";
 
 interface WalletWidgetContentProps {

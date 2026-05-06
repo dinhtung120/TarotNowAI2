@@ -8,7 +8,7 @@ import {
   setGamificationActiveTitleServer,
 } from '@/features/gamification/shared/gamificationServerActions';
 import { gamificationKeys } from '@/features/gamification/shared/gamificationQueryKeys';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 export { gamificationKeys };
 

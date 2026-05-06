@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Camera, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProfileAvatarSpinner } from './ProfileAvatarSpinner';
-import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 
 interface ProfileAvatarUploaderProps {
  avatarAlt: string;

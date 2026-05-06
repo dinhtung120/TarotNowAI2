@@ -2,8 +2,8 @@
 
 import { type ReactNode } from 'react';
 import { usePathname } from '@/i18n/routing';
-import { usePresenceConnection } from '@/shared/application/hooks/usePresenceConnection';
-import { shouldEnableRealtimeForPath } from '@/shared/infrastructure/navigation/normalizePathname';
+import { usePresenceConnection } from '@/shared/hooks/usePresenceConnection';
+import { shouldEnableRealtimeForPath } from '@/shared/navigation/normalizePathname';
 
 interface PresenceProviderProps {
  children: ReactNode;

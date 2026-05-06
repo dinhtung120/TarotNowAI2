@@ -8,7 +8,7 @@ import { ADMIN_QUERY_POLICY } from '@/features/admin/shared/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
 import { useAdminUsersModalForms } from '@/features/admin/users/hooks/useAdminUsersModalForms';
 import { useAdminUsersMutations } from '@/features/admin/users/hooks/useAdminUsersMutations';
-import { queryFnOrThrow, useDebouncedQueryInput } from '@/shared/application/utils/queryPolicy';
+import { queryFnOrThrow, useDebouncedQueryInput } from '@/shared/utils/queryPolicy';
 
 export type {
  AdminUsersAddModalState,

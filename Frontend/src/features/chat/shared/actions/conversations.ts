@@ -30,7 +30,7 @@ import type {
  ListMessagesResult,
  MediaPayloadDto,
 } from './conversations.types';
-import type { ActionResult } from '@/shared/domain/actionResult';
+import type { ActionResult } from '@/shared/models/actionResult';
 
 export async function createConversation(readerId: string, slaHours?: number): Promise<ActionResult<ConversationDto>> {
  return createConversationCore(readerId, slaHours);

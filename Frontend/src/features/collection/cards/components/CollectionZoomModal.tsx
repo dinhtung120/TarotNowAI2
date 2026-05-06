@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import CollectionZoomCardVisual from "@/features/collection/cards/components/zoom-modal/CollectionZoomCardVisual";
 import CollectionZoomDetails from "@/features/collection/cards/components/zoom-modal/CollectionZoomDetails";
 import type { CollectionZoomModalProps } from "@/features/collection/cards/components/zoom-modal/types";
-import { acquirePageScrollLock } from "@/shared/infrastructure/dom/scrollLock";
+import { acquirePageScrollLock } from "@/shared/dom/scrollLock";
 import { cn } from "@/lib/utils";
 
 export function CollectionZoomModal({

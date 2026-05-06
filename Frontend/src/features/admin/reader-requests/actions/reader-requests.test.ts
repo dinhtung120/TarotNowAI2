@@ -3,24 +3,24 @@ import {
  listReaderRequests,
  processReaderRequest,
 } from '@/features/admin/reader-requests/actions/reader-requests';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { createIdempotentDomainCommandInvoker } from '@/shared/application/gateways/idempotentDomainCommandInvoker';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { createIdempotentDomainCommandInvoker } from '@/shared/gateways/idempotentDomainCommandInvoker';
 
-vi.mock('@/shared/application/gateways/serverAuth', () => ({
+vi.mock('@/shared/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
+vi.mock('@/shared/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/idempotentDomainCommandInvoker', () => ({
+vi.mock('@/shared/gateways/idempotentDomainCommandInvoker', () => ({
  createIdempotentDomainCommandInvoker: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/logger', () => ({
+vi.mock('@/shared/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },

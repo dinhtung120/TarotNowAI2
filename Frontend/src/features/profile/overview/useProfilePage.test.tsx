@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useProfilePage } from '@/features/profile/overview/useProfilePage';
-import { useHydrateFormOnce } from '@/shared/application/hooks/useHydrateFormOnce';
+import { useHydrateFormOnce } from '@/shared/hooks/useHydrateFormOnce';
 import { useAuthStore } from '@/features/auth/public';
 import { useForm } from 'react-hook-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,7 +25,7 @@ vi.mock('react-hook-form', () => ({
  useForm: vi.fn(),
 }));
 
-vi.mock('@/shared/application/hooks/useHydrateFormOnce', () => ({
+vi.mock('@/shared/hooks/useHydrateFormOnce', () => ({
  useHydrateFormOnce: vi.fn(),
 }));
 

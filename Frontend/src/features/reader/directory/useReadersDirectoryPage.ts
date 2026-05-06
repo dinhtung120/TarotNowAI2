@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReaderProfile } from '@/features/reader/shared';
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 export function useReadersDirectoryPage() {

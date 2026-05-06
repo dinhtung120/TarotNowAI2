@@ -1,8 +1,8 @@
 'use client';
 
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
-import { useErrorBoundaryLogger } from '@/shared/application/hooks/useErrorBoundaryLogger';
+import { useErrorBoundaryLogger } from '@/shared/hooks/useErrorBoundaryLogger';
 
 interface UserErrorProps {
  error: Error & { digest?: string };

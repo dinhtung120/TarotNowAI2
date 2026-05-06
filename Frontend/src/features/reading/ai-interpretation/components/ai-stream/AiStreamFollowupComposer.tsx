@@ -1,6 +1,6 @@
 "use client";
 
-import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
+import type { TypedSubmitHandler } from '@/shared/utils/typedSubmit';
 import { AiStreamFollowupForm } from "./AiStreamFollowupForm";
 import { AiStreamHardCapState } from "./AiStreamHardCapState";
 

@@ -8,7 +8,7 @@ import { LeaderboardCurrentUserCard } from "@/features/gamification/leaderboard/
 import { LeaderboardBody } from "@/features/gamification/leaderboard/components/leaderboard/LeaderboardBody";
 import { LeaderboardCurrencyTabs } from "@/features/gamification/leaderboard/components/leaderboard/LeaderboardCurrencyTabs";
 import { LeaderboardPeriodTabs } from "@/features/gamification/leaderboard/components/leaderboard/LeaderboardPeriodTabs";
-import { useRuntimePolicies } from "@/shared/application/hooks/useRuntimePolicies";
+import { useRuntimePolicies } from "@/shared/hooks/useRuntimePolicies";
 import { cn } from "@/lib/utils";
 
 type LeaderboardCurrency = "gold" | "diamond";

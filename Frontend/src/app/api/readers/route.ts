@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { listReaders } from '@/features/reader/shared';
-import { resolveActionFailureStatus } from '@/shared/domain/actionResult';
+import { resolveActionFailureStatus } from '@/shared/models/actionResult';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
  const page = Math.max(1, Number(request.nextUrl.searchParams.get('page') ?? '1') || 1);

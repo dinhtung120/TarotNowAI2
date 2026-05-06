@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { DEFAULT_THEME, resolveTheme, type ThemeId } from '@/shared/domain/theme';
-import { applyTheme, resolveClientTheme } from '@/shared/infrastructure/theme/clientTheme';
+import { DEFAULT_THEME, resolveTheme, type ThemeId } from '@/shared/models/theme';
+import { applyTheme, resolveClientTheme } from '@/shared/theme/clientTheme';
 
 interface UseThemeStylesheetManagerArgs {
   initialTheme: ThemeId;

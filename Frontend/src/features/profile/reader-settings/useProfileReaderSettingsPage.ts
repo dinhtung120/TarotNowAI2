@@ -13,7 +13,7 @@ import type {
  ReaderSettingsDraft,
  TranslateFn,
 } from '@/features/profile/reader-settings/useProfileReaderSettings.types';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 
 function toDraft(
  profile: ReaderProfile | null | undefined,

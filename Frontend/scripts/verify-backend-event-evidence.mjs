@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const registryPath = resolve(process.cwd(), 'src/shared/application/gateways/domainCommandRegistry.ts');
+const registryPath = resolve(process.cwd(), 'src/shared/gateways/domainCommandRegistry.ts');
 const registrySource = readFileSync(registryPath, 'utf8');
 
 const requiredCommandKeys = [
@@ -97,7 +97,7 @@ const sourceFiles = globSync('src/**/*.{ts,tsx}', {
 
 const directCallViolations = [];
 for (const relativePath of sourceFiles) {
- if (relativePath === 'src/shared/application/gateways/domainCommandRegistry.ts') {
+ if (relativePath === 'src/shared/gateways/domainCommandRegistry.ts') {
   continue;
  }
 

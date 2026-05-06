@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import type { UserCollectionDto } from '@/features/collection/cards/actions/actions';
 import type { ReadingSetupSnapshotDto } from '@/features/reading/setup/reading-setup-snapshot';
 import type {

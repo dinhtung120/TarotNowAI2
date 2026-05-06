@@ -6,7 +6,7 @@ import ProfileUpgradeHeader from "@/features/profile/overview/components/profile
 import ProfileUpgradePendingState from "@/features/profile/overview/components/profile-upgrade/ProfileUpgradePendingState";
 import ProfileUpgradeRejectedState from "@/features/profile/overview/components/profile-upgrade/ProfileUpgradeRejectedState";
 import type { ProfileReaderUpgradeCardProps } from "@/features/profile/overview/components/profile-upgrade/types";
-import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
+import { useOptimizedNavigation } from "@/shared/navigation/useOptimizedNavigation";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/shared/ui";
 

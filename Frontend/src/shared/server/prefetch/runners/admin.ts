@@ -13,8 +13,8 @@ import {
 } from '@/features/admin/gamification/actions/adminGamificationServer';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { listWithdrawalQueue } from '@/features/wallet/public';
-import { logger } from '@/shared/application/gateways/logger';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { logger } from '@/shared/gateways/logger';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 async function swallowPrefetch(
  label: string,

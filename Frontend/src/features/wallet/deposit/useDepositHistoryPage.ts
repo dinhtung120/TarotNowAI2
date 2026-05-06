@@ -8,7 +8,7 @@ import {
  reconcileDepositOrder,
  type MyDepositOrderHistoryItemResponse,
 } from '@/features/wallet/deposit/actions';
-import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 const DEFAULT_PAGE_SIZE = 10;
 

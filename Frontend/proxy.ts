@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_COOKIE } from '@/shared/auth/authConstants';
 import { AUTH_ENTRY_PATHS, PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';

@@ -7,7 +7,7 @@ const protectedDecisionPath = resolve(
 );
 const serverAuthPath = resolve(
  process.cwd(),
- 'src/shared/infrastructure/auth/serverAuth.ts',
+ 'src/shared/auth/serverAuth.ts',
 );
 
 const protectedDecisionSource = readFileSync(protectedDecisionPath, 'utf8');

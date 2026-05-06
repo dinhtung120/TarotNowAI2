@@ -1,4 +1,4 @@
-import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
 
 const CATALOG_MANIFEST_ENDPOINT = '/api/v1/reading/cards-catalog/manifest';
 const CHUNK_ENDPOINT_PREFIX = '/api/v1/reading/cards-catalog/chunks';

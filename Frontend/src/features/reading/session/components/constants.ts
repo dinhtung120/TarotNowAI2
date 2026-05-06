@@ -1,4 +1,4 @@
-import { TAROT_CARD_COUNT } from "@/shared/domain/tarotData";
+import { TAROT_CARD_COUNT } from "@/shared/models/tarotData";
 
 export const SESSION_SHUFFLE_DURATION_MS = 2200;
 export const SHUFFLE_CARD_COUNT = 9;

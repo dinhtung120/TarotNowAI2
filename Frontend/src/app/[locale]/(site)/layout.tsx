@@ -6,7 +6,7 @@ import { AppNavbar, AuthBootstrap } from '@/features/auth/public';
 import { WalletStoreBridge } from '@/features/wallet/public';
 import UserSidebar from "@/shared/app-shell/navigation/user-sidebar/UserSidebar";
 import { BottomTabBar } from "@/features/app-shell/public";
-import { AUTH_COOKIE } from "@/shared/infrastructure/auth/authConstants";
+import { AUTH_COOKIE } from "@/shared/auth/authConstants";
 import { pickClientMessages, SITE_CLIENT_NAMESPACES } from '@/i18n/clientMessages';
 import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
 

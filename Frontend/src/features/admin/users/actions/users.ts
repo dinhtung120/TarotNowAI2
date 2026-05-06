@@ -1,12 +1,12 @@
 'use server';
 import { randomUUID } from 'node:crypto';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
-import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
-import { AUTH_HEADER } from '@/shared/application/gateways/authConstants';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
+import { invokeDomainCommand } from '@/shared/gateways/domainCommandRegistry';
+import { AUTH_HEADER } from '@/shared/gateways/authConstants';
 
 export interface AdminUserItem { id: string; email: string; username: string; displayName: string; status: string; role: string; level: number; exp: number; goldBalance: number; diamondBalance: number; createdAt: string }
 interface ListUsersResponse { users: AdminUserItem[]; totalCount: number }

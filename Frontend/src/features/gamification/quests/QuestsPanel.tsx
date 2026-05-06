@@ -9,7 +9,7 @@ import GamificationDetailModal from "@/features/gamification/hub/GamificationDet
 import { QuestCard } from "@/features/gamification/quests/QuestCard";
 import { QuestPanelHeader } from "@/features/gamification/quests/QuestPanelHeader";
 import { useQuestClaimHandlers } from "@/features/gamification/quests/components/quest-panel/useQuestClaimHandlers";
-import { useRuntimePolicies } from "@/shared/application/hooks/useRuntimePolicies";
+import { useRuntimePolicies } from "@/shared/hooks/useRuntimePolicies";
 import { cn } from "@/lib/utils";
 
 export default function QuestsPanel() {

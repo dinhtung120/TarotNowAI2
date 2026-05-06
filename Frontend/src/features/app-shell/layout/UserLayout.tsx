@@ -1,9 +1,9 @@
 
 
 import { type ReactNode } from "react";
-import { BottomTabBar } from '@/features/app-shell/public';
+import BottomTabBar from '@/features/app-shell/navigation/bottom-tab-bar/BottomTabBar';
 import UserSidebar from '@/shared/app-shell/navigation/user-sidebar/UserSidebar';
-import AstralBackground from "./AstralBackground";
+import AstralBackground from '@/shared/app-shell/layout/AstralBackground';
 import { cn } from '@/lib/utils';
 
 interface UserLayoutProps {

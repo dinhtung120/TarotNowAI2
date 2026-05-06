@@ -1,4 +1,4 @@
-import { postJsonToApiV1, type ClientJsonResult } from '@/shared/infrastructure/http/clientJsonRequest';
+import { postJsonToApiV1, type ClientJsonResult } from '@/shared/http/clientJsonRequest';
 import type {
   AvatarConfirmResponse,
   CommunityImageConfirmResponse,

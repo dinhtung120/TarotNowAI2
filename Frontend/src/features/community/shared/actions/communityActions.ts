@@ -1,9 +1,9 @@
 'use server';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { logger } from '@/shared/application/gateways/logger';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { logger } from '@/shared/gateways/logger';
 import {
  AddCommentPayload,
  CommunityPost,

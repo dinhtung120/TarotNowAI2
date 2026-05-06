@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET } from '@/app/[locale]/api/reading/sessions/[sessionId]/stream/route';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
+import { getServerAccessToken } from '@/shared/auth/serverAuth';
+import { internalApiUrl } from '@/shared/http/apiUrl';
 
-vi.mock('@/shared/infrastructure/auth/serverAuth', () => ({
+vi.mock('@/shared/auth/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/http/apiUrl', () => ({
+vi.mock('@/shared/http/apiUrl', () => ({
  internalApiUrl: vi.fn((path: string) => `http://backend.test${path}`),
 }));
 
-vi.mock('@/shared/infrastructure/logging/logger', () => ({
+vi.mock('@/shared/logging/logger', () => ({
  logger: {
   warn: vi.fn(),
   error: vi.fn(),

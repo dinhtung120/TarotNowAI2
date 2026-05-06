@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isRenderableImageUrl, parseMarkdownSegments } from "@/features/community/shared/markdownImageParser";
-import { shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
+import { shouldUseUnoptimizedImage } from "@/shared/http/assetUrl";
 
 interface PostCardContentProps {
  content: string;

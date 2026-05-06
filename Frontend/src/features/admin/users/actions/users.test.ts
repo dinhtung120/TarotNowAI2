@@ -1,24 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createUser, listUsers, updateUser } from '@/features/admin/users/actions/users';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { AUTH_HEADER } from '@/shared/application/gateways/authConstants';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
+import { AUTH_HEADER } from '@/shared/gateways/authConstants';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { invokeDomainCommand } from '@/shared/gateways/domainCommandRegistry';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
 
-vi.mock('@/shared/application/gateways/serverAuth', () => ({
+vi.mock('@/shared/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/domainCommandRegistry', () => ({
+vi.mock('@/shared/gateways/domainCommandRegistry', () => ({
  invokeDomainCommand: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
+vi.mock('@/shared/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/application/gateways/logger', () => ({
+vi.mock('@/shared/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },

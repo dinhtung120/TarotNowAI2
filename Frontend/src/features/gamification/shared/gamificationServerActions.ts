@@ -1,8 +1,8 @@
 'use server';
 
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
+import { AUTH_ERROR } from '@/shared/models/authErrors';
 import type {
  ClaimQuestRewardResult,
  LeaderboardResult,

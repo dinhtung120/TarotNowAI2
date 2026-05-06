@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { performClientLogoutCleanup } from '@/shared/infrastructure/auth/clientLogoutCleanup';
+import { performClientLogoutCleanup } from '@/shared/auth/clientLogoutCleanup';
 
 interface UseNavbarLogoutArgs {
   closeAvatarMenu: () => void;

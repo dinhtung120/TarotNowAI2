@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 import { INVENTORY_API_ROUTE, inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
 import type { InventoryResponse } from '@/features/inventory/shared/inventoryTypes';
 

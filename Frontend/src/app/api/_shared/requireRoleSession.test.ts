@@ -2,10 +2,10 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { NextResponse } from 'next/server';
-import { getServerAccessToken, getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
+import { getServerAccessToken, getServerSessionSnapshot } from '@/shared/auth/serverAuth';
 import { requireRoleSession } from '@/app/api/_shared/requireRoleSession';
 
-vi.mock('@/shared/infrastructure/auth/serverAuth', () => ({
+vi.mock('@/shared/auth/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
  getServerSessionSnapshot: vi.fn(),
 }));

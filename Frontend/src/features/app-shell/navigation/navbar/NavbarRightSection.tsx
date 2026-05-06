@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react';
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import StreakBadge from '@/features/checkin/streak/StreakBadge';
 import { MessageDropdown } from '@/features/chat/public';
 import { NotificationDropdown } from '@/features/notifications/public';

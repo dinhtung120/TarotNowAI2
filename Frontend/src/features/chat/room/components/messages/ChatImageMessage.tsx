@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 
 interface ChatImageMessageProps {
   imageUrl: string;

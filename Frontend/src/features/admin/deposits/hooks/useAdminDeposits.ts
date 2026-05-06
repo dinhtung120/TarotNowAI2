@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { listDeposits, processDeposit, type AdminDepositOrder } from '@/features/admin/deposits/actions/deposits';
 import { ADMIN_QUERY_POLICY } from '@/features/admin/shared/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 interface ConfirmModalState {
  isOpen: boolean;

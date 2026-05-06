@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 import { ReaderStatusIndicator } from '@/features/reader/directory/components/readers-directory/ReaderStatusIndicator';
 
 interface ReaderDetailHeaderProps {

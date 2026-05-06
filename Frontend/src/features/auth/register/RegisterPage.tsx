@@ -2,7 +2,7 @@
 
 import { FormProvider } from 'react-hook-form';
 import { Sparkles } from 'lucide-react';
-import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
+import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { useRegisterPage } from '@/features/auth/register/useRegisterPage';
 import { AuthErrorBanner } from '@/features/auth/shared/AuthErrorBanner';
 import RegisterConsentField from '@/features/auth/register/RegisterConsentField';

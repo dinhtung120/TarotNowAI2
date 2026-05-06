@@ -1,11 +1,11 @@
 'use server';
 
 import { getTranslations } from 'next-intl/server';
-import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { logger } from '@/shared/application/gateways/logger';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { getServerAccessToken } from '@/shared/gateways/serverAuth';
+import { logger } from '@/shared/gateways/logger';
+import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
 import type { RevealReadingRequest, RevealReadingResponse } from './types';
-import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
+import { invokeDomainCommand } from '@/shared/gateways/domainCommandRegistry';
 
 export async function revealReadingSession(data: RevealReadingRequest): Promise<ActionResult<RevealReadingResponse>> {
  const t = await getTranslations('ApiErrors');

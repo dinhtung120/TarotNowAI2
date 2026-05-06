@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
-import type { TarotCardMeta } from "@/shared/domain/tarotData";
-import { shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
+import type { TarotCardMeta } from "@/shared/models/tarotData";
+import { shouldUseUnoptimizedImage } from "@/shared/http/assetUrl";
 import { cn } from "@/lib/utils";
 
 interface CollectionZoomCardImageProps {

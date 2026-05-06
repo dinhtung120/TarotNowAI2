@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import { acquirePageScrollLock } from '@/shared/infrastructure/dom/scrollLock';
+import { acquirePageScrollLock } from '@/shared/dom/scrollLock';
 
 interface UseModalLifecycleArgs {
   isOpen: boolean;

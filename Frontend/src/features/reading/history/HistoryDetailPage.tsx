@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useHistoryDetailPage } from "@/features/reading/history/useHistoryDetailPage";
-import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
+import { useOptimizedNavigation } from "@/shared/navigation/useOptimizedNavigation";
 import { useAuthStore } from "@/features/auth/public";
 import { HistoryDetailAiSummary, HistoryDetailCardsGrid, HistoryDetailHeader, HistoryDetailStates } from "./components/detail";
 import { resolveSpreadName } from "./spreadLabels";

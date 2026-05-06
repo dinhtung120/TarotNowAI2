@@ -1,4 +1,4 @@
-import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import type { TarotCardMeta } from "@/shared/models/tarotData";
 import CollectionZoomCardCaption from "@/features/collection/cards/components/zoom-modal/CollectionZoomCardCaption";
 import CollectionZoomCardImage from "@/features/collection/cards/components/zoom-modal/CollectionZoomCardImage";
 import { cn } from "@/lib/utils";

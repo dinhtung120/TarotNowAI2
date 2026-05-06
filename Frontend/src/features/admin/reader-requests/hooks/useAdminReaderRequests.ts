@@ -8,7 +8,7 @@ import { listReaderRequests } from '@/features/admin/reader-requests/actions/rea
 import { processReaderRequest } from '@/features/admin/reader-requests/actions/reader-requests';
 import { ADMIN_QUERY_POLICY } from '@/features/admin/shared/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
-import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
+import { queryFnOrThrow } from '@/shared/utils/queryPolicy';
 
 export function useAdminReaderRequests() {
  const t = useTranslations('Admin');

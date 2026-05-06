@@ -5,11 +5,11 @@ import ts from 'typescript';
 import {
  findClientBoundaryViolation,
  findForbiddenFeatureLayerFolder,
+ findForbiddenSharedLayerFolder,
  findLine,
  findSensitiveStreamViolation,
  findUnclassifiedRuntimeFiles,
  isAllowedSharedFeatureImport,
- isSharedComponentsPath,
  isSharedImportingFeature,
  isTestFile,
  resolveLayer,
@@ -31,10 +31,11 @@ const unclassifiedRuntimeFiles = findUnclassifiedRuntimeFiles(sourceFiles);
 for (const relativePath of sourceFiles) {
  const sourceCode = readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
- if (isSharedComponentsPath(relativePath)) {
+ const forbiddenSharedLayer = findForbiddenSharedLayerFolder(relativePath);
+ if (forbiddenSharedLayer) {
   folderOwnershipViolations.push({
    file: relativePath,
-   message: 'src/shared/components is forbidden; use src/shared/ui, src/shared/app-shell, or an owning feature.',
+   message: `shared layer folder "${forbiddenSharedLayer}" is forbidden in Frontend; use top-level shared role folders instead.`,
   });
  }
 

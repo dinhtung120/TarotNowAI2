@@ -14,7 +14,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/infrastructure/auth/serverAuth.ts',
+  file: 'src/shared/auth/serverAuth.ts',
   thresholds: {
    statements: 70,
    branches: 55,
@@ -23,7 +23,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/application/gateways/domainCommandRegistry.ts',
+  file: 'src/shared/gateways/domainCommandRegistry.ts',
   thresholds: {
    statements: 65,
    branches: 55,
@@ -77,7 +77,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/application/hooks/useHydrateFormOnce.ts',
+  file: 'src/shared/hooks/useHydrateFormOnce.ts',
   thresholds: {
    statements: 90,
    branches: 80,
@@ -86,7 +86,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/application/hooks/useReconnectWakeup.ts',
+  file: 'src/shared/hooks/useReconnectWakeup.ts',
   thresholds: {
    statements: 90,
    branches: 80,
@@ -140,7 +140,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/application/hooks/usePresenceConnection.ts',
+  file: 'src/shared/hooks/usePresenceConnection.ts',
   thresholds: {
    statements: 70,
    branches: 50,

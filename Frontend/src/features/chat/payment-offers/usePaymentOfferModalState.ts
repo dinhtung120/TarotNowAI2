@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 function createPaymentOfferModalSchema(maxNoteLength: number) {

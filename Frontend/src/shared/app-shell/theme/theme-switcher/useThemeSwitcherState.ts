@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_THEME, isValidTheme, THEME_OPTIONS, type ThemeId } from "@/shared/domain/theme";
-import { applyTheme, resolveClientTheme } from "@/shared/infrastructure/theme/clientTheme";
+import { DEFAULT_THEME, isValidTheme, THEME_OPTIONS, type ThemeId } from "@/shared/models/theme";
+import { applyTheme, resolveClientTheme } from "@/shared/theme/clientTheme";
 
 export function useThemeSwitcherState() {
  const containerRef = useRef<HTMLDivElement>(null);
