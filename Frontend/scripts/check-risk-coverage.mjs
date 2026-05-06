@@ -59,7 +59,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/server/auth/redirectAuthenticatedAuthEntry.ts',
+  file: 'src/app/_shared/server/auth/redirectAuthenticatedAuthEntry.ts',
   thresholds: {
    statements: 85,
    branches: 75,
@@ -86,7 +86,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/hooks/useReconnectWakeup.ts',
+  file: 'src/features/chat/shared/hooks/useReconnectWakeup.ts',
   thresholds: {
    statements: 90,
    branches: 80,
@@ -140,7 +140,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/shared/hooks/usePresenceConnection.ts',
+  file: 'src/app/_shared/hooks/usePresenceConnection.ts',
   thresholds: {
    statements: 70,
    branches: 50,
