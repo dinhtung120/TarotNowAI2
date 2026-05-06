@@ -10,6 +10,8 @@ const PUBLIC_API_ACCESS_ALLOWLIST = new Set([
  'src/shared/infrastructure/http/clientJsonRequest.ts',
 ]);
 
+const forbiddenFeatureLayerFolders = new Set(['application', 'presentation', 'domain', 'infrastructure']);
+
 export function normalizePath(filePath) {
  return filePath.replace(/\\/g, '/');
 }
@@ -24,12 +26,47 @@ export function isClassifiedRuntimeTarget(filePath) {
  const normalized = normalizePath(filePath);
  return normalized === 'src/proxy.ts'
   || normalized.startsWith('src/app/')
-  || normalized.startsWith('src/components/')
   || normalized.startsWith('src/features/')
   || normalized.startsWith('src/i18n/')
   || normalized.startsWith('src/lib/')
-  || normalized.startsWith('src/shared/')
-  || normalized.startsWith('src/store/');
+  || normalized.startsWith('src/shared/');
+}
+
+export function findForbiddenFeatureLayerFolder(filePath) {
+ const normalized = normalizePath(filePath);
+ const parts = normalized.split('/');
+ const featuresIndex = parts.indexOf('features');
+ if (featuresIndex < 0 || parts[0] !== 'src') return null;
+
+ for (let index = featuresIndex + 2; index < parts.length - 1; index += 1) {
+  if (forbiddenFeatureLayerFolders.has(parts[index])) return parts[index];
+ }
+
+ return null;
+}
+
+export function isSharedComponentsPath(filePath) {
+ return normalizePath(filePath).startsWith('src/shared/components/');
+}
+
+export function isSharedImportingFeature(filePath, importPath) {
+ return normalizePath(filePath).startsWith('src/shared/') && importPath.startsWith('@/features/');
+}
+
+export function isAllowedSharedFeatureImport(filePath) {
+ const normalized = normalizePath(filePath);
+
+ return normalized.startsWith('src/shared/server/prefetch/')
+  || normalized === 'src/shared/server/auth/sessionHandshake.ts'
+  || normalized === 'src/shared/providers/AuthProvider.tsx'
+  || normalized === 'src/shared/hooks/useAuth.ts'
+  || normalized.startsWith('src/shared/infrastructure/auth/')
+  || normalized.startsWith('src/shared/infrastructure/navigation/')
+  || normalized.startsWith('src/shared/infrastructure/query/')
+  || normalized.startsWith('src/shared/application/actions/')
+  || normalized.startsWith('src/shared/application/gateways/')
+  || normalized.startsWith('src/shared/application/hooks/usePresenceConnection')
+  || normalized.startsWith('src/shared/app-shell/navigation/');
 }
 
 export function resolveLayer(filePath) {
@@ -37,24 +74,17 @@ export function resolveLayer(filePath) {
 
  if (normalized === 'src/proxy.ts') return 'presentation';
  if (normalized.startsWith('src/app/')) return 'presentation';
- if (normalized.startsWith('src/components/')) return 'presentation';
  if (normalized.startsWith('src/i18n/')) return 'application';
+ if (normalized === 'src/lib/utils' || normalized === 'src/lib/utils.ts') return 'application';
  if (normalized.startsWith('src/lib/')) return 'presentation';
 
- if (normalized.includes('/domain/')) return 'domain';
- if (normalized.includes('/application/')) return 'application';
- if (normalized.includes('/infrastructure/')) return 'infrastructure';
- if (normalized.includes('/presentation/')) return 'presentation';
+ if (normalized.startsWith('src/features/')) return 'application';
 
- if (normalized.startsWith('src/store/')) return 'application';
-
- if (/^src\/features\/[^/]+\/components\//.test(normalized)) return 'presentation';
- if (/^src\/features\/[^/]+\/hooks\//.test(normalized)) return 'application';
- if (/^src\/features\/[^/]+\/public\.ts$/.test(normalized)) return 'presentation';
- if (/^src\/features\/[^/]+\/types\//.test(normalized)) return 'application';
- if (/^src\/features\/[^/]+\/(types\.ts|.+\.types\.ts)$/.test(normalized)) return 'application';
-
- if (normalized.startsWith('src/shared/components/')) return 'presentation';
+ if (normalized.startsWith('src/shared/domain/')) return 'domain';
+ if (normalized.startsWith('src/shared/application/')) return 'application';
+ if (normalized.startsWith('src/shared/infrastructure/')) return 'infrastructure';
+ if (normalized.startsWith('src/shared/ui/')) return 'presentation';
+ if (normalized.startsWith('src/shared/app-shell/')) return 'presentation';
  if (normalized.startsWith('src/shared/providers/')) return 'presentation';
  if (normalized.startsWith('src/shared/hooks/')) return 'application';
  if (normalized.startsWith('src/shared/server/')) return 'infrastructure';

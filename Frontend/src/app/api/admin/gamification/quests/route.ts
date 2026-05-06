@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { requireAdminSession } from '@/app/api/admin/gamification/_shared';
-import type { AdminQuestDefinition } from '@/features/gamification/admin/application/adminGamification.types';
+import type { AdminQuestDefinition } from '@/features/admin/gamification/types/adminGamification.types';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 
 export async function GET(): Promise<NextResponse> {

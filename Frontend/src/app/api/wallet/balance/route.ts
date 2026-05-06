@@ -3,7 +3,7 @@ import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import type { WalletBalance } from '@/features/wallet/domain/types';
+import type { WalletBalance } from '@/features/wallet/shared/types';
 
 export async function GET(): Promise<NextResponse> {
  const token = await getServerAccessToken();

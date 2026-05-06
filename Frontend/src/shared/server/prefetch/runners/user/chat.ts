@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { listConversations } from '@/features/chat/application/actions';
+import { listConversations } from '@/features/chat/shared/actions';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { CHAT_INBOX_PREFETCH_STALE_MS } from '@/shared/server/prefetch/runners/user/shared';
 

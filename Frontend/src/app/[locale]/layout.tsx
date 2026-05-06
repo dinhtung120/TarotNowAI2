@@ -6,10 +6,10 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { pickClientMessages, ROOT_CLIENT_NAMESPACES } from "@/i18n/clientMessages";
-import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetManager";
+import ThemeStylesheetManager from "@/shared/app-shell/theme/ThemeStylesheetManager";
 import { DEFAULT_THEME, getThemeStylesheetHref, isValidTheme, THEME_COOKIE_KEY, type ThemeId } from "@/shared/domain/theme";
 import { AppAuthSessionManager } from '@/features/auth/public';
-import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
+import AppQueryProvider from "@/shared/app-shell/common/AppQueryProvider";
 import "../globals.css";
 
 const geistSans = Geist({

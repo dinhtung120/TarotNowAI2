@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import LoadingSpinner from '@/shared/components/ui/LoadingSpinner';
+import LoadingSpinner from '@/shared/ui/LoadingSpinner';
 
 const ChatRoomPage = dynamic(
  () => import('@/features/chat/public').then((m) => m.ChatRoomPage),

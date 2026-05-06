@@ -30,7 +30,7 @@ export default defineConfig({
      statements: 90,
      branches: 80,
     },
-    'src/features/wallet/application/actions/deposit/user-orders.ts': {
+    'src/features/wallet/deposit/actions/user-orders.ts': {
      statements: 75,
      branches: 60,
     },

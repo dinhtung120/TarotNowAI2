@@ -1,5 +1,7 @@
 {
   "ratchetLimit": 100,
   "generatedAt": "2026-04-28",
-  "entries": {}
+  "entries": {
+    "src/features/collection/cards/components/zoom-modal/CollectionZoomCardImage.tsx": 102
+  }
 }

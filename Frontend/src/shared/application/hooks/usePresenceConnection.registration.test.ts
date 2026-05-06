@@ -4,8 +4,8 @@ import type { QueryClient } from '@tanstack/react-query';
 import { registerPresenceConnectionHandlers } from '@/shared/application/hooks/usePresenceConnection.registration';
 import { invalidateUserStateQueries } from '@/shared/application/gateways/invalidateUserStateQueries';
 import { performClientLogoutCleanup } from '@/shared/application/gateways/clientLogoutCleanup';
-import { useWalletStore } from '@/store/walletStore';
-import { useAuthStore } from '@/store/authStore';
+import { useWalletStore } from '@/features/wallet/shared/walletStore';
+import { useAuthStore } from '@/features/auth/session/authStore';
 
 vi.mock('@/shared/application/gateways/logger', () => ({
  logger: {
@@ -31,13 +31,13 @@ vi.mock('@/shared/application/gateways/inventoryRealtimeDedup', () => ({
  shouldSkipRealtimeInventoryInvalidation: vi.fn(() => false),
 }));
 
-vi.mock('@/store/walletStore', () => ({
+vi.mock('@/features/wallet/shared/walletStore', () => ({
  useWalletStore: {
   getState: vi.fn(),
  },
 }));
 
-vi.mock('@/store/authStore', () => ({
+vi.mock('@/features/auth/session/authStore', () => ({
  useAuthStore: {
   getState: vi.fn(),
  },

@@ -3,7 +3,7 @@
 import {
  mapReadersFromHomeSnapshot,
  type HomeSnapshotDto,
-} from '@/features/reader/application/homeSnapshotMapper';
+} from '@/features/reader/profile/homeSnapshotMapper';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 

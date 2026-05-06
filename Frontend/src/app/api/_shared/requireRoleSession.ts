@@ -5,7 +5,7 @@ import {
  getServerAccessToken,
  getServerSessionSnapshot,
 } from '@/shared/infrastructure/auth/serverAuth';
-import type { UserProfile } from '@/features/auth/domain/types';
+import type { UserProfile } from '@/features/auth/session/types';
 
 function normalizeRole(role: string | undefined): string {
  return role?.trim().toLowerCase() ?? '';

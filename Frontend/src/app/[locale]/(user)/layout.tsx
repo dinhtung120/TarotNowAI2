@@ -1,11 +1,10 @@
 import { Suspense, type ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { AppNavbar } from '@/features/auth/public';
+import { AppNavbar, AuthBootstrap } from '@/features/auth/public';
 import { WalletStoreBridge } from '@/features/wallet/public';
-import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
-import UserLayout from '@/shared/components/layout/UserLayout';
-import { UserSegmentMainSkeleton } from '@/shared/components/loading/segment-skeletons';
+import UserLayout from '@/shared/app-shell/layout/UserLayout';
+import { UserSegmentMainSkeleton } from '@/shared/app-shell/loading/segment-skeletons';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchUserSegmentShell } from '@/shared/server/prefetch/runners';
 import { pickClientMessages, USER_CLIENT_NAMESPACES } from '@/i18n/clientMessages';

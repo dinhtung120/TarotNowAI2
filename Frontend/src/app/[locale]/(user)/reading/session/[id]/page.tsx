@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import LoadingSpinner from "@/shared/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 
 const ReadingSessionPage = dynamic(
  () => import('@/features/reading/public').then((m) => m.ReadingSessionPage),

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import type { ReadingSetupSnapshotDto } from '@/shared/application/actions/reading-setup-snapshot';
+import type { ReadingSetupSnapshotDto } from '@/features/reading/setup/reading-setup-snapshot';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 

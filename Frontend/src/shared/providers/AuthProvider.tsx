@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { registerAuthQueryBridge } from '@/store/authStore';
+import { registerAuthQueryBridge } from '@/features/auth/session/authStore';
 
 interface AuthProviderProps {
  children: ReactNode;

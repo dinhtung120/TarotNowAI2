@@ -1,7 +1,10 @@
-export { default as AppNavbar } from '@/features/auth/presentation/components/AppNavbar';
-export { default as AppAuthSessionManager } from '@/features/auth/presentation/components/AppAuthSessionManager';
-export { default as ForgotPasswordPage } from '@/features/auth/presentation/ForgotPasswordPage';
-export { default as LoginPage } from '@/features/auth/presentation/LoginPage';
-export { default as RegisterPage } from '@/features/auth/presentation/RegisterPage';
-export { default as ResetPasswordPage } from '@/features/auth/presentation/ResetPasswordPage';
-export { default as VerifyEmailPage } from '@/features/auth/presentation/VerifyEmailPage';
+export { default as LoginPage } from './login/LoginPage';
+export { default as RegisterPage } from './register/RegisterPage';
+export { default as ForgotPasswordPage } from './recovery/ForgotPasswordPage';
+export { default as ResetPasswordPage } from './recovery/ResetPasswordPage';
+export { default as VerifyEmailPage } from './verify-email/VerifyEmailPage';
+export { default as AppAuthSessionManager } from './session/AppAuthSessionManager';
+export { default as AppNavbar } from './session/AppNavbar';
+export { default as AuthBootstrap } from './session/components/AuthBootstrap';
+export type { AuthResponse, UserProfile } from './session/types';
+export { useAuthStore } from './session/authStore';

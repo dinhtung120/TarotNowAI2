@@ -3,10 +3,10 @@
 import { getServerAccessToken } from "@/shared/application/gateways/serverAuth";
 import { serverHttpRequest } from "@/shared/application/gateways/serverHttpClient";
 import { actionFail, actionOk, type ActionResult } from "@/shared/domain/actionResult";
-import type { WalletBalance } from "@/features/wallet/domain/types";
-import type { IStreakStatusResult } from "@/features/checkin/types/checkin.types";
-import type { ListConversationsResult } from "@/features/chat/application/actions";
-import type { NotificationListResponse } from "@/features/notifications/application/actions/types";
+import type { WalletBalance } from "@/features/wallet/shared/types";
+import type { IStreakStatusResult } from "@/features/checkin/streak/checkin.types";
+import type { ListConversationsResult } from "@/features/chat/shared/actions";
+import type { NotificationListResponse } from "@/features/notifications/shared/actions/types";
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 

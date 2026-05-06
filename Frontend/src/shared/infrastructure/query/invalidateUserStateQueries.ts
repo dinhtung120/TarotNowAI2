@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { gamificationKeys } from '@/features/gamification/application/gamificationQueryKeys';
-import { gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
+import { gamificationKeys } from '@/features/gamification/shared/gamificationQueryKeys';
+import { gachaQueryKeys } from '@/features/gacha/shared/gachaConstants';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 const GACHA_HISTORY_QUERY_KEY = [...gachaQueryKeys.all, 'history'] as const;

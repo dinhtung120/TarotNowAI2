@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UserProfile } from '@/features/auth/domain/types';
+import type { UserProfile } from '@/features/auth/session/types';
 import {
  loginAction,
  logoutAction,
  refreshAccessTokenAction,
-} from '@/features/auth/application/actions';
+} from '@/features/auth/shared';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import {
  getClientSessionSnapshot,
@@ -15,7 +15,7 @@ import {
 } from '@/shared/application/gateways/clientSessionSnapshot';
 import { performClientLogoutCleanup } from '@/shared/application/gateways/clientLogoutCleanup';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/features/auth/session/authStore';
 
 interface LoginPayload {
  emailOrUsername: string;

@@ -3,12 +3,12 @@ import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
 import {
  getHistoryDetailAction,
  getHistorySessionsAction,
-} from '@/features/reading/application/actions/history';
+} from '@/features/reading/history/actions';
 import {
  HISTORY_PAGE_SIZE,
  historyDetailQueryKey,
  historySessionsListQueryKey,
-} from '@/features/reading/history/domain/historyQueryKeys';
+} from '@/features/reading/history/historyQueryKeys';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 
 export async function prefetchReadingHistoryListPage(qc: QueryClient): Promise<void> {

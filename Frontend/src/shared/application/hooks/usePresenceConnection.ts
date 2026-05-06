@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/features/auth/session/authStore';
 import { logger } from '@/shared/application/gateways/logger';
 import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
 import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';

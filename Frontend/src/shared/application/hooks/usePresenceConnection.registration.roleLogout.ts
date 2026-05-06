@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/features/auth/session/authStore';
 import { routing } from '@/i18n/routing';
 import { performClientLogoutCleanup } from '@/shared/application/gateways/clientLogoutCleanup';
 

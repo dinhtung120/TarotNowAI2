@@ -1,11 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
+import { gachaQueryKeys } from '@/features/gacha/shared/gachaConstants';
 import {
  fetchGachaHistoryServer,
  fetchGachaPoolOddsServer,
  fetchGachaPoolsServer,
-} from '@/shared/infrastructure/gacha/gachaServerActions';
-import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
+} from '@/features/gacha/shared/gachaServerActions';
+import type { GachaPool } from '@/features/gacha/shared/gachaTypes';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 
 async function gachaPoolsQueryFn() {

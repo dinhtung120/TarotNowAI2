@@ -3,7 +3,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { applyWalletDelta, createPresenceWalletRefreshScheduler } from '@/shared/application/hooks/usePresenceConnection.registration.wallet';
 import { createPresenceInvalidationScheduler } from '@/shared/application/hooks/usePresenceConnection.registration.invalidationScheduler';
 import { createPresenceRoleChangeLogoutCoordinator } from '@/shared/application/hooks/usePresenceConnection.registration.roleLogout';
-import { createPresenceChatInvalidationSchedulers } from '@/shared/application/hooks/usePresenceConnection.registration.chatInvalidation';
+import { createPresenceChatInvalidationSchedulers } from '@/features/chat/realtime/usePresenceConnection.registration.chatInvalidation';
 import { registerPresenceDomainEventHandlers } from '@/shared/application/hooks/usePresenceConnection.registration.domainEvents';
 import { startPresenceHeartbeat } from '@/shared/application/hooks/usePresenceConnection.registration.heartbeat';
 import { createPresenceStatusObserverCoordinator } from '@/shared/application/hooks/usePresenceConnection.registration.statusObservers';

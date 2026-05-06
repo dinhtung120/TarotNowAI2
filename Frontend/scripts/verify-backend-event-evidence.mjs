@@ -21,15 +21,15 @@ const commandKeyViolations = requiredCommandKeys.filter((key) => {
 
 const expectedCommandUsage = [
  {
-  file: 'src/features/wallet/application/actions/withdrawal/admin.ts',
+  file: 'src/features/wallet/withdraw/actions/admin.ts',
   key: 'wallet.withdrawal.admin.process',
  },
  {
-  file: 'src/features/chat/application/actions/conversations.finance.ts',
+  file: 'src/features/chat/disputes/conversations.finance.ts',
   key: 'chat.dispute.resolve',
  },
  {
-  file: 'src/features/admin/application/actions/users.ts',
+  file: 'src/features/admin/users/actions/users.ts',
   key: 'admin.user.adjust-balance',
  },
  {
@@ -37,11 +37,11 @@ const expectedCommandUsage = [
   key: 'reading.session.init',
  },
  {
-  file: 'src/features/admin/application/actions/deposits.ts',
+  file: 'src/features/admin/deposits/actions/deposits.ts',
   key: 'wallet.deposit.admin.process',
  },
  {
-  file: 'src/features/admin/application/actions/reader-requests.ts',
+  file: 'src/features/admin/reader-requests/actions/reader-requests.ts',
   key: 'admin.reader-request.process',
  },
 ];
@@ -56,7 +56,7 @@ const usageViolations = expectedCommandUsage
  .filter(Boolean);
 
 const updateUserFlowSource = readFileSync(
- resolve(process.cwd(), 'src/features/admin/users/application/useAdminUsers.ts'),
+ resolve(process.cwd(), 'src/features/admin/users/hooks/useAdminUsers.ts'),
  'utf8',
 );
 const updateUserFlowViolation = updateUserFlowSource.includes('enforceMoneyEvent')

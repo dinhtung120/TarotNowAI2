@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import type { AuthResponse } from '@/features/auth/domain/types';
+import type { AuthResponse } from '@/features/auth/session/types';
 import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';

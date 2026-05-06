@@ -1,1 +1,1 @@
-export * from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
+export * from '@/features/inventory/shared/inventoryRealtimeDedup';

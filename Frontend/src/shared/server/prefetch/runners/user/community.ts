@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { getFeedAction } from '@/features/community/application/actions/communityActions';
-import type { CommunityFeedResponse } from '@/features/community/types';
+import { getFeedAction } from '@/features/community/shared/actions/communityActions';
+import type { CommunityFeedResponse } from '@/features/community/shared/types';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 
 async function prefetchCommunityFeedInfinite(qc: QueryClient, visibility: 'public' | 'private'): Promise<void> {

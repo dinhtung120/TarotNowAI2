@@ -53,7 +53,7 @@ vi.mock('@tanstack/react-query', () => ({
  useQueryClient: () => useQueryClient(),
 }));
 
-vi.mock('@/store/authStore', () => ({
+vi.mock('@/features/auth/session/authStore', () => ({
  useAuthStore: (selector: (state: { isAuthenticated: boolean }) => unknown) => useAuthStore(selector),
 }));
 

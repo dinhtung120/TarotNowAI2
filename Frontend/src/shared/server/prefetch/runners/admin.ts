@@ -1,13 +1,16 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { getAdminDashboardSummary, listDeposits, listReaderRequests, listUsers } from '@/features/admin/application/actions';
-import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
-import { listAdminDisputes } from '@/features/chat/application/actions';
-import { adminGamificationKeys } from '@/features/gamification/admin/application/adminGamificationKeys';
+import { getAdminDashboardSummary } from '@/features/admin/dashboard/actions/dashboard';
+import { listDeposits } from '@/features/admin/deposits/actions/deposits';
+import { listUsers } from '@/features/admin/users/actions/users';
+import { listReaderRequests } from '@/features/admin/reader-requests/actions/reader-requests';
+import { adminQueryKeys } from '@/features/admin/shared/adminQueryKeys';
+import { listAdminDisputes } from '@/features/chat/shared/actions';
+import { adminGamificationKeys } from '@/features/admin/gamification/adminGamificationKeys';
 import {
  fetchAdminGamificationAchievementsServer,
  fetchAdminGamificationQuestsServer,
  fetchAdminGamificationTitlesServer,
-} from '@/features/gamification/admin/infrastructure/adminGamificationServer';
+} from '@/features/admin/gamification/actions/adminGamificationServer';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { listWithdrawalQueue } from '@/features/wallet/public';
 import { logger } from '@/shared/application/gateways/logger';

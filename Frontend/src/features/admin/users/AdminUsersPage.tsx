@@ -1,0 +1,71 @@
+'use client';
+
+import { useAdminUsers } from '@/features/admin/users/hooks/useAdminUsers';
+import { cn } from '@/lib/utils';
+import { AdminUsersPageHeader } from './components/AdminUsersPageHeader';
+import { AdminUsersPageModals } from './components/AdminUsersPageModals';
+import { AdminUsersTable } from './components/AdminUsersTable';
+import type { AdminUsersTranslateFn } from './components/types';
+
+export default function AdminUsersPage() {
+ const {
+  t,
+  locale,
+  users,
+  totalCount,
+  page,
+  setPage,
+  searchTerm,
+  setSearchTerm,
+  loading,
+  listError,
+  addModal,
+  addForm,
+  setAddForm,
+  addFormErrors,
+  editModal,
+  editForm,
+  setEditForm,
+  editFormErrors,
+  actionLoading,
+  createLoading,
+  handleOpenAdd,
+  closeAddModal,
+  handleCreateUser,
+  handleOpenEdit,
+  closeEditModal,
+  handleSaveUser,
+ } = useAdminUsers();
+ const translate = t as AdminUsersTranslateFn;
+
+ return (
+  <div className={cn('space-y-8 pb-20 animate-in fade-in duration-700')}>
+   <AdminUsersPageModals
+    addModalProps={{ addModal, addForm, addFormErrors, closeAddModal, createLoading, onCreateUser: handleCreateUser, setAddForm, t: translate }}
+    editModalProps={{ actionLoading, closeEditModal, editForm, editFormErrors, editModal, onSaveUser: handleSaveUser, setEditForm, t: translate }}
+   />
+   <AdminUsersPageHeader
+    t={translate}
+    totalCount={totalCount}
+    searchTerm={searchTerm}
+    onOpenAdd={handleOpenAdd}
+    onSearchTermChange={(value) => {
+     setSearchTerm(value);
+     setPage(1);
+    }}
+   />
+   <AdminUsersTable
+    errorLabel={listError}
+    loading={loading}
+    locale={locale}
+    onEdit={handleOpenEdit}
+    onNextPage={() => setPage((currentPage) => currentPage + 1)}
+    onPrevPage={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+    page={page}
+    t={translate}
+    totalCount={totalCount}
+    users={users}
+   />
+  </div>
+ );
+}

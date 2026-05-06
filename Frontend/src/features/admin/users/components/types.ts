@@ -1,0 +1,54 @@
+import type { Dispatch, SetStateAction } from "react";
+import type { FieldErrors } from 'react-hook-form';
+import type { CreateUserParams, UpdateUserParams } from '@/features/admin/users/actions/users';
+import type { AdminUsersAddModalState, AdminUsersEditModalState, AdminUsersViewUser } from "@/features/admin/users/hooks/useAdminUsers";
+
+export type AdminUsersTranslateFn = (
+ key: string,
+ values?: Record<string, string | number>,
+) => string;
+
+export type SetAddUserForm = Dispatch<SetStateAction<CreateUserParams>>;
+export type SetEditUserForm = Dispatch<SetStateAction<UpdateUserParams>>;
+
+export interface AdminUsersAddModalProps {
+ addModal: AdminUsersAddModalState;
+ addForm: CreateUserParams;
+ addFormErrors: FieldErrors<CreateUserParams>;
+ closeAddModal: () => void;
+ createLoading: boolean;
+ onCreateUser: () => void | Promise<void>;
+ setAddForm: SetAddUserForm;
+ t: AdminUsersTranslateFn;
+}
+
+export interface AdminUsersEditModalProps {
+ actionLoading: boolean;
+ closeEditModal: () => void;
+ editForm: UpdateUserParams;
+ editFormErrors: FieldErrors<UpdateUserParams>;
+ editModal: AdminUsersEditModalState;
+ onSaveUser: () => void | Promise<void>;
+ setEditForm: SetEditUserForm;
+ t: AdminUsersTranslateFn;
+}
+
+export interface AdminUserTableRowProps {
+ locale: string;
+ onEdit: (user: AdminUsersViewUser) => void;
+ t: AdminUsersTranslateFn;
+ user: AdminUsersViewUser;
+}
+
+export interface AdminUsersTableProps {
+ errorLabel?: string;
+ loading: boolean;
+ locale: string;
+ onNextPage: () => void;
+ onEdit: (user: AdminUsersViewUser) => void;
+ onPrevPage: () => void;
+ page: number;
+ t: AdminUsersTranslateFn;
+ totalCount: number;
+ users: AdminUsersViewUser[];
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import type { InitReadingRequest, InitReadingResponse } from '@/features/reading/application/actions/types';
+import type { InitReadingRequest, InitReadingResponse } from '@/features/reading/shared/actions/types';
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 

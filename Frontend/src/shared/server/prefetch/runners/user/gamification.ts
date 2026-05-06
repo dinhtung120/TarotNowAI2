@@ -5,8 +5,8 @@ import {
  fetchGamificationLeaderboard,
  fetchGamificationQuests,
  fetchGamificationTitles,
-} from '@/features/gamification/application/gamificationServerActions';
-import { gamificationKeys } from '@/features/gamification/application/gamificationQueryKeys';
+} from '@/features/gamification/shared/gamificationServerActions';
+import { gamificationKeys } from '@/features/gamification/shared/gamificationQueryKeys';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 
 export async function prefetchGamificationHubPage(qc: QueryClient): Promise<void> {

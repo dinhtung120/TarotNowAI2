@@ -1,8 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { getUserCollection } from '@/features/collection/application/actions';
-import { getReadingSetupSnapshotAction } from '@/shared/application/actions/reading-setup-snapshot';
-import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
-import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
+import { getUserCollection } from '@/features/collection/cards/actions/actions';
+import { getReadingSetupSnapshotAction } from '@/features/reading/setup/reading-setup-snapshot';
+import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
+import { fetchInventoryServer } from '@/features/inventory/shared/inventoryServerActions';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 

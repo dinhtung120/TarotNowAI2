@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/readers/[id]/route';
-import { getReaderProfile } from '@/features/reader/application/actions';
+import { getReaderProfile } from '@/features/reader/shared';
 
-vi.mock('@/features/reader/application/actions', () => ({
+vi.mock('@/features/reader/shared', () => ({
  getReaderProfile: vi.fn(),
 }));
 

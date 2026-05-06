@@ -1,4 +1,4 @@
-import { ChatSegmentSkeleton } from '@/shared/components/loading/segment-skeletons';
+import { ChatSegmentSkeleton } from '@/shared/app-shell/loading/segment-skeletons';
 
 export default function ChatSegmentLoading() {
  return <ChatSegmentSkeleton />;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
+import type { GachaPool } from '@/features/gacha/shared/gachaTypes';
 import { buildProblemResponse, requireServerAccessToken } from '@/app/api/gacha/_shared';
 
 export async function GET(): Promise<NextResponse> {

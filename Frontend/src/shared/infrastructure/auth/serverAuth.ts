@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import type { UserProfile } from '@/features/auth/domain/types';
+import type { UserProfile } from '@/features/auth/session/types';
 import { AUTH_COOKIE, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';

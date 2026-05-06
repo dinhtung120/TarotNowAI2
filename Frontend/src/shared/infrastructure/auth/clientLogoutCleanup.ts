@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
-import { useWalletStore } from '@/store/walletStore';
+import { useAuthStore } from '@/features/auth/session/authStore';
+import { useWalletStore } from '@/features/wallet/shared/walletStore';
 import { invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
 
 export function performClientLogoutCleanup(queryClient: QueryClient): void {

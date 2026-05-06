@@ -6,7 +6,7 @@ import {
  AdminLayoutShell,
  type AdminLayoutLabels,
 } from '@/features/admin/public';
-import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
+import { AuthBootstrap } from '@/features/auth/public';
 import { ADMIN_CLIENT_NAMESPACES, pickClientMessages } from '@/i18n/clientMessages';
 import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
 

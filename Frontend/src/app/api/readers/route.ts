@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import { listReaders } from '@/features/reader/application/actions';
+import { listReaders } from '@/features/reader/shared';
 import { resolveActionFailureStatus } from '@/shared/domain/actionResult';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

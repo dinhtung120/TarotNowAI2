@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import AdminRouteLoadingFallback from '@/shared/components/loading/AdminRouteLoadingFallback';
+import AdminRouteLoadingFallback from '@/shared/app-shell/loading/AdminRouteLoadingFallback';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchAdminDisputesPage } from '@/shared/server/prefetch/runners';
 

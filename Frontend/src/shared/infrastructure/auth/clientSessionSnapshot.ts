@@ -1,6 +1,6 @@
 'use client';
 
-import type { UserProfile } from '@/features/auth/domain/types';
+import type { UserProfile } from '@/features/auth/session/types';
 import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import { fetchWithTimeout } from '@/shared/infrastructure/http/clientFetch';
 

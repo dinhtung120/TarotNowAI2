@@ -4,7 +4,7 @@ import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import {
  type ServerSessionSnapshot,
 } from '@/shared/infrastructure/auth/serverAuth';
-import type { UserProfile } from '@/features/auth/domain/types';
+import type { UserProfile } from '@/features/auth/session/types';
 import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
 import { isServerDocumentNavigationRequest } from '@/shared/server/auth/navigationRequest';
 

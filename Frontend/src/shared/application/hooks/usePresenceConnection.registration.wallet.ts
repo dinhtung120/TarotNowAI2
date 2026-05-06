@@ -1,4 +1,4 @@
-import { useWalletStore } from '@/store/walletStore';
+import { useWalletStore } from '@/features/wallet/shared/walletStore';
 
 const WALLET_REFRESH_MIN_INTERVAL_MS = 2_000;
 

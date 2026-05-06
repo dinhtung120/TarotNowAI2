@@ -1,11 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { routing } from '@/i18n/routing';
-import { gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
+import { gachaQueryKeys } from '@/features/gacha/shared/gachaConstants';
 import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
+import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
 import { isPrefetchBlocked } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/features/auth/session/authStore';
 
 interface RouteQuerySpec {
  queryKey: readonly unknown[];

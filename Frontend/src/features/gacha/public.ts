@@ -1,2 +1,12 @@
-export { default as GachaHistoryPage } from '@/features/gacha/presentation/GachaHistoryPage';
-export { default as GachaPage } from '@/features/gacha/presentation/GachaPage';
+export { default as GachaPage } from './play/GachaPage';
+export { default as GachaPageClient } from './play/GachaPageClient';
+export { default as GachaHistoryPage } from './history/GachaHistoryPage';
+export { default as GachaHistoryPageClient } from './history/GachaHistoryPageClient';
+export { default as GachaHistoryPreview } from './history/GachaHistoryPreview';
+export { default as GachaResultModal } from './result/GachaResultModal';
+export * from './shared/gachaTypes';
+export * from './shared/gachaConstants';
+export { useGacha } from './shared/useGacha';
+export { useGachaHistory } from './shared/useGachaHistory';
+export { usePullGacha } from './shared/usePullGacha';
+export { shouldSkipRealtimeGachaInvalidation, markLocalGachaCacheSynced } from './shared/gachaRealtimeDedup';

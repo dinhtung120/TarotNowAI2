@@ -32,7 +32,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/admin/application/actions/users.ts',
+  file: 'src/features/admin/users/actions/users.ts',
   thresholds: {
    statements: 45,
    branches: 30,
@@ -41,7 +41,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/wallet/application/actions/deposit/user-orders.ts',
+  file: 'src/features/wallet/deposit/actions/user-orders.ts',
   thresholds: {
    statements: 75,
    branches: 60,
@@ -50,7 +50,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/store/authStore.ts',
+  file: 'src/features/auth/session/authStore.ts',
   thresholds: {
    statements: 75,
    branches: 60,
@@ -68,7 +68,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/notifications/application/notificationCache.ts',
+  file: 'src/features/notifications/shared/notificationCache.ts',
   thresholds: {
    statements: 90,
    branches: 80,
@@ -122,7 +122,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/gamification/admin/application/adminGamificationFormSchema.ts',
+  file: 'src/features/admin/gamification/schemas/adminGamificationFormSchema.ts',
   thresholds: {
    statements: 75,
    branches: 60,
@@ -131,7 +131,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/chat/application/chat-connection/useChatSignalRLifecycle.ts',
+  file: 'src/features/chat/room/hooks/useChatSignalRLifecycle.ts',
   thresholds: {
    statements: 55,
    branches: 40,
@@ -149,7 +149,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/notifications/application/useNotificationDropdown.ts',
+  file: 'src/features/notifications/dropdown/hooks/useNotificationDropdown.ts',
   thresholds: {
    statements: 75,
    branches: 60,
@@ -158,7 +158,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/notifications/application/useNotificationsPage.ts',
+  file: 'src/features/notifications/list/useNotificationsPage.ts',
   thresholds: {
    statements: 80,
    branches: 60,
@@ -167,7 +167,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/profile/application/useProfilePage.ts',
+  file: 'src/features/profile/overview/useProfilePage.ts',
   thresholds: {
    statements: 55,
    branches: 40,
@@ -176,7 +176,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/admin/system-configs/application/useAdminSystemConfigs.ts',
+  file: 'src/features/admin/system-configs/hooks/useAdminSystemConfigs.ts',
   thresholds: {
    statements: 55,
    branches: 40,
@@ -185,7 +185,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/admin/promotions/application/useAdminPromotions.ts',
+  file: 'src/features/admin/promotions/hooks/useAdminPromotions.ts',
   thresholds: {
    statements: 55,
    branches: 40,
@@ -194,7 +194,7 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/gamification/admin/application/useAdminGamification.ts',
+  file: 'src/features/admin/gamification/hooks/useAdminGamification.ts',
   thresholds: {
    statements: 75,
    branches: 50,

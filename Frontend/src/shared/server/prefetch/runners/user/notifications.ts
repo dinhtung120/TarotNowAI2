@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { getNotifications } from '@/features/notifications/application/actions';
+import { getNotifications } from '@/features/notifications/shared/actions';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 export async function prefetchNotificationsPage(qc: QueryClient): Promise<void> {

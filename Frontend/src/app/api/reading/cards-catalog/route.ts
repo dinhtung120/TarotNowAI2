@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import type { CardCatalogItemDto } from '@/features/reading/application/actions/cards-catalog';
+import type { CardCatalogItemDto } from '@/features/reading/tarot-catalog/actions/cards-catalog';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 
 export async function GET(): Promise<NextResponse> {

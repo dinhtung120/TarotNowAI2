@@ -43,7 +43,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["src/shared/infrastructure/gacha/**/*.{ts,tsx}"],
+    files: ["src/features/gacha/shared/**/*.{ts,tsx}"],
     rules: {
       "no-param-reassign": ["error", { props: true }],
     },

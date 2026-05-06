@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import type { GachaPoolOdds } from '@/shared/infrastructure/gacha/gachaTypes';
+import type { GachaPoolOdds } from '@/features/gacha/shared/gachaTypes';
 import { buildProblemResponse, requireServerAccessToken } from '@/app/api/gacha/_shared';
 
 interface RouteParams {

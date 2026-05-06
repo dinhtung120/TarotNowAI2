@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import type { NotificationListResponse } from '@/features/notifications/application/actions/types';
+import type { NotificationListResponse } from '@/features/notifications/shared/actions/types';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 

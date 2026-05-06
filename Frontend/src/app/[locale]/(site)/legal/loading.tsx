@@ -1,4 +1,4 @@
-import LoadingSpinner from '@/shared/components/ui/LoadingSpinner';
+import LoadingSpinner from '@/shared/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
 
 export default function LegalRouteLoading() {

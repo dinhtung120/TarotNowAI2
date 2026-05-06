@@ -1,1 +1,1 @@
-export * from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
+export * from '@/features/gacha/shared/gachaRealtimeDedup';

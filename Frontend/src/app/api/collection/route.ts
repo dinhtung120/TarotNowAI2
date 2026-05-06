@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import type { UserCollectionDto } from '@/features/collection/application/actions';
+import type { UserCollectionDto } from '@/features/collection/cards/actions/actions';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 

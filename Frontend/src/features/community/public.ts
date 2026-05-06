@@ -1,1 +1,3 @@
-export { FeedPage } from '@/features/community/components/FeedPage';
+export { FeedPage } from './feed/components/FeedPage';
+export * from './shared/actions/communityActions';
+export * from './shared/types';

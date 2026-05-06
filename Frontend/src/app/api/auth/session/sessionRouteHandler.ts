@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { UserProfile } from '@/features/auth/domain/types';
+import type { UserProfile } from '@/features/auth/session/types';
 import { AUTH_ERROR, isTerminalAuthError } from '@/shared/domain/authErrors';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import {

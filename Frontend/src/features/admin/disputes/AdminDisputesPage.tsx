@@ -1,0 +1,71 @@
+'use client';
+
+import { Scale } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { AdminDisputeItemDto } from '@/features/chat/shared/actions';
+import { useAdminDisputes } from '@/features/admin/disputes/hooks/useAdminDisputes';
+import { AdminDisputeCard } from '@/features/admin/disputes/components/AdminDisputeCard';
+import { AdminDisputesEmptyState } from '@/features/admin/disputes/components/AdminDisputesEmptyState';
+import { AdminDisputesLoadingState } from '@/features/admin/disputes/components/AdminDisputesLoadingState';
+import { SectionHeader } from '@/shared/ui';
+import { cn } from '@/lib/utils';
+
+export default function AdminDisputesPage() {
+ const t = useTranslations('Admin');
+ const {
+  disputes,
+  loading,
+  error,
+  processingId,
+  noteById,
+  setNoteById,
+  splitPercentById,
+  setSplitPercentById,
+  defaultSplitPercentToReader,
+  resolveDispute,
+ } = useAdminDisputes(t);
+
+ const renderDisputeCard = (item: AdminDisputeItemDto) => {
+  const note = noteById[item.id] ?? '';
+  const splitPercent = splitPercentById[item.id] ?? defaultSplitPercentToReader;
+  return (
+   <AdminDisputeCard
+    key={item.id}
+    amountLabel={t('disputes.card.amount')}
+    isProcessing={processingId === item.id}
+    item={item}
+    itemIdLabel={t('disputes.card.item_id')}
+    note={note}
+    notePlaceholder={t('disputes.form.note_placeholder')}
+    onChangeNote={(value) => setNoteById((prev) => ({ ...prev, [item.id]: value }))}
+    onChangeSplitPercent={(value) => setSplitPercentById((prev) => ({ ...prev, [item.id]: value }))}
+    onRelease={() => resolveDispute(item.id, 'release')}
+    onRefund={() => resolveDispute(item.id, 'refund')}
+    onSplit={() => resolveDispute(item.id, 'split')}
+    payerLabel={t('disputes.card.payer')}
+    readerLabel={t('disputes.card.reader')}
+    refundLabel={t('disputes.form.refund_button')}
+    releaseLabel={t('disputes.form.release_button')}
+    splitLabel={t('disputes.form.split_button')}
+    splitPercent={splitPercent}
+    splitPercentLabel={t('disputes.form.split_percent_label')}
+   />
+  );
+ };
+
+ return (
+  <div className={cn('max-w-6xl mx-auto tn-admin-page-pad py-10 space-y-6')}>
+   <SectionHeader
+    tag={t('disputes.header.tag')}
+    tagIcon={<Scale className={cn('w-3 h-3 tn-text-danger')} />}
+    title={t('disputes.header.title')}
+    subtitle={t('disputes.header.subtitle')}
+    className={cn('mb-0')}
+   />
+   {loading ? <AdminDisputesLoadingState /> : null}
+   {!loading && error ? <AdminDisputesEmptyState label={error} /> : null}
+   {!loading && !error && disputes.length === 0 ? <AdminDisputesEmptyState label={t('disputes.empty')} /> : null}
+   {!loading && !error && disputes.length > 0 ? <div className={cn('space-y-4')}>{disputes.map(renderDisputeCard)}</div> : null}
+  </div>
+ );
+}

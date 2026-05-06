@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import AdminRouteLoadingFallback from '@/shared/components/loading/AdminRouteLoadingFallback';
+import AdminRouteLoadingFallback from '@/shared/app-shell/loading/AdminRouteLoadingFallback';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import type { AdminSystemConfigItem } from '@/features/admin/public';

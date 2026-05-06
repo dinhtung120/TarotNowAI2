@@ -3,12 +3,12 @@ import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { INVENTORY_IDEMPOTENCY_HEADER } from '@/shared/infrastructure/inventory/inventoryConstants';
+import { INVENTORY_IDEMPOTENCY_HEADER } from '@/features/inventory/shared/inventoryConstants';
 import type {
  InventoryResponse,
  UseInventoryItemPayload,
  UseInventoryItemResponse,
-} from '@/shared/infrastructure/inventory/inventoryTypes';
+} from '@/features/inventory/shared/inventoryTypes';
 
 export async function GET(): Promise<NextResponse> {
  const token = await getServerAccessToken();

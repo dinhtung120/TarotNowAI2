@@ -4,12 +4,14 @@ import { dirname, extname, resolve } from 'node:path';
 import ts from 'typescript';
 import {
  findClientBoundaryViolation,
+ findForbiddenFeatureLayerFolder,
  findLine,
  findSensitiveStreamViolation,
  findUnclassifiedRuntimeFiles,
- isAllowedLayerException,
+ isAllowedSharedFeatureImport,
+ isSharedComponentsPath,
+ isSharedImportingFeature,
  isTestFile,
- layerOrder,
  resolveLayer,
 } from './lib/cleanArchitectureGuard.mjs';
 
@@ -19,16 +21,32 @@ const sourceFiles = globSync('src/**/*.{ts,tsx,mts}', {
  ignore: ['**/*.d.ts'],
 }).filter((path) => !isTestFile(path));
 
-const dependencyViolations = [];
-const domainPurityViolations = [];
+const folderOwnershipViolations = [];
+const sharedImportViolations = [];
 const clientBoundaryViolations = [];
 const sensitiveStreamViolations = [];
 const pagePublicApiViolations = [];
 const unclassifiedRuntimeFiles = findUnclassifiedRuntimeFiles(sourceFiles);
 
 for (const relativePath of sourceFiles) {
- const sourceLayer = resolveLayer(relativePath);
  const sourceCode = readFileSync(resolve(process.cwd(), relativePath), 'utf8');
+
+ if (isSharedComponentsPath(relativePath)) {
+  folderOwnershipViolations.push({
+   file: relativePath,
+   message: 'src/shared/components is forbidden; use src/shared/ui, src/shared/app-shell, or an owning feature.',
+  });
+ }
+
+ const forbiddenLayer = findForbiddenFeatureLayerFolder(relativePath);
+ if (forbiddenLayer) {
+  folderOwnershipViolations.push({
+   file: relativePath,
+   message: `feature layer folder "${forbiddenLayer}" is forbidden in Frontend; use feature/subfeature role folders instead.`,
+  });
+ }
+
+ const sourceLayer = resolveLayer(relativePath);
  const clientBoundaryViolation = findClientBoundaryViolation(relativePath, sourceCode);
  if (clientBoundaryViolation) {
   clientBoundaryViolations.push(clientBoundaryViolation);
@@ -57,36 +75,9 @@ for (const relativePath of sourceFiles) {
    });
   }
 
-  if (sourceLayer === 'domain' && isExternalImport(importPath)) {
-   domainPurityViolations.push({
+  if (isSharedImportingFeature(relativePath, importPath) && !isAllowedSharedFeatureImport(relativePath)) {
+   sharedImportViolations.push({
     file: relativePath,
-    importPath,
-    line: findLine(sourceCode, importPath),
-   });
-   continue;
-  }
-
-  const targetRelativePath = resolveImportTarget(relativePath, importPath);
-  if (!targetRelativePath) {
-   continue;
-  }
-
-  const targetLayer = resolveLayer(targetRelativePath);
-  if (!targetLayer) {
-   continue;
-  }
-
-  if (isAllowedLayerException(relativePath, sourceLayer, targetLayer)) {
-   continue;
-  }
-
-  const sourceRank = layerOrder[sourceLayer];
-  const targetRank = layerOrder[targetLayer];
-  if (sourceRank < targetRank) {
-   dependencyViolations.push({
-    file: relativePath,
-    sourceLayer,
-    targetLayer,
     importPath,
     line: findLine(sourceCode, importPath),
    });
@@ -96,8 +87,8 @@ for (const relativePath of sourceFiles) {
 
 if (
  unclassifiedRuntimeFiles.length > 0
- || dependencyViolations.length > 0
- || domainPurityViolations.length > 0
+ || folderOwnershipViolations.length > 0
+ || sharedImportViolations.length > 0
  || clientBoundaryViolations.length > 0
  || sensitiveStreamViolations.length > 0
  || pagePublicApiViolations.length > 0
@@ -111,18 +102,16 @@ if (
   }
  }
 
- if (dependencyViolations.length > 0) {
-  console.error('Layer direction violations:');
-  for (const violation of dependencyViolations) {
-   console.error(
-    `- ${violation.file}:${violation.line} (${violation.sourceLayer} -> ${violation.targetLayer}) import ${violation.importPath}`,
-   );
+ if (folderOwnershipViolations.length > 0) {
+  console.error('Folder ownership violations:');
+  for (const violation of folderOwnershipViolations) {
+   console.error(`- ${violation.file}: ${violation.message}`);
   }
  }
 
- if (domainPurityViolations.length > 0) {
-  console.error('Domain purity violations (external imports are forbidden in domain layer):');
-  for (const violation of domainPurityViolations) {
+ if (sharedImportViolations.length > 0) {
+  console.error('Shared code must not import feature code:');
+  for (const violation of sharedImportViolations) {
    console.error(`- ${violation.file}:${violation.line} import ${violation.importPath}`);
   }
  }

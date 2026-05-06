@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
+import { checkinQueryKeys } from '@/features/checkin/streak/checkinQueryKeys';
 import { getInitialMetadata } from '@/shared/application/actions/metadata';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
