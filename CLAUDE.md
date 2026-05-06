@@ -50,7 +50,6 @@ If this file conflicts with an enforced guard, follow the guard and report that 
 
 - App routes should import feature entry points through established public exports such as `@/features/*/public` when available.
 - Keep business/data orchestration outside routes and presentational components; use feature components/hooks for complex UI behavior.
-- Respect the frontend clean-architecture guard, including layer direction, domain purity, client/runtime boundaries, and sensitive EventSource/API path rules.
 - Use TanStack Query for server state and Zustand for local UI state when state management is needed.
 - New user-facing text must use the existing VI/EN/ZH localization approach with `locale → vi` fallback; do not migrate unrelated old hard-coded copy during small fixes.
 - Extract custom hooks for reused or complex effects, subscriptions, data fetching, debounce/throttle, infinite scroll, forms, or browser integration; keep trivial local UI state inline.
