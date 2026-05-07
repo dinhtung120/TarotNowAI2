@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_ERROR } from '@/shared/models/authErrors';
 import { AUTH_HEADER } from '@/shared/auth/authConstants';
 import { serverHttpRequest } from '@/shared/http/serverHttpClient';
-import { buildProblemResponse, clearAuthCookies, resolveDeviceIdFromRequest } from '@/app/api/auth/_shared';
+import { buildProblemResponse, clearAuthCookies, resolveDeviceIdFromRequest, sanitizeForwardedUserAgent } from '@/app/api/auth/_shared';
 
 interface LogoutPayload {
  revokeAll?: boolean;
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   headers: {
    Cookie: request.headers.get('cookie') ?? '',
    [AUTH_HEADER.DEVICE_ID]: deviceId,
-   [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
+   [AUTH_HEADER.FORWARDED_USER_AGENT]: sanitizeForwardedUserAgent(request.headers.get('user-agent')),
   },
   cache: 'no-store',
   fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,

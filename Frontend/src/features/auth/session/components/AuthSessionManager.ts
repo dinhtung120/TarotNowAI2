@@ -28,6 +28,16 @@ function isProtectedPath(pathname: string): boolean {
  return PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function buildLoginPathFromCurrentPath(pathname: string): string {
+ const normalizedPath = normalizePathname(pathname);
+ const firstSegment = normalizedPath.split('/')[1];
+ if (firstSegment === 'en' || firstSegment === 'zh' || firstSegment === 'vi') {
+  return `/${firstSegment}/login`;
+ }
+
+ return '/vi/login';
+}
+
 function resolveRefreshDelay(expiresInSeconds: number | undefined): number {
  if (typeof expiresInSeconds !== 'number' || !Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
   return DEFAULT_REFRESH_INTERVAL_MS;
@@ -109,7 +119,7 @@ export default function AuthSessionManager({
 
    const normalizedPath = normalizePathname(pathnameRef.current);
    if (!normalizedPath.includes('/login')) {
-    navigation.push('/login');
+    navigation.push(buildLoginPathFromCurrentPath(normalizedPath));
    }
   },
   [clearRefreshTimer, logout, navigation, queryClient],

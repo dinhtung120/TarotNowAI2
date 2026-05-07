@@ -8,6 +8,7 @@ import {
  clearAuthCookies,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
+ sanitizeForwardedUserAgent,
  setAccessCookie,
  setDeviceCookie,
  setRefreshCookieFromHeaders,
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   json: payload,
   headers: {
    [AUTH_HEADER.DEVICE_ID]: deviceId,
-   [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
+   [AUTH_HEADER.FORWARDED_USER_AGENT]: sanitizeForwardedUserAgent(request.headers.get('user-agent')),
   },
   cache: 'no-store',
   fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,

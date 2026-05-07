@@ -47,12 +47,16 @@ const matchesPrefix = (pathname: string, prefix: string): boolean =>
 
 const buildLoginPath = (locale: string): string => `/${locale}/login`;
 
-const clearAuthCookies = (response: NextResponse): void => {
+const shouldUseSecureCookie = (request: NextRequest): boolean =>
+ request.nextUrl.protocol === 'https:' || IS_PRODUCTION;
+
+const clearAuthCookies = (response: NextResponse, request: NextRequest): void => {
+ const secure = shouldUseSecureCookie(request);
  response.cookies.set({
   name: AUTH_COOKIE.ACCESS,
   value: '',
   httpOnly: true,
-  secure: true,
+  secure,
   sameSite: 'strict',
   path: '/',
   ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
@@ -62,7 +66,7 @@ const clearAuthCookies = (response: NextResponse): void => {
   name: AUTH_COOKIE.REFRESH,
   value: '',
   httpOnly: true,
-  secure: true,
+  secure,
   sameSite: 'strict',
   path: '/',
   ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
@@ -177,13 +181,16 @@ const buildContentSecurityPolicy = (nonce: string): string => {
  const scriptSrc = IS_PRODUCTION
   ? `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com`
   : `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' https://static.cloudflareinsights.com`;
+ const imgSrc = IS_PRODUCTION
+  ? "img-src 'self' data: blob: https:"
+  : "img-src 'self' data: blob: https: http:";
 
  const cspParts = [
   "default-src 'self'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob: https: http:",
+  imgSrc,
   "font-src 'self' data: https:",
   "media-src 'self' blob: data:",
   styleSrc,
@@ -233,7 +240,7 @@ export default async function proxy(request: NextRequest) {
   const hasSessionCookie = Boolean(accessToken || refreshToken);
   if (!hasSessionCookie) {
    const response = NextResponse.redirect(new URL(buildLoginPath(locale), request.url));
-   clearAuthCookies(response);
+   clearAuthCookies(response, request);
    return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
   }
  }

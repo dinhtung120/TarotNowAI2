@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
-import { proxy } from '../proxy';
+import proxy from './proxy';
+
+vi.mock('@/shared/http/apiUrl', () => ({
+ getPublicApiOrigin: () => 'https://api.tarotnow.test',
+}));
 
 vi.mock('next-intl/middleware', () => ({
  default: () => (request: NextRequest) => {
@@ -19,8 +23,15 @@ vi.mock('@/i18n/routing', () => ({
  },
 }));
 
+const originalNodeEnv = process.env.NODE_ENV;
+
+afterEach(() => {
+ process.env.NODE_ENV = originalNodeEnv;
+ vi.resetModules();
+});
+
 function createRequest(url: string, cookieHeader?: string): NextRequest {
- const headers = new Headers();
+ const headers = new Headers({ accept: 'text/html' });
  if (cookieHeader) {
   headers.set('cookie', cookieHeader);
  }
@@ -29,40 +40,50 @@ function createRequest(url: string, cookieHeader?: string): NextRequest {
 }
 
 describe('auth middleware', () => {
- it('redirects locale-less root path to default locale', () => {
-  const response = proxy(createRequest('https://www.tarotnow.xyz/'));
+ it('redirects locale-less root path to default locale', async () => {
+  const response = await proxy(createRequest('https://www.tarotnow.xyz/'));
   expect(response.status).toBe(307);
   expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi');
  });
 
- it('redirects protected route to login when no auth cookies exist', () => {
-  const response = proxy(createRequest('https://www.tarotnow.xyz/vi/wallet'));
+ it('redirects protected route to login when no auth cookies exist', async () => {
+  const response = await proxy(createRequest('https://www.tarotnow.xyz/vi/wallet'));
   expect(response.status).toBe(307);
   expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi/login');
  });
 
- it('redirects protected route to handshake when refresh cookie exists but access cookie is missing', () => {
-  const response = proxy(
+ it('allows protected document requests when a refresh cookie exists', async () => {
+  const response = await proxy(
    createRequest('https://www.tarotnow.xyz/vi/wallet', 'refreshToken=refresh-value'),
   );
 
-  expect(response.status).toBe(307);
-  expect(response.headers.get('location')).toBe(
-   'https://www.tarotnow.xyz/api/auth/session/handshake?next=%2Fvi%2Fwallet',
-  );
- });
-
- it('redirects authenticated users away from auth entry routes', () => {
-  const response = proxy(
-   createRequest('https://www.tarotnow.xyz/vi/login', 'accessToken=access-value'),
-  );
-
-  expect(response.status).toBe(307);
-  expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi');
- });
-
- it('skips api routes', () => {
-  const response = proxy(createRequest('https://www.tarotnow.xyz/vi/api/user-context/metadata'));
   expect(response.status).toBe(200);
+ });
+
+
+ it('skips api routes', async () => {
+  const response = await proxy(createRequest('https://www.tarotnow.xyz/vi/api/user-context/metadata'));
+  expect(response.status).toBe(200);
+ });
+
+ it('clears auth cookies without Secure on http requests', async () => {
+  const response = await proxy(createRequest('http://localhost:3000/vi/wallet'));
+  const setCookie = response.headers.get('set-cookie') ?? '';
+
+  expect(setCookie).toContain('accessToken=');
+  expect(setCookie).toContain('refreshToken=');
+  expect(setCookie).not.toContain('Secure');
+ });
+
+ it('omits http image source from production CSP', async () => {
+  process.env.NODE_ENV = 'production';
+  vi.resetModules();
+  const { default: productionProxy } = await import('./proxy');
+
+  const response = await productionProxy(createRequest('https://www.tarotnow.xyz/vi'));
+  const csp = response.headers.get('Content-Security-Policy') ?? '';
+
+  expect(csp).toContain("img-src 'self' data: blob: https:");
+  expect(csp).not.toContain("img-src 'self' data: blob: https: http:");
  });
 });

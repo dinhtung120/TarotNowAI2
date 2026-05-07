@@ -10,6 +10,7 @@ import {
  normalizeAuthTokenCookieValue,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
+ sanitizeForwardedUserAgent,
  setAccessCookie,
  setDeviceCookie,
  setRefreshCookieFromHeaders,
@@ -44,7 +45,7 @@ export async function executeRefreshRoute(request: NextRequest): Promise<NextRes
  }
 
  const deviceId = resolveDeviceIdFromRequest(request);
- const userAgent = request.headers.get('user-agent') ?? '';
+ const userAgent = sanitizeForwardedUserAgent(request.headers.get('user-agent'));
  const idempotencyKey = resolveRefreshIdempotencyKey(refreshToken, deviceId, userAgent);
 
  let result: Awaited<ReturnType<typeof serverHttpRequest<AuthResponse>>>;

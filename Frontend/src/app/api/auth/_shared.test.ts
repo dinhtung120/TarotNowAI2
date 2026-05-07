@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NextResponse } from 'next/server';
 import {
  normalizeAuthTokenCookieValue,
+ sanitizeForwardedUserAgent,
  setRefreshCookieFromHeaders,
 } from '@/app/api/auth/_shared';
 
@@ -27,5 +28,18 @@ describe('auth cookie helpers', () => {
   const downstreamCookie = response.headers.get('set-cookie') ?? '';
   expect(downstreamCookie).toContain('refreshToken=%2BfVCUkB%2FE8HKLkbg1TEcOd8%3D%3D');
   expect(downstreamCookie).not.toContain('%252B');
+ });
+});
+
+describe('sanitizeForwardedUserAgent', () => {
+ it('strips control characters and trims whitespace', () => {
+  expect(sanitizeForwardedUserAgent('  Mozilla/5.0\r\nInjected: true\t ')).toBe('Mozilla/5.0Injected: true');
+ });
+
+ it('truncates long user agents', () => {
+  const result = sanitizeForwardedUserAgent('a'.repeat(300));
+
+  expect(result).toHaveLength(192);
+  expect(result).toBe('a'.repeat(192));
  });
 });
