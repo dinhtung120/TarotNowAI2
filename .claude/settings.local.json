@@ -1,20 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh *)",
-      "Read(//tmp/**)",
-      "Bash(python3 *)",
-      "Bash(grep *)",
-      "Bash(dotnet *)",
-      "Bash(npm *)",
-      "Bash(rg *)",
-      "Bash(git *)",
-      "Bash(curl *)",
-      "Bash(*)",
       "Read(*)",
       "Edit(*)",
-      "Bash(/usr/bin/find *)",
-      "Skill(code-review:code-review)"
+      "Bash(*)",
+      "Skill(*)",
+      "mcp__plugin_context7_*",
+      "mcp__plugin_playwright_*"
     ]
   }
 }
