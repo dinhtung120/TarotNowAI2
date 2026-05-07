@@ -4,7 +4,7 @@
 
 TarotNowAI2 already has a Playwright-based navigation benchmark in `Frontend/tests/tarotnow-navigation-benchmark.spec.ts`. It covers route discovery, logged-out/admin/reader scenarios, network tracking, request thresholds, slow request thresholds, paint metrics, duplicate requests, pending requests, and benchmark outputs.
 
-The performance work should extend this existing benchmark instead of replacing it. The goal is a repeatable audit and optimization loop for `https://www.tarotnow.xyz/vi`, including public and protected routes, with smaller feature-level reruns after each fix.
+The approved approach is a full production audit first, followed by evidence-based hotspot fixes, targeted reruns, deployment verification, and a final full production re-audit. The work should extend the existing benchmark instead of replacing it. The target is `https://www.tarotnow.xyz/vi`, including public and protected routes, with smaller feature-level reruns after each fix.
 
 ## Goals
 
@@ -75,14 +75,16 @@ Generate root-level `PERFORMANCE-AUDIT.md` from benchmark data. The report must 
 
 Use small evidence-based loops:
 
-1. Run baseline benchmark.
-2. Analyze report and group hotspots into shared, feature-specific, and asset/cache issues.
-3. Inspect code only for the hotspot areas identified by benchmark data.
-4. Apply minimal fixes.
-5. Run the corresponding feature benchmark.
-6. Broaden verification only when the fix touches shared paths.
-7. Commit, push, monitor GitHub Actions, and fix CI failures if any.
-8. After CI succeeds, rerun the full production benchmark and update `PERFORMANCE-AUDIT.md`.
+1. Run the full production benchmark with logged-out, admin, and tarot-reader scenarios.
+2. Generate and inspect `PERFORMANCE-AUDIT.md` from the fresh benchmark data.
+3. Analyze report and group hotspots into shared, feature-specific, and asset/cache issues.
+4. Inspect code only for the hotspot areas identified by benchmark data.
+5. Apply minimal fixes.
+6. Run the corresponding feature benchmark.
+7. Open the affected flows in a browser and compare manual observations with Playwright metrics.
+8. Broaden verification only when the fix touches shared paths.
+9. Commit, push, monitor GitHub Actions, and fix CI failures if any.
+10. After CI succeeds, rerun the full production benchmark and update `PERFORMANCE-AUDIT.md`.
 
 Optimization targets include:
 
@@ -100,7 +102,8 @@ Optimization targets include:
 - Do not make broad unrelated refactors.
 - Do not commit credentials, `.claude/settings.local.json`, temporary lock files, local-only config, or large benchmark artifacts unless explicitly needed and safe.
 - Use provided production credentials only through environment variables or interactive session state, never in repository files or reports.
-- Keep production side effects minimal. Prefer read/open/toggle probes. If a route requires write-like probing, keep it bounded and record it in coverage notes.
+- Production full audit is approved for this cycle, including bounded login and reading-session creation for coverage.
+- Keep production side effects minimal beyond the approved benchmark probes. Prefer read/open/toggle probes where possible, and record write-like probing in coverage notes.
 - Keep recursive crawling bounded by route/page limits.
 
 ## Verification Strategy
