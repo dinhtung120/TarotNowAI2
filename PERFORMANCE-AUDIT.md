@@ -414,8 +414,8 @@
 
 ## Optimization Plan
 
-1. Fix shared Critical issues first: auth/session loops, layout-level fetch churn, failed requests, pending non-persistent requests.
-2. Fix feature Critical/High issues next, starting with the feature that has the most affected page-scenario combinations.
+1. Phase 1 complete: auth-public presence/session gating is covered by regression tests and post-deploy `auth-public` benchmark shows `0` pending requests.
+2. Continue with Phase 2: collection image proxy latency remains the most visible feature bottleneck.
 3. Fix duplicate API calls by inspecting query keys, staleTime, refetch triggers, and parent/child component fetch ownership.
 4. Fix image/cache issues by checking Next Image usage, remote patterns, dimensions, lazy/eager strategy, and modal reopen behavior.
 5. Re-run the affected feature benchmark after every hotspot fix, then run full matrix before final deploy validation.
@@ -437,3 +437,8 @@
 - GitHub Actions: `CD Fast Deploy` run `25510638702` completed successfully after push to `main`.
 - Post-deploy full production benchmark: completed with `full-matrix` coverage across 190 pages.
 - Post-deploy collection validation: benchmark artifact shows `0` wrapped `/_next/image?...collection%2Fcard-image...` requests, and slow collection proxy image entries in the report return `200` directly from `/api/collection/card-image`.
+- Phase 1 shared auth/session/presence validation: commit `f5b922d8` added regression coverage for locale-aware realtime gating, `PresenceProvider`, and `usePresenceConnection` disabled/unauthenticated behavior.
+- Phase 1 local verification: `npx vitest run src/shared/navigation/normalizePathname.test.ts src/app/_shared/providers/PresenceProvider.test.tsx src/app/_shared/hooks/usePresenceConnection.test.tsx` passed with 43 tests, and `npm run lint` passed.
+- Phase 1 GitHub Actions: `CD Fast Deploy` run `25513544998` completed successfully after push to `main`.
+- Phase 1 production benchmark: `BENCHMARK_FEATURE=auth-public` feature-matrix completed at `2026-05-07T18:37:06.354Z` with 54 auth-public pages and `0` pending requests.
+- Phase 1 root-cause note: `/api/readers?page=1&pageSize=4` on logged-in auth routes is caused by expected redirect from auth entry pages to `/${locale}`, where the home page renders featured readers; no production code change was justified for that request.
