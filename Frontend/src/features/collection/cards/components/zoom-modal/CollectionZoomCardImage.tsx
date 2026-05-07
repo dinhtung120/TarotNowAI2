@@ -63,7 +63,7 @@ export default function CollectionZoomCardImage({
       preloader.onload = null;
       preloader.onerror = null;
     };
-  }, [cardImageUrl, cardPreviewImageUrl]);
+  }, [fullUrl, previewUrl]);
 
   if (resolvedImageUrl) {
     return (

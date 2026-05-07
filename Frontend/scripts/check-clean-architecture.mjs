@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
-import { dirname, extname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import ts from 'typescript';
 import {
  findClientBoundaryViolation,
@@ -176,60 +176,7 @@ function extractImports(sourceCode) {
  return imports;
 }
 
-function isExternalImport(importPath) {
- return !importPath.startsWith('./')
-  && !importPath.startsWith('../')
-  && !importPath.startsWith('@/');
-}
-
 function isAppPageOrLayout(relativePath) {
  return /^src\/app\/.+\/(page|layout)\.(ts|tsx|mts)$/.test(relativePath);
 }
 
-function resolveImportTarget(sourceRelativePath, importPath) {
- if (importPath.startsWith('@/')) {
-  return `src/${importPath.slice(2)}`;
- }
-
- if (!importPath.startsWith('.')) {
-  return null;
- }
-
- const sourceDir = dirname(sourceRelativePath);
- const withExtension = resolveWithExtension(resolve(process.cwd(), sourceDir, importPath));
- if (!withExtension) {
-  return null;
- }
-
- return toPosixRelative(withExtension);
-}
-
-function resolveWithExtension(absolutePath) {
- const extensions = ['.ts', '.tsx', '.mts'];
- if (extensions.includes(extname(absolutePath))) {
-  return absolutePath;
- }
-
- for (const extension of extensions) {
-  const candidate = `${absolutePath}${extension}`;
-  if (existsSync(candidate)) {
-   return candidate;
-  }
- }
-
- for (const extension of extensions) {
-  const indexCandidate = resolve(absolutePath, `index${extension}`);
-  if (existsSync(indexCandidate)) {
-   return indexCandidate;
-  }
- }
-
- return null;
-}
-
-function toPosixRelative(absolutePath) {
- return absolutePath
-  .replace(resolve(process.cwd()), '')
-  .replace(/^\/+/, '')
-  .replace(/\\/g, '/');
-}

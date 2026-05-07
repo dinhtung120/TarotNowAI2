@@ -1,7 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
-import { Star, Sparkles, Wand2 } from 'lucide-react';
 
 /**
  * Component render Markdown cho kết quả trả bài Tarot.
@@ -18,21 +17,21 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
         remarkPlugins={[remarkGfm]}
         components={{
           // Tùy chỉnh cách hiển thị tiêu đề (h4 thường dùng cho vị trí lá bài)
-          h4: ({ node, ...props }) => (
+          h4: (props) => (
             <span
               className="text-[15px] font-bold tracking-tight text-purple-400 after:content-[':'] mr-0.5"
               {...props}
             />
           ),
           // Tùy chỉnh cách hiển thị văn bản in đậm
-          strong: ({ node, ...props }) => (
+          strong: (props) => (
             <strong
               className="font-semibold text-purple-400"
               {...props}
             />
           ),
           // Tùy chỉnh cách hiển thị đoạn văn
-          p: ({ node, ...props }) => (
+          p: (props) => (
             <span
               className="text-gray-300 leading-relaxed text-[15px] inline"
             >
@@ -41,21 +40,21 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
             </span>
           ),
           // Tùy chỉnh danh sách
-          ul: ({ node, ...props }) => (
+          ul: (props) => (
             <ul className="list-disc list-inside space-y-2 mb-6 text-gray-300" {...props} />
           ),
-          li: ({ node, ...props }) => (
+          li: (props) => (
             <li className="leading-relaxed" {...props} />
           ),
           // Tùy chỉnh blockquote
-          blockquote: ({ node, ...props }) => (
+          blockquote: (props) => (
             <blockquote
               className="border-l-2 border-purple-500/50 pl-4 py-1 my-6 italic text-gray-400"
               {...props}
             />
           ),
           // Tùy chỉnh hr
-          hr: ({ node, ...props }) => (
+          hr: (props) => (
             <hr className="my-8 border-t border-white/10" {...props} />
           )
         }}
