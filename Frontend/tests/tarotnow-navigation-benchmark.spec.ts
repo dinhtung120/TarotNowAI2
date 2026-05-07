@@ -4,7 +4,16 @@ import { expect, test, type Browser, type Page, type Request, type Response } fr
 
 type BenchmarkScenario = 'logged-out' | 'logged-in-admin' | 'logged-in-reader';
 type BenchmarkViewportId = 'desktop' | 'mobile';
-type BenchmarkMode = 'full-matrix' | 'targeted-hotspots';
+type BenchmarkMode = 'full-matrix' | 'targeted-hotspots' | 'feature-matrix';
+type BenchmarkFeature =
+  | 'auth-public'
+  | 'reading'
+  | 'inventory-gacha-collection'
+  | 'profile-wallet-notifications'
+  | 'reader-chat'
+  | 'community-leaderboard-quest'
+  | 'admin'
+  | 'other';
 
 type RequestCategory = 'html' | 'api' | 'static' | 'third-party' | 'telemetry' | 'websocket' | 'other';
 type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
@@ -18,6 +27,7 @@ interface RequestMetric {
   scenario: BenchmarkScenario;
   viewport: BenchmarkViewportId;
   route: string;
+  feature: BenchmarkFeature;
   method: string;
   resourceType: string;
   initiator: string;
@@ -51,6 +61,7 @@ interface PageBenchmarkMetric {
   scenario: BenchmarkScenario;
   viewport: BenchmarkViewportId;
   route: string;
+  feature: BenchmarkFeature;
   navFrom: string | null;
   finalUrl: string;
   navigationMs: number;
@@ -117,6 +128,7 @@ interface BenchmarkRunResult {
 
 interface MutableRequestMetric {
   route: string;
+  feature: BenchmarkFeature;
   method: string;
   resourceType: string;
   initiator: string;
@@ -606,6 +618,61 @@ function resolveRouteFamily(route: string): string {
   return 'other';
 }
 
+function resolveBenchmarkFeature(route: string): BenchmarkFeature {
+  const pathWithoutLocale = stripLocalePath(route);
+  if (
+    pathWithoutLocale === '/'
+    || pathWithoutLocale === '/login'
+    || pathWithoutLocale === '/register'
+    || pathWithoutLocale === '/forgot-password'
+    || pathWithoutLocale === '/reset-password'
+    || pathWithoutLocale === '/verify-email'
+    || pathWithoutLocale.startsWith('/legal')
+  ) return 'auth-public';
+
+  if (pathWithoutLocale === '/reading' || pathWithoutLocale.startsWith('/reading/')) return 'reading';
+
+  if (
+    pathWithoutLocale === '/inventory'
+    || pathWithoutLocale.startsWith('/inventory/')
+    || pathWithoutLocale === '/gacha'
+    || pathWithoutLocale.startsWith('/gacha/')
+    || pathWithoutLocale === '/collection'
+    || pathWithoutLocale.startsWith('/collection/')
+  ) return 'inventory-gacha-collection';
+
+  if (
+    pathWithoutLocale === '/profile'
+    || pathWithoutLocale.startsWith('/profile/')
+    || pathWithoutLocale === '/wallet'
+    || pathWithoutLocale.startsWith('/wallet/')
+    || pathWithoutLocale === '/notifications'
+    || pathWithoutLocale.startsWith('/notifications/')
+  ) return 'profile-wallet-notifications';
+
+  if (
+    pathWithoutLocale === '/reader'
+    || pathWithoutLocale.startsWith('/reader/')
+    || pathWithoutLocale === '/readers'
+    || pathWithoutLocale.startsWith('/readers/')
+    || pathWithoutLocale === '/chat'
+    || pathWithoutLocale.startsWith('/chat/')
+  ) return 'reader-chat';
+
+  if (
+    pathWithoutLocale === '/community'
+    || pathWithoutLocale.startsWith('/community/')
+    || pathWithoutLocale === '/leaderboard'
+    || pathWithoutLocale.startsWith('/leaderboard/')
+    || pathWithoutLocale === '/gamification'
+    || pathWithoutLocale.startsWith('/gamification/')
+  ) return 'community-leaderboard-quest';
+
+  if (pathWithoutLocale === '/admin' || pathWithoutLocale.startsWith('/admin/')) return 'admin';
+
+  return 'other';
+}
+
 function isCollectionImageRequestUrl(requestUrl: string): boolean {
   try {
     const parsed = new URL(requestUrl);
@@ -727,6 +794,7 @@ function toRequestMetric(record: MutableRequestMetric, scenario: BenchmarkScenar
     scenario,
     viewport,
     route: record.route,
+    feature: record.feature,
     method: record.method,
     resourceType: record.resourceType,
     initiator: record.initiator,
@@ -1459,6 +1527,7 @@ async function benchmarkNavigation(
   navFrom: string | null,
 ): Promise<PageBenchmarkMetric> {
   const routeUrl = `${BASE_ORIGIN}${route}`;
+  const feature = resolveBenchmarkFeature(route);
   const requests = new Map<Request, MutableRequestMetric>();
   const responseMap = new Map<Request, Response>();
   const finalizeTasks: Array<Promise<void>> = [];
@@ -1481,6 +1550,7 @@ async function benchmarkNavigation(
       inFlightCounter += 1;
       requests.set(request, {
         route,
+        feature,
         method: request.method(),
         resourceType: request.resourceType(),
         initiator: request.resourceType(),
@@ -1518,6 +1588,7 @@ async function benchmarkNavigation(
       inFlightCounter += 1;
       requests.set(request, {
         route,
+        feature,
         method: request.method(),
         resourceType: request.resourceType(),
         initiator: request.resourceType(),
@@ -1752,6 +1823,7 @@ async function benchmarkNavigation(
     scenario,
     viewport,
     route,
+    feature,
     navFrom,
     finalUrl,
     navigationMs,
