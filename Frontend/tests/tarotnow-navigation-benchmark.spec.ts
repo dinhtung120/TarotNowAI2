@@ -184,6 +184,8 @@ interface ViewportProfile {
 
 const RUN_NAVIGATION_BENCHMARK = process.env.RUN_NAVIGATION_BENCHMARK === 'true';
 const RUN_NAVIGATION_BENCHMARK_TARGETED = process.env.RUN_NAVIGATION_BENCHMARK_TARGETED === 'true';
+const RUN_NAVIGATION_BENCHMARK_FEATURE = process.env.RUN_NAVIGATION_BENCHMARK_FEATURE === 'true';
+const BENCHMARK_FEATURE = (process.env.BENCHMARK_FEATURE?.trim() || 'inventory-gacha-collection') as BenchmarkFeature;
 const BASE_ORIGIN = (process.env.BENCHMARK_BASE_ORIGIN ?? 'http://127.0.0.1:3100').trim().replace(/\/+$/, '');
 const LOCALE_PREFIX = '/vi';
 const BASE_URL = `${BASE_ORIGIN}${LOCALE_PREFIX}`;
@@ -222,6 +224,12 @@ const OUTPUT_TARGETED_REQUESTS_CSV = path.join(OUTPUT_DIR, 'tarotnow-benchmark-h
 const OUTPUT_TARGETED_MD = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots-report.md');
 const OUTPUT_TARGETED_ANALYSIS_MD = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots-analysis.md');
 const OUTPUT_TARGETED_ROUTE_MAP = path.join(OUTPUT_DIR, 'tarotnow-route-map-hotspots.json');
+const OUTPUT_FEATURE_JSON = path.join(OUTPUT_DIR, `tarotnow-benchmark-${BENCHMARK_FEATURE}.json`);
+const OUTPUT_FEATURE_PAGES_CSV = path.join(OUTPUT_DIR, `tarotnow-benchmark-${BENCHMARK_FEATURE}-pages.csv`);
+const OUTPUT_FEATURE_REQUESTS_CSV = path.join(OUTPUT_DIR, `tarotnow-benchmark-${BENCHMARK_FEATURE}-requests.csv`);
+const OUTPUT_FEATURE_MD = path.join(OUTPUT_DIR, `tarotnow-benchmark-${BENCHMARK_FEATURE}-report.md`);
+const OUTPUT_FEATURE_ANALYSIS_MD = path.join(OUTPUT_DIR, `tarotnow-benchmark-${BENCHMARK_FEATURE}-analysis.md`);
+const OUTPUT_FEATURE_ROUTE_MAP = path.join(OUTPUT_DIR, `tarotnow-route-map-${BENCHMARK_FEATURE}.json`);
 
 const CONTROLLED_SPREAD_TYPES = ['daily_1', 'spread_3', 'spread_5', 'spread_10'] as const;
 const MAX_DYNAMIC_READING_SESSIONS = 4;
@@ -1015,6 +1023,17 @@ function resolveOutputPaths(mode: BenchmarkMode): BenchmarkOutputPaths {
     };
   }
 
+  if (mode === 'feature-matrix') {
+    return {
+      json: OUTPUT_FEATURE_JSON,
+      pagesCsv: OUTPUT_FEATURE_PAGES_CSV,
+      requestsCsv: OUTPUT_FEATURE_REQUESTS_CSV,
+      reportMd: OUTPUT_FEATURE_MD,
+      analysisMd: OUTPUT_FEATURE_ANALYSIS_MD,
+      routeMap: OUTPUT_FEATURE_ROUTE_MAP,
+    };
+  }
+
   return {
     json: OUTPUT_JSON,
     pagesCsv: OUTPUT_PAGES_CSV,
@@ -1025,6 +1044,27 @@ function resolveOutputPaths(mode: BenchmarkMode): BenchmarkOutputPaths {
   };
 }
 
+const BENCHMARK_FEATURES: BenchmarkFeature[] = [
+  'auth-public',
+  'reading',
+  'inventory-gacha-collection',
+  'profile-wallet-notifications',
+  'reader-chat',
+  'community-leaderboard-quest',
+  'admin',
+  'other',
+];
+
+function assertBenchmarkFeature(value: BenchmarkFeature): void {
+  if (!BENCHMARK_FEATURES.includes(value)) {
+    throw new Error(`Unsupported BENCHMARK_FEATURE: ${value}`);
+  }
+}
+
+function filterRoutesForBenchmarkFeature(routes: string[], feature: BenchmarkFeature): string[] {
+  return routes.filter((route) => resolveBenchmarkFeature(route) === feature);
+}
+
 function resolveSeedRoutesForMode(
   mode: BenchmarkMode,
   fullSeedRoutes: string[],
@@ -1033,6 +1073,11 @@ function resolveSeedRoutesForMode(
     return HOTSPOT_ROUTE_SEEDS
       .map((route) => normalizeRoutePath(route))
       .filter((route): route is string => Boolean(route));
+  }
+
+  if (mode === 'feature-matrix') {
+    assertBenchmarkFeature(BENCHMARK_FEATURE);
+    return filterRoutesForBenchmarkFeature(fullSeedRoutes, BENCHMARK_FEATURE);
   }
 
   return fullSeedRoutes;
@@ -1946,6 +1991,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
     'scenario',
     'viewport',
     'route',
+    'feature',
     'final_url',
     'request_count',
     'interaction_request_count',
@@ -1986,6 +2032,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
         toCsvValue(page.scenario),
         toCsvValue(page.viewport),
         toCsvValue(page.route),
+        toCsvValue(page.feature),
         toCsvValue(page.finalUrl),
         toCsvValue(page.requestCount),
         toCsvValue(page.interactionRequestCount),
@@ -2031,6 +2078,7 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
     'scenario',
     'viewport',
     'route',
+    'feature',
     'method',
     'status',
     'resource_type',
@@ -2054,6 +2102,7 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
           toCsvValue(request.scenario),
           toCsvValue(request.viewport),
           toCsvValue(request.route),
+          toCsvValue(request.feature),
           toCsvValue(request.method),
           toCsvValue(request.status ?? ''),
           toCsvValue(request.resourceType),
@@ -2086,7 +2135,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
   const highSlowRequests = allPages.flatMap((page) =>
     page.slowRequests
       .filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_HIGH_THRESHOLD_MS)
-      .map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route })),
+      .map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route, feature: page.feature })),
   );
 
   const mediumSlowRequests = allPages.flatMap((page) =>
@@ -2095,7 +2144,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
         const duration = request.durationMs ?? 0;
         return duration > SLOW_REQUEST_MEDIUM_THRESHOLD_MS && duration <= SLOW_REQUEST_HIGH_THRESHOLD_MS;
       })
-      .map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route })),
+      .map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route, feature: page.feature })),
   );
 
   const summaryLines = result.scenarios.map((scenario) => {
@@ -2113,7 +2162,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
   const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const pageLines = allPages.map((page) =>
-    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.interactionRequestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReopenRequestCount} | ${page.collectionImageCacheHitCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
+    `| ${page.scenario} | ${page.viewport} | ${page.feature} | ${page.route} | ${page.requestCount} | ${page.interactionRequestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReopenRequestCount} | ${page.collectionImageCacheHitCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
   );
 
   const collectionFocusLines = collectionFocusPages.length > 0
@@ -2127,7 +2176,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
       .sort((left, right) => (right.durationMs ?? 0) - (left.durationMs ?? 0))
       .slice(0, 80)
       .map((request) =>
-        `| ${request.scenario} | ${request.viewport} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.category} | ${request.url} |`,
+        `| ${request.scenario} | ${request.viewport} | ${request.feature} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.category} | ${request.url} |`,
       )
     : ['| - | - | - | - | - | - | - | - | - |'];
 
@@ -2136,13 +2185,13 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
       .sort((left, right) => (right.durationMs ?? 0) - (left.durationMs ?? 0))
       .slice(0, 80)
       .map((request) =>
-        `| ${request.scenario} | ${request.viewport} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.category} | ${request.url} |`,
+        `| ${request.scenario} | ${request.viewport} | ${request.feature} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.category} | ${request.url} |`,
       )
     : ['| - | - | - | - | - | - | - | - | - |'];
 
   const suspiciousLines = suspiciousPages.length > 0
     ? suspiciousPages.map((page) =>
-      `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${page.requestBreakdown.api} | ${page.requestBreakdown.static} | ${page.requestBreakdown.thirdParty} |`,
+      `| ${page.scenario} | ${page.viewport} | ${page.feature} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${page.requestBreakdown.api} | ${page.requestBreakdown.static} | ${page.requestBreakdown.thirdParty} |`,
     )
     : ['| - | - | - | - | - | - | - | - |'];
 
@@ -2181,8 +2230,8 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     ...(routeFamilySummaryLines.length > 0 ? routeFamilySummaryLines : ['| - | - | - | - | - | - | - |']),
     '',
     '## Per-Page Metrics',
-    '| Scenario | Viewport | Route | Requests | Interaction Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Collection Img Requests | Collection Img 400-800ms | Collection Img >800ms | Collection Img First Load | Collection Img Reopen | Collection Img Cache Hits | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
-    '| --- | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    '| Scenario | Viewport | Feature | Route | Requests | Interaction Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Collection Img Requests | Collection Img 400-800ms | Collection Img >800ms | Collection Img First Load | Collection Img Reopen | Collection Img Cache Hits | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
+    '| --- | --- | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...pageLines,
     '',
     '## Collection Image Focus',
@@ -2191,18 +2240,18 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     ...collectionFocusLines,
     '',
     '## Suspicious Pages (>25 requests)',
-    '| Scenario | Viewport | Route | Request Count | Severity | API | Static | Third-party |',
-    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: |',
+    '| Scenario | Viewport | Feature | Route | Request Count | Severity | API | Static | Third-party |',
+    '| --- | --- | --- | --- | ---: | --- | ---: | ---: | ---: |',
     ...suspiciousLines,
     '',
     '## High Slow Requests (>800ms)',
-    '| Scenario | Viewport | Route | Method | Status | Duration (ms) | TTFB (ms) | Category | URL |',
-    '| --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |',
+    '| Scenario | Viewport | Feature | Route | Method | Status | Duration (ms) | TTFB (ms) | Category | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |',
     ...slowHighLines,
     '',
     '## Medium Slow Requests (400-800ms)',
-    '| Scenario | Viewport | Route | Method | Status | Duration (ms) | TTFB (ms) | Category | URL |',
-    '| --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |',
+    '| Scenario | Viewport | Feature | Route | Method | Status | Duration (ms) | TTFB (ms) | Category | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |',
     ...slowMediumLines,
     '',
     '## Pending Requests',
@@ -2234,11 +2283,11 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
   const highRequestPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_HIGH_THRESHOLD);
   const criticalRequestPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_CRITICAL_THRESHOLD);
   const highSlowRequests = allPages
-    .flatMap((page) => page.slowRequests.map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route })))
+    .flatMap((page) => page.slowRequests.map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route, feature: page.feature })))
     .filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_HIGH_THRESHOLD_MS)
     .sort((left, right) => (right.durationMs ?? 0) - (left.durationMs ?? 0));
   const mediumSlowRequests = allPages
-    .flatMap((page) => page.slowRequests.map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route })))
+    .flatMap((page) => page.slowRequests.map((request) => ({ ...request, scenario: page.scenario, viewport: page.viewport, route: page.route, feature: page.feature })))
     .filter((request) => {
       const duration = request.durationMs ?? 0;
       return duration > SLOW_REQUEST_MEDIUM_THRESHOLD_MS && duration <= SLOW_REQUEST_HIGH_THRESHOLD_MS;
@@ -2250,7 +2299,7 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     .slice(0, 10);
 
   const duplicateSummary = allPages
-    .flatMap((page) => page.duplicateRequestGroups.map((group) => ({ ...group, scenario: page.scenario, viewport: page.viewport, route: page.route })))
+    .flatMap((page) => page.duplicateRequestGroups.map((group) => ({ ...group, scenario: page.scenario, viewport: page.viewport, route: page.route, feature: page.feature })))
     .filter((entry) => !entry.key.includes('/cdn-cgi/rum'))
     .sort((left, right) => right.count - left.count)
     .slice(0, 20);
@@ -2277,19 +2326,19 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
   const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const topSlowPageLines = topSlowPages.map((page) =>
-    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.navigationMs} | ${page.requestCount} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.tbt, 1)} | ${formatNumber(page.cls, 4)} |`,
+    `| ${page.scenario} | ${page.viewport} | ${page.feature} | ${page.route} | ${page.navigationMs} | ${page.requestCount} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.tbt, 1)} | ${formatNumber(page.cls, 4)} |`,
   );
 
   const highSlowRequestLines = highSlowRequests.slice(0, 15).map((request) =>
-    `| ${request.scenario} | ${request.viewport} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.url} |`,
+    `| ${request.scenario} | ${request.viewport} | ${request.feature} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.url} |`,
   );
 
   const mediumSlowRequestLines = mediumSlowRequests.slice(0, 15).map((request) =>
-    `| ${request.scenario} | ${request.viewport} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.url} |`,
+    `| ${request.scenario} | ${request.viewport} | ${request.feature} | ${request.route} | ${request.method} | ${request.status ?? '-'} | ${formatNumber(request.durationMs)} | ${formatNumber(request.ttfbMs)} | ${request.url} |`,
   );
 
   const duplicateLines = duplicateSummary.map((entry) =>
-    `| ${entry.scenario} | ${entry.viewport} | ${entry.route} | ${entry.count} | ${entry.key} |`,
+    `| ${entry.scenario} | ${entry.viewport} | ${entry.feature} | ${entry.route} | ${entry.count} | ${entry.key} |`,
   );
 
   const keyFindings = [
@@ -2343,23 +2392,23 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     ...keyFindings.map((item, index) => `${index + 1}. ${item}`),
     '',
     '## Top Slow Pages',
-    '| Scenario | Viewport | Route | Navigate (ms) | Request count | LCP (ms) | TBT (ms) | CLS |',
-    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |',
+    '| Scenario | Viewport | Feature | Route | Navigate (ms) | Request count | LCP (ms) | TBT (ms) | CLS |',
+    '| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |',
     ...(topSlowPageLines.length > 0 ? topSlowPageLines : ['| - | - | - | - | - | - | - | - |']),
     '',
     `## High Slow Requests (> ${SLOW_REQUEST_HIGH_THRESHOLD_MS}ms)`,
-    '| Scenario | Viewport | Route | Method | Status | Duration (ms) | TTFB (ms) | URL |',
-    '| --- | --- | --- | --- | ---: | ---: | ---: | --- |',
+    '| Scenario | Viewport | Feature | Route | Method | Status | Duration (ms) | TTFB (ms) | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |',
     ...(highSlowRequestLines.length > 0 ? highSlowRequestLines : ['| - | - | - | - | - | - | - | - |']),
     '',
     `## Medium Slow Requests (${SLOW_REQUEST_MEDIUM_THRESHOLD_MS}-${SLOW_REQUEST_HIGH_THRESHOLD_MS}ms)`,
-    '| Scenario | Viewport | Route | Method | Status | Duration (ms) | TTFB (ms) | URL |',
-    '| --- | --- | --- | --- | ---: | ---: | ---: | --- |',
+    '| Scenario | Viewport | Feature | Route | Method | Status | Duration (ms) | TTFB (ms) | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |',
     ...(mediumSlowRequestLines.length > 0 ? mediumSlowRequestLines : ['| - | - | - | - | - | - | - | - |']),
     '',
     '## Duplicate Request Candidates (Non-telemetry)',
-    '| Scenario | Viewport | Route | Count | Request Key |',
-    '| --- | --- | --- | ---: | --- |',
+    '| Scenario | Viewport | Feature | Route | Count | Request Key |',
+    '| --- | --- | --- | --- | ---: | --- |',
     ...(duplicateLines.length > 0 ? duplicateLines : ['| - | - | - | - | - |']),
     '',
     '## Collection Image Metrics',
@@ -2467,6 +2516,16 @@ test.describe('TarotNow production benchmark', () => {
 
     const runResult = await runBenchmarkSuite(browser, 'targeted-hotspots');
     await writeBenchmarkArtifacts(runResult, resolveOutputPaths('targeted-hotspots'));
+    assertScenarioIntegrity(runResult);
+  });
+
+  test('benchmark one feature route matrix', async ({ browser }) => {
+    test.skip(!RUN_NAVIGATION_BENCHMARK_FEATURE, 'Set RUN_NAVIGATION_BENCHMARK_FEATURE=true and BENCHMARK_FEATURE=<feature> to run feature benchmark.');
+    assertSafeBenchmarkEnvironment();
+    assertBenchmarkFeature(BENCHMARK_FEATURE);
+
+    const runResult = await runBenchmarkSuite(browser, 'feature-matrix');
+    await writeBenchmarkArtifacts(runResult, resolveOutputPaths('feature-matrix'));
     assertScenarioIntegrity(runResult);
   });
 });
