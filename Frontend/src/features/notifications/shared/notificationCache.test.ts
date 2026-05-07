@@ -75,4 +75,55 @@ describe('applyNotificationReadPatch', () => {
   expect(result).toEqual({ wasUnread: false });
   expect(queryClient.getQueryData(userStateQueryKeys.notifications.unreadCount())).toBe(1);
  });
+
+ it('leaves caches and unread badge unchanged when the notification is not cached', () => {
+  const queryClient = new QueryClient();
+  const dropdown = createNotificationList([createItem('n-2')]);
+  const allList = createNotificationList([createItem('n-3', true)]);
+  queryClient.setQueryData(userStateQueryKeys.notifications.dropdown(), dropdown);
+  queryClient.setQueryData(userStateQueryKeys.notifications.list(1, false), allList);
+  queryClient.setQueryData(userStateQueryKeys.notifications.unreadCount(), 4);
+
+  const result = applyNotificationReadPatch(queryClient, { id: 'n-missing' });
+
+  expect(result).toEqual({ wasUnread: false });
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.dropdown())).toBe(dropdown);
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.list(1, false))).toBe(allList);
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.unreadCount())).toBe(4);
+ });
+
+ it('patches an explicit unread page without duplicating the default unread list update', () => {
+  const queryClient = new QueryClient();
+  queryClient.setQueryData(
+   userStateQueryKeys.notifications.list(1, true),
+   { ...createNotificationList([createItem('n-1')]), totalCount: 0 },
+  );
+  queryClient.setQueryData(userStateQueryKeys.notifications.unreadCount(), 0);
+
+  const result = applyNotificationReadPatch(queryClient, { id: 'n-1', page: 1, unreadOnly: true });
+
+  expect(result).toEqual({ wasUnread: true });
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.list(1, true))).toMatchObject({
+   items: [],
+   totalCount: 0,
+  });
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.unreadCount())).toBe(0);
+ });
+
+ it('patches an explicit unread page and initializes a missing unread badge to zero', () => {
+  const queryClient = new QueryClient();
+  queryClient.setQueryData(
+   userStateQueryKeys.notifications.list(2, true),
+   createNotificationList([createItem('n-4')]),
+  );
+
+  const result = applyNotificationReadPatch(queryClient, { id: 'n-4', page: 2, unreadOnly: true });
+
+  expect(result).toEqual({ wasUnread: true });
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.list(2, true))).toMatchObject({
+   items: [],
+   totalCount: 0,
+  });
+  expect(queryClient.getQueryData(userStateQueryKeys.notifications.unreadCount())).toBe(0);
+ });
 });
