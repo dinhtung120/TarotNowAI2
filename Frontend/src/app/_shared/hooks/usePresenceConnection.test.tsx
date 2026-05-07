@@ -231,6 +231,40 @@ describe('usePresenceConnection', () => {
   expect(fakeConnection.stop).toHaveBeenCalled();
  });
 
+ it('does not start realtime session when disabled on auth-public routes', async () => {
+  act(() => {
+   root.render(<Harness enabled={false} />);
+  });
+
+  await act(async () => {
+   await Promise.resolve();
+   await Promise.resolve();
+  });
+
+  expect(useRuntimePolicies).toHaveBeenCalled();
+  expect(ensureRealtimeSession).not.toHaveBeenCalled();
+  expect(fakeConnection.start).not.toHaveBeenCalled();
+  expect(cancelWakeup).toHaveBeenCalled();
+ });
+
+ it('does not start realtime session when the user is unauthenticated', async () => {
+  authState = { isAuthenticated: false };
+
+  act(() => {
+   root.render(<Harness />);
+  });
+
+  await act(async () => {
+   await Promise.resolve();
+   await Promise.resolve();
+  });
+
+  expect(useRuntimePolicies).toHaveBeenCalled();
+  expect(ensureRealtimeSession).not.toHaveBeenCalled();
+  expect(fakeConnection.start).not.toHaveBeenCalled();
+  expect(cancelWakeup).toHaveBeenCalled();
+ });
+
  it('stops the existing connection when realtime is disabled and swallows stop errors', async () => {
   fakeConnection.start.mockImplementation(async () => {
    fakeConnection.state = 'Connected';
