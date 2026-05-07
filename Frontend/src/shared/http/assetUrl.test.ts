@@ -46,17 +46,17 @@ describe('shouldUseUnoptimizedImage', () => {
     expect(shouldUseUnoptimizedImage('/images/collection/back-card.svg')).toBe(false);
   });
 
-  it('forces unoptimized for collection image proxy urls', () => {
+  it('keeps collection image proxy urls optimized', () => {
     expect(
       shouldUseUnoptimizedImage(
         '/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Fa.avif%3Fiv%3Dabc%26variant%3Dthumb&iv=abc',
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldUseUnoptimizedImage(
         'https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Fa.avif&iv=abc',
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('keeps allowlisted remote hosts optimized', () => {
