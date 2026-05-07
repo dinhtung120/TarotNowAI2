@@ -237,7 +237,11 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          docker stop $(docker ps -aq) 2>/dev/null || true && docker rm $(docker ps -aq) 2>/dev/null || true && docker image prune -a -f && docker builder prune -f && docker network prune -f
+          docker ps -aq | xargs -r docker stop 2>/dev/null || true
+          docker ps -aq | xargs -r docker rm 2>/dev/null || true
+          docker image prune -a -f
+          docker builder prune -f
+          docker network prune -f
           REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
@@ -312,7 +316,11 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          docker stop $(docker ps -aq) 2>/dev/null || true && docker rm $(docker ps -aq) 2>/dev/null || true && docker image prune -a -f && docker builder prune -f && docker network prune -f
+          docker ps -aq | xargs -r docker stop 2>/dev/null || true
+          docker ps -aq | xargs -r docker rm 2>/dev/null || true
+          docker image prune -a -f
+          docker builder prune -f
+          docker network prune -f
           REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
@@ -387,7 +395,11 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          docker stop $(docker ps -aq) 2>/dev/null || true && docker rm $(docker ps -aq) 2>/dev/null || true && docker image prune -a -f && docker builder prune -f && docker network prune -f
+          docker ps -aq | xargs -r docker stop 2>/dev/null || true
+          docker ps -aq | xargs -r docker rm 2>/dev/null || true
+          docker image prune -a -f
+          docker builder prune -f
+          docker network prune -f
           REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
