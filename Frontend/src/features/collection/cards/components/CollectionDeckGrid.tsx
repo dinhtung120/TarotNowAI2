@@ -52,7 +52,7 @@ export function CollectionDeckGrid({
           break;
         }
       }
-    }, { rootMargin: "320px 0px" });
+    }, { rootMargin: "0px" });
 
     observer.observe(sentinel);
     return () => observer.disconnect();
