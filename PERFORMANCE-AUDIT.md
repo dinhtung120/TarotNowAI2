@@ -415,9 +415,9 @@
 ## Optimization Plan
 
 1. Phase 1 complete: auth-public presence/session gating is covered by regression tests and post-deploy `auth-public` benchmark shows `0` pending requests.
-2. Continue with Phase 2: collection image proxy latency remains the most visible feature bottleneck.
-3. Fix duplicate API calls by inspecting query keys, staleTime, refetch triggers, and parent/child component fetch ownership.
-4. Fix image/cache issues by checking Next Image usage, remote patterns, dimensions, lazy/eager strategy, and modal reopen behavior.
+2. Phase 2 complete: collection image proxy URLs are image-like and Cloudflare caches them; post-deploy benchmark shows no collection proxy image request >800ms.
+3. Continue with Phase 3: reduce bundle/static request count on auth-public and admin routes.
+4. Fix duplicate API calls by inspecting query keys, staleTime, refetch triggers, and parent/child component fetch ownership.
 5. Re-run the affected feature benchmark after every hotspot fix, then run full matrix before final deploy validation.
 
 ## Recommended Refactors
@@ -442,3 +442,8 @@
 - Phase 1 GitHub Actions: `CD Fast Deploy` run `25513544998` completed successfully after push to `main`.
 - Phase 1 production benchmark: `BENCHMARK_FEATURE=auth-public` feature-matrix completed at `2026-05-07T18:37:06.354Z` with 54 auth-public pages and `0` pending requests.
 - Phase 1 root-cause note: `/api/readers?page=1&pageSize=4` on logged-in auth routes is caused by expected redirect from auth entry pages to `/${locale}`, where the home page renders featured readers; no production code change was justified for that request.
+- Phase 2 collection image latency validation: commit `ae205767` changed generated proxy URLs to `/api/collection/card-image/{iv}.avif?...` while keeping the existing SSRF host allowlist and route handler behavior.
+- Phase 2 local verification: `npx vitest run src/features/collection/cards/collectionCatalogChunked.test.ts`, `npx vitest run src/shared/http/assetUrl.test.ts src/features/collection/cards/collectionCatalogChunked.test.ts`, `npm run lint`, and `npm run build` passed.
+- Phase 2 GitHub Actions: `CD Fast Deploy` run `25515738110` completed successfully after push to `main`.
+- Phase 2 production benchmark: `BENCHMARK_FEATURE=inventory-gacha-collection` feature-matrix completed at `2026-05-07T19:12:47.831Z`; collection-focus reported `0` image requests >800ms on 4 collection image requests in the focused summary.
+- Phase 2 CDN validation: repeated production requests to the new `/api/collection/card-image/81a3d9698977fda2.avif?...` URL returned `cf-cache-status: HIT` with non-zero `age`, replacing the prior `cf-cache-status: DYNAMIC` behavior on extensionless API proxy URLs.
