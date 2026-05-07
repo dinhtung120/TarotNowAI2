@@ -2,645 +2,810 @@
 
 ## Executive Summary
 
-- Generated at (UTC): 2026-05-07T10:26:33.496Z
-- Benchmark generated at (UTC): 2026-05-07T10:26:27.420Z
+- Generated at (UTC): 2026-05-07T13:25:25.984Z
+- Benchmark generated at (UTC): 2026-05-07T13:25:12.351Z
 - Base origin: https://www.tarotnow.xyz
 - Locale prefix: /vi
 - Benchmark mode: full-matrix
 - Total scenarios: 6
-- Total pages measured: 163
-- Critical pages: 75
-- High pages: 86
-- Medium pages: 2
-- Slow requests >800ms: 3481
-- Slow requests 400-800ms: 1387
+- Total pages measured: 161
+- Critical pages: 100
+- High pages: 61
+- Medium pages: 0
+- Slow requests >800ms: 3884
+- Slow requests 400-800ms: 994
 
 ## Scenario Coverage
 
 | Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Pending | Failed | Login bootstrap |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| logged-out | desktop | 9 | 25.1 | 4394 | 0 | 1 | yes |
-| logged-in-admin | desktop | 39 | 29.0 | 5878 | 82 | 1 | yes |
-| logged-in-reader | desktop | 36 | 29.1 | 5477 | 62 | 1 | yes |
-| logged-out | mobile | 9 | 24.9 | 4441 | 1 | 0 | yes |
-| logged-in-admin | mobile | 35 | 28.7 | 5563 | 88 | 1 | yes |
-| logged-in-reader | mobile | 35 | 28.7 | 6976 | 110 | 1 | yes |
+| logged-out | desktop | 9 | 25.1 | 5775 | 1 | 1 | yes |
+| logged-in-admin | desktop | 35 | 28.9 | 9683 | 176 | 1 | yes |
+| logged-in-reader | desktop | 35 | 29.2 | 7061 | 88 | 1 | yes |
+| logged-out | mobile | 9 | 24.9 | 4754 | 2 | 0 | yes |
+| logged-in-admin | mobile | 35 | 29.3 | 6927 | 130 | 1 | yes |
+| logged-in-reader | mobile | 38 | 28.8 | 8074 | 114 | 1 | yes |
 
 ## Detailed Metrics Table
 
 | Severity | Feature | Scenario | Viewport | Route | Requests | API | Static | Third-party | Nav (ms) | FCP (ms) | LCP (ms) | TBT (ms) | CLS | Pending | Failed | Transfer bytes |
 | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Critical | community-leaderboard-quest | logged-in-reader | desktop | /vi/community | 41 | 4 | 35 | 0 | 7030 | 1372 | 2936 | 0.0 | 0.0039 | 0 | 1 | 790364 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha | 39 | 3 | 34 | 0 | 8821 | 1636 | 1636 | 11.0 | 0.0042 | 0 | 0 | 738101 |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | 38 | 3 | 33 | 0 | 7775 | 1540 | 7076 | 5.0 | 0.0042 | 0 | 1 | 770658 |
-| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | 37 | 2 | 33 | 0 | 5595 | 892 | 2560 | 0.0 | 0.0173 | 1 | 1 | 778749 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | 37 | 2 | 33 | 0 | 5904 | 1312 | 1648 | 0.0 | 0.0071 | 1 | 0 | 663697 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | 36 | 1 | 33 | 0 | 5482 | 1936 | 1936 | 0.0 | 0.0042 | 0 | 0 | 653271 |
-| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | 36 | 1 | 33 | 0 | 4828 | 1468 | 1468 | 12.0 | 0.0039 | 2 | 0 | 734914 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | 36 | 1 | 33 | 0 | 4457 | 1068 | 1396 | 0.0 | 0.0071 | 0 | 0 | 662457 |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community | 36 | 1 | 33 | 0 | 5745 | 1124 | 2340 | 0.0 | 0.0173 | 2 | 1 | 768963 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | 35 | 0 | 33 | 0 | 7564 | 2216 | 2356 | 0.0 | 0.0071 | 2 | 0 | 798049 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | 35 | 0 | 33 | 0 | 6906 | 1048 | 1384 | 0.0 | 0.0071 | 3 | 0 | 783556 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | 32 | 2 | 28 | 0 | 5091 | 1060 | 1060 | 0.0 | 0.0071 | 3 | 0 | 728133 |
-| Critical | auth-public | logged-out | desktop | /vi | 31 | 2 | 27 | 0 | 5694 | 2744 | 2744 | 383.0 | 0.0024 | 0 | 1 | 602981 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | 31 | 2 | 27 | 0 | 4250 | 1028 | 1348 | 0.0 | 0.0000 | 2 | 0 | 633854 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/90a1dff0-637a-4c24-ae37-1f6d19808a82 | 31 | 0 | 29 | 0 | 5392 | 1556 | 1556 | 0.0 | 0.0042 | 2 | 0 | 705119 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/a234d7ae-09a6-4ea5-8183-2599752598ad | 31 | 0 | 29 | 0 | 6623 | 2728 | 2728 | 0.0 | 0.0042 | 3 | 0 | 705050 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | 31 | 2 | 27 | 0 | 5285 | 1664 | 1664 | 0.0 | 0.0042 | 1 | 0 | 626692 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 31 | 2 | 27 | 0 | 5387 | 1432 | 1432 | 3.0 | 0.0042 | 1 | 0 | 628673 |
-| Critical | reading | logged-in-reader | desktop | /vi/reading/session/b9f507fb-919b-488f-b8ca-2b02a8e9fc65 | 31 | 0 | 29 | 0 | 4377 | 944 | 944 | 0.0 | 0.0039 | 2 | 0 | 712909 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | 31 | 2 | 27 | 0 | 3708 | 816 | 1140 | 0.0 | 0.0071 | 2 | 0 | 627696 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | 31 | 2 | 27 | 0 | 5314 | 1208 | 1532 | 0.0 | 0.0071 | 2 | 0 | 627188 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | 30 | 1 | 27 | 0 | 6893 | 2104 | 2104 | 0.0 | 0.0043 | 16 | 0 | 643731 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | 30 | 2 | 26 | 0 | 4628 | 1308 | 1308 | 0.0 | 0.0039 | 3 | 0 | 633858 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/session/8dfcd983-416a-4565-870e-7ace00ba2e5d | 30 | 0 | 28 | 0 | 4446 | 712 | 1188 | 0.0 | 0.0072 | 1 | 0 | 673308 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/session/797fea9f-b1fc-4e17-8906-c4dfd78107b4 | 30 | 0 | 28 | 0 | 8107 | 2640 | 2980 | 0.0 | 0.0072 | 3 | 0 | 673330 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 30 | 2 | 26 | 0 | 5019 | 880 | 880 | 0.0 | 0.0071 | 2 | 0 | 625841 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | 30 | 2 | 26 | 0 | 4425 | 1668 | 2008 | 0.0 | 0.0071 | 1 | 0 | 626453 |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | 30 | 0 | 28 | 0 | 4835 | 768 | 1100 | 0.0 | 0.0267 | 3 | 0 | 642416 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | 30 | 0 | 28 | 0 | 13745 | 1544 | 1544 | 0.0 | 0.0072 | 6 | 0 | 673396 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/a3c19aa3-0e8f-4421-8a74-0f5f2474dec8 | 30 | 0 | 28 | 0 | 8568 | 3908 | 4244 | 0.0 | 0.0072 | 2 | 0 | 673655 |
-| Critical | auth-public | logged-in-admin | desktop | /vi | 29 | 0 | 27 | 0 | 4333 | 1256 | 1256 | 367.0 | 0.0040 | 1 | 0 | 607759 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers | 29 | 0 | 27 | 0 | 4557 | 1768 | 1768 | 0.0 | 0.0042 | 2 | 0 | 635309 |
-| Critical | auth-public | logged-in-reader | desktop | /vi | 29 | 0 | 27 | 0 | 4407 | 776 | 1452 | 925.0 | 0.0038 | 3 | 0 | 607933 |
-| Critical | auth-public | logged-out | mobile | /vi | 29 | 0 | 27 | 0 | 6214 | 2648 | 2648 | 0.0 | 0.0000 | 1 | 0 | 604321 |
-| Critical | auth-public | logged-in-admin | mobile | /vi | 29 | 0 | 27 | 0 | 8027 | 2740 | 2740 | 0.0 | 0.0055 | 2 | 0 | 607880 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | 29 | 0 | 27 | 0 | 6641 | 900 | 900 | 0.0 | 0.0071 | 15 | 0 | 643085 |
-| Critical | auth-public | logged-in-reader | mobile | /vi | 29 | 0 | 27 | 0 | 5371 | 1460 | 1816 | 0.0 | 0.0024 | 6 | 0 | 607777 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | 29 | 0 | 27 | 0 | 4649 | 696 | 1016 | 0.0 | 0.0071 | 11 | 0 | 634868 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 5842 | 1280 | 1280 | 0.0 | 0.0042 | 2 | 0 | 624551 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 4735 | 1000 | 1304 | 0.0 | 0.0000 | 14 | 0 | 624120 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 11957 | 1808 | 1808 | 4.0 | 0.0042 | 2 | 0 | 624350 |
-| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | 28 | 0 | 26 | 0 | 4048 | 1016 | 1016 | 0.0 | 0.0039 | 2 | 0 | 631752 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet | 28 | 0 | 26 | 0 | 5300 | 1744 | 2204 | 1.0 | 0.0039 | 1 | 0 | 634373 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 4664 | 1632 | 1632 | 0.0 | 0.0039 | 2 | 0 | 631874 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 4820 | 1812 | 1812 | 0.0 | 0.0095 | 2 | 0 | 633344 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | 28 | 0 | 26 | 0 | 5150 | 1384 | 1384 | 0.0 | 0.0044 | 2 | 0 | 632285 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading | 28 | 0 | 26 | 0 | 4208 | 764 | 1088 | 0.0 | 0.0071 | 1 | 0 | 641618 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | 28 | 0 | 26 | 0 | 5846 | 904 | 1256 | 0.0 | 0.0071 | 2 | 0 | 634219 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 4128 | 1288 | 1288 | 0.0 | 0.0000 | 10 | 0 | 631219 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | 28 | 0 | 26 | 0 | 5554 | 1596 | 1928 | 0.0 | 0.0074 | 3 | 0 | 631990 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | 28 | 0 | 26 | 0 | 11128 | 7084 | 7084 | 0.0 | 0.0071 | 3 | 0 | 625769 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 5427 | 2344 | 2696 | 0.0 | 0.0071 | 4 | 0 | 625924 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading | 28 | 0 | 26 | 0 | 5200 | 976 | 976 | 0.0 | 0.0071 | 1 | 0 | 641470 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 4694 | 1184 | 1184 | 0.0 | 0.0071 | 2 | 0 | 624610 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | 28 | 0 | 26 | 0 | 4190 | 776 | 1088 | 0.0 | 0.0071 | 1 | 0 | 627147 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 7061 | 2104 | 2360 | 0.0 | 0.0071 | 2 | 0 | 624594 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/notifications | 28 | 0 | 26 | 0 | 4402 | 1484 | 1516 | 0.0 | 0.0074 | 2 | 0 | 625442 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/reader/apply | 28 | 0 | 26 | 0 | 8090 | 4860 | 5192 | 0.0 | 0.0071 | 1 | 0 | 625620 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 11807 | 7476 | 7796 | 0.0 | 0.0071 | 2 | 0 | 624291 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 5829 | 2440 | 2748 | 0.0 | 0.0024 | 2 | 0 | 520133 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 7446 | 3176 | 3492 | 0.0 | 0.0024 | 4 | 0 | 519820 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 7045 | 3396 | 3712 | 0.0 | 0.0024 | 4 | 0 | 520060 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 8497 | 5208 | 5524 | 0.0 | 0.0024 | 2 | 0 | 520003 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/login | 24 | 0 | 22 | 0 | 4277 | 1664 | 1664 | 241.0 | 0.0000 | 10 | 0 | 511180 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/register | 24 | 0 | 22 | 0 | 4061 | 1324 | 1324 | 296.0 | 0.0000 | 12 | 0 | 511190 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 4211 | 1744 | 1744 | 90.0 | 0.0000 | 14 | 0 | 511178 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | 24 | 0 | 22 | 0 | 4984 | - | - | 0.0 | 0.0024 | 23 | 0 | 511233 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | 24 | 0 | 22 | 0 | 5285 | 2124 | 2124 | 487.0 | 0.0028 | 8 | 0 | 511253 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 11642 | 2304 | 2304 | 0.0 | 0.0000 | 12 | 0 | 511220 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/login | 24 | 0 | 22 | 0 | 4603 | 1292 | 1292 | 0.0 | 0.0000 | 9 | 0 | 511197 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/register | 24 | 0 | 22 | 0 | 3564 | 648 | 1004 | 0.0 | 0.0024 | 4 | 0 | 511223 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 3988 | - | - | 0.0 | 0.0000 | 19 | 0 | 511264 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/login | 24 | 0 | 22 | 0 | 5935 | 992 | 992 | 0.0 | 0.0384 | 11 | 0 | 511232 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | 24 | 0 | 22 | 0 | 8519 | - | - | 0.0 | 0.0000 | 22 | 0 | 511257 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 5970 | - | - | 0.0 | 0.0000 | 19 | 0 | 511153 |
-| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | 35 | 0 | 33 | 0 | 3866 | 896 | 1164 | 0.0 | 0.0039 | 0 | 0 | 652458 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/e0ac9d62-58bd-41d2-9abb-fd7f5092131d | 34 | 2 | 30 | 0 | 6337 | 2176 | 2176 | 0.0 | 0.0039 | 0 | 0 | 715954 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/5d1c145a-5a71-4480-acf0-244f34f6ef76 | 34 | 2 | 30 | 0 | 7030 | 1868 | 1868 | 0.0 | 0.0039 | 0 | 0 | 716101 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | 34 | 4 | 28 | 0 | 5570 | 1220 | 1220 | 0.0 | 0.0039 | 0 | 0 | 644702 |
-| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | 33 | 2 | 29 | 0 | 5555 | 2504 | 2504 | 0.0 | 0.0042 | 0 | 0 | 728962 |
-| High | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | 33 | 3 | 28 | 0 | 4575 | 728 | 1172 | 0.0 | 0.0180 | 0 | 0 | 644829 |
-| High | reading | logged-in-reader | mobile | /vi/reading/session/37afc1bc-5feb-4b68-8c4b-da8ffc156f46 | 33 | 2 | 29 | 0 | 5163 | 1528 | 1528 | 0.0 | 0.0072 | 0 | 0 | 677129 |
-| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/leaderboard | 32 | 2 | 28 | 0 | 7875 | 4292 | 4292 | 0.0 | 0.0177 | 0 | 0 | 652053 |
-| High | reading | logged-in-admin | desktop | /vi/reading/session/d67a8827-530a-4358-ae07-5d5f6b08bd1d | 31 | 0 | 29 | 0 | 4171 | 1064 | 1064 | 0.0 | 0.0042 | 0 | 0 | 704807 |
-| High | reading | logged-in-admin | desktop | /vi/reading/session/dedc486f-ae01-4175-8304-308508b8e6fd | 31 | 0 | 29 | 0 | 5395 | 1516 | 1516 | 0.0 | 0.0042 | 0 | 0 | 705535 |
-| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha/history | 31 | 1 | 28 | 0 | 6896 | 4056 | 4056 | 0.0 | 0.0039 | 0 | 0 | 724980 |
-| High | reading | logged-in-reader | desktop | /vi/reading/history | 31 | 2 | 27 | 0 | 4207 | 1424 | 1424 | 0.0 | 0.0039 | 0 | 0 | 636145 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/4cda2818-0afd-475d-9391-f8b697b5e44c | 31 | 0 | 29 | 0 | 8894 | 1688 | 1688 | 0.0 | 0.0039 | 0 | 0 | 712851 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile | 31 | 2 | 27 | 0 | 5094 | 1068 | 1400 | 0.0 | 0.0760 | 0 | 0 | 648373 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/withdraw | 31 | 2 | 27 | 0 | 5273 | 1512 | 1512 | 0.0 | 0.0401 | 0 | 0 | 629190 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 31 | 2 | 27 | 0 | 4724 | 1116 | 1432 | 0.0 | 0.0071 | 0 | 0 | 627295 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | 30 | 2 | 26 | 0 | 5573 | 2716 | 2716 | 0.0 | 0.0042 | 0 | 0 | 633663 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | 30 | 2 | 26 | 0 | 4873 | 860 | 1184 | 0.0 | 0.0000 | 0 | 0 | 632740 |
-| High | reader-chat | logged-in-admin | mobile | /vi/chat | 30 | 2 | 26 | 0 | 4964 | 1156 | 1480 | 0.0 | 0.0071 | 0 | 0 | 633828 |
-| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/leaderboard | 30 | 0 | 28 | 0 | 5547 | 1160 | 1160 | 0.0 | 0.0267 | 0 | 0 | 649622 |
-| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/gamification | 30 | 1 | 27 | 0 | 6439 | 1232 | 1564 | 0.0 | 0.0071 | 0 | 0 | 644858 |
-| High | reading | logged-in-admin | mobile | /vi/reading/session/37a5aa0f-5b91-4586-94a6-97ba219a8629 | 30 | 0 | 28 | 0 | 4885 | 928 | 1252 | 0.0 | 0.0072 | 0 | 0 | 673282 |
-| High | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | 30 | 0 | 28 | 0 | 24110 | 4988 | 4988 | 0.0 | 0.0071 | 0 | 0 | 722191 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile | 29 | 0 | 27 | 0 | 6018 | 2552 | 2552 | 0.0 | 0.0543 | 0 | 0 | 636048 |
-| High | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | 29 | 0 | 27 | 0 | 13767 | 4680 | 4680 | 0.0 | 0.0192 | 0 | 0 | 636783 |
-| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | 29 | 0 | 27 | 0 | 9153 | 2052 | 2052 | 32.0 | 0.0039 | 0 | 0 | 641943 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile | 29 | 0 | 27 | 0 | 4082 | 1172 | 1172 | 0.0 | 0.0740 | 0 | 0 | 636094 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers | 29 | 0 | 27 | 0 | 5004 | 2400 | 2400 | 0.0 | 0.0039 | 0 | 0 | 635531 |
-| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/gamification | 29 | 0 | 27 | 0 | 5200 | 1792 | 1792 | 0.0 | 0.0190 | 0 | 0 | 643559 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers | 29 | 0 | 27 | 0 | 4406 | 800 | 1108 | 0.0 | 0.0071 | 0 | 0 | 640582 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | 29 | 0 | 27 | 0 | 5089 | 1852 | 2184 | 0.0 | 0.0892 | 0 | 0 | 636515 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers | 29 | 0 | 27 | 0 | 5492 | 2104 | 2348 | 0.0 | 0.0071 | 0 | 0 | 633637 |
-| High | community-leaderboard-quest | logged-in-reader | mobile | /vi/gamification | 29 | 0 | 27 | 0 | 5169 | 1880 | 2356 | 0.0 | 0.0071 | 0 | 0 | 636445 |
-| High | reading | logged-in-admin | desktop | /vi/reading | 28 | 0 | 26 | 0 | 5246 | 1980 | 1980 | 35.0 | 0.0042 | 0 | 0 | 641595 |
-| High | reader-chat | logged-in-admin | desktop | /vi/chat | 28 | 0 | 26 | 0 | 11267 | 8184 | 8184 | 0.0 | 0.0042 | 0 | 0 | 624405 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | 28 | 0 | 26 | 0 | 6081 | 1460 | 1460 | 3.0 | 0.0042 | 0 | 0 | 627272 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 6561 | 1108 | 1420 | 0.0 | 0.0042 | 0 | 0 | 625449 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | 28 | 0 | 26 | 0 | 4099 | 1012 | 1012 | 0.0 | 0.0042 | 0 | 0 | 624919 |
-| High | reader-chat | logged-in-admin | desktop | /vi/reader/apply | 28 | 0 | 26 | 0 | 4967 | 1088 | 1088 | 0.0 | 0.0042 | 0 | 0 | 625500 |
-| High | reading | logged-in-admin | desktop | /vi/reading/history | 28 | 0 | 26 | 0 | 4887 | 1200 | 1200 | 1.0 | 0.0043 | 0 | 0 | 625801 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 6081 | 1468 | 1468 | 0.0 | 0.0042 | 0 | 0 | 624320 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 7158 | 1984 | 1984 | 2.0 | 0.0042 | 0 | 0 | 625858 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 6510 | 2788 | 2936 | 50.0 | 0.0042 | 0 | 0 | 625926 |
-| High | reading | logged-in-reader | desktop | /vi/reading | 28 | 0 | 26 | 0 | 4188 | 824 | 1224 | 0.0 | 0.0039 | 0 | 0 | 641613 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/mfa | 28 | 0 | 26 | 0 | 4512 | 1432 | 1432 | 0.0 | 0.0039 | 0 | 0 | 631920 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/reader | 28 | 0 | 26 | 0 | 4226 | 1508 | 1508 | 0.0 | 0.0039 | 0 | 0 | 632433 |
-| High | reader-chat | logged-in-reader | desktop | /vi/reader/apply | 28 | 0 | 26 | 0 | 4639 | 1516 | 1516 | 0.0 | 0.0039 | 0 | 0 | 632474 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 5546 | 1724 | 1724 | 0.0 | 0.0039 | 0 | 0 | 631312 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 4847 | 1036 | 1036 | 0.0 | 0.0039 | 0 | 0 | 630988 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 4630 | 744 | 744 | 0.0 | 0.0071 | 0 | 0 | 631615 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 4336 | 892 | 1224 | 0.0 | 0.0071 | 0 | 0 | 631436 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 4142 | 1160 | 1488 | 0.0 | 0.0071 | 0 | 0 | 632149 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 7369 | 4068 | 4388 | 0.0 | 0.0071 | 0 | 0 | 624322 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 12575 | 9380 | 9380 | 0.0 | 0.0071 | 0 | 0 | 625295 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 6050 | 2028 | 2028 | 0.0 | 0.0071 | 0 | 0 | 625035 |
-| High | reading | logged-in-reader | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 6142 | 1004 | 1004 | 0.0 | 0.0071 | 0 | 0 | 626117 |
-| High | auth-public | logged-out | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 9047 | 1004 | 1004 | 0.0 | 0.0000 | 0 | 0 | 525662 |
-| High | auth-public | logged-out | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 3539 | 1084 | 1084 | 0.0 | 0.0000 | 0 | 0 | 525900 |
-| High | auth-public | logged-in-admin | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 4824 | 832 | 832 | 0.0 | 0.0020 | 0 | 0 | 520048 |
-| High | auth-public | logged-in-admin | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3918 | 1140 | 1140 | 0.0 | 0.0020 | 0 | 0 | 520206 |
-| High | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 3583 | 876 | 876 | 0.0 | 0.0020 | 0 | 0 | 520003 |
-| High | auth-public | logged-in-reader | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 4711 | 1108 | 1108 | 0.0 | 0.0019 | 0 | 0 | 526163 |
-| High | auth-public | logged-in-reader | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 5075 | 2080 | 2080 | 0.0 | 0.0019 | 0 | 0 | 526163 |
-| High | auth-public | logged-in-reader | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 5607 | 2152 | 2152 | 0.0 | 0.0019 | 0 | 0 | 526249 |
-| High | auth-public | logged-out | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 3737 | 756 | 756 | 0.0 | 0.0000 | 0 | 0 | 525755 |
-| High | auth-public | logged-out | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3873 | 904 | 904 | 0.0 | 0.0000 | 0 | 0 | 525900 |
-| High | auth-public | logged-out | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 4556 | 1412 | 1412 | 0.0 | 0.0000 | 0 | 0 | 526021 |
-| High | auth-public | logged-in-admin | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 5855 | 1632 | 1940 | 0.0 | 0.0055 | 0 | 0 | 519884 |
-| High | auth-public | logged-in-admin | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 9214 | 4764 | 5080 | 0.0 | 0.0055 | 0 | 0 | 519982 |
-| High | auth-public | logged-out | desktop | /vi/login | 24 | 0 | 22 | 0 | 3768 | 932 | 932 | 0.0 | 0.0000 | 0 | 0 | 512233 |
-| High | auth-public | logged-out | desktop | /vi/register | 24 | 0 | 22 | 0 | 4361 | 1344 | 1344 | 0.0 | 0.0000 | 0 | 0 | 512759 |
-| High | auth-public | logged-out | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 3708 | 908 | 908 | 0.0 | 0.0000 | 0 | 0 | 512045 |
-| High | auth-public | logged-out | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 3457 | 988 | 988 | 0.0 | 0.0000 | 0 | 0 | 511978 |
-| High | auth-public | logged-in-admin | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 4577 | 1200 | 1200 | 0.0 | 0.0000 | 0 | 0 | 511923 |
-| High | auth-public | logged-in-admin | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 4553 | 1616 | 1616 | 0.0 | 0.0000 | 0 | 0 | 512020 |
-| High | auth-public | logged-in-reader | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 4599 | 1824 | 1824 | 0.0 | 0.0001 | 0 | 0 | 511925 |
-| High | auth-public | logged-in-reader | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 3959 | 1256 | 1256 | 0.0 | 0.0000 | 0 | 0 | 512221 |
-| High | auth-public | logged-out | mobile | /vi/login | 24 | 0 | 22 | 0 | 4171 | 756 | 756 | 0.0 | 0.0000 | 0 | 0 | 512242 |
-| High | auth-public | logged-out | mobile | /vi/register | 24 | 0 | 22 | 0 | 5148 | 1448 | 1448 | 0.0 | 0.0000 | 0 | 0 | 512727 |
-| High | auth-public | logged-out | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 3395 | 700 | 700 | 0.0 | 0.0000 | 0 | 0 | 511851 |
-| High | auth-public | logged-out | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 5107 | 1924 | 1924 | 0.0 | 0.0000 | 0 | 0 | 511951 |
-| High | auth-public | logged-out | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 3771 | 924 | 924 | 0.0 | 0.0000 | 0 | 0 | 512088 |
-| High | auth-public | logged-in-admin | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 5163 | 1516 | 1516 | 0.0 | 0.0000 | 0 | 0 | 511894 |
-| High | auth-public | logged-in-admin | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 4854 | 1356 | 1356 | 0.0 | 0.0000 | 0 | 0 | 512125 |
-| High | auth-public | logged-in-reader | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 5101 | 1508 | 1508 | 0.0 | 0.0000 | 0 | 0 | 511931 |
-| High | auth-public | logged-in-reader | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 4961 | 1348 | 1348 | 0.0 | 0.0000 | 0 | 0 | 512031 |
-| Medium | auth-public | logged-out | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2970 | 660 | 972 | 0.0 | 0.0000 | 0 | 0 | 525791 |
-| Medium | auth-public | logged-out | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 3003 | 872 | 872 | 0.0 | 0.0000 | 0 | 0 | 511847 |
+| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | 41 | 4 | 35 | 0 | 8418 | 1120 | 2544 | 0.0 | 0.0173 | 0 | 1 | 791182 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | 40 | 4 | 34 | 0 | 7729 | 1308 | 1308 | 0.0 | 0.0039 | 0 | 0 | 746155 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | 39 | 3 | 34 | 0 | 7246 | 2736 | 4356 | 0.0 | 0.0042 | 2 | 1 | 771740 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | 39 | 3 | 34 | 0 | 6466 | 1956 | 2292 | 0.0 | 0.0071 | 0 | 0 | 803036 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | 38 | 2 | 34 | 0 | 5040 | 1316 | 1316 | 0.0 | 0.0039 | 2 | 0 | 655176 |
+| Critical | community-leaderboard-quest | logged-in-reader | desktop | /vi/community | 38 | 2 | 34 | 0 | 6365 | 1312 | 3160 | 0.0 | 0.0039 | 0 | 1 | 779875 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | 38 | 3 | 33 | 0 | 8050 | 1416 | 1416 | 0.0 | 0.0071 | 1 | 0 | 800848 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | 37 | 2 | 33 | 0 | 7819 | 3148 | 3148 | 0.0 | 0.0042 | 3 | 0 | 654043 |
+| Critical | auth-public | logged-in-reader | desktop | /vi | 36 | 5 | 28 | 0 | 6772 | 1876 | 1876 | 362.0 | 0.0031 | 2 | 0 | 613638 |
+| Critical | auth-public | logged-in-admin | mobile | /vi | 36 | 5 | 28 | 0 | 5160 | 1004 | 1004 | 0.0 | 0.0055 | 1 | 0 | 614834 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community | 36 | 1 | 33 | 0 | 8392 | 1548 | 3084 | 0.0 | 0.0173 | 0 | 1 | 769372 |
+| Critical | auth-public | logged-in-admin | desktop | /vi | 35 | 5 | 27 | 0 | 28308 | 22736 | 22736 | 214.0 | 0.0040 | 3 | 0 | 612971 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | 35 | 0 | 33 | 0 | 5152 | 736 | 1060 | 0.0 | 0.0071 | 2 | 0 | 661181 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | 35 | 0 | 33 | 0 | 6559 | 1188 | 1188 | 0.0 | 0.0071 | 4 | 0 | 657600 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | 34 | 3 | 29 | 0 | 8512 | 2584 | 2924 | 0.0 | 0.0071 | 1 | 0 | 728840 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | 33 | 2 | 29 | 0 | 9674 | 1172 | 1172 | 0.0 | 0.0072 | 6 | 0 | 681514 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/789b367a-02d2-4de3-b131-a820b8f4446d | 33 | 2 | 29 | 0 | 7144 | 1404 | 1404 | 0.0 | 0.0072 | 4 | 0 | 677259 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | 32 | 2 | 28 | 0 | 6898 | 1024 | 1024 | 0.0 | 0.0071 | 15 | 0 | 646790 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | 32 | 2 | 28 | 0 | 5344 | 1448 | 1448 | 0.0 | 0.0071 | 4 | 0 | 640392 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | 32 | 2 | 28 | 0 | 19273 | 10532 | 10852 | 0.0 | 0.0071 | 3 | 0 | 638651 |
+| Critical | auth-public | logged-out | desktop | /vi | 31 | 2 | 27 | 0 | 6911 | 3876 | 4376 | 166.0 | 0.0000 | 1 | 1 | 601848 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/chat | 31 | 2 | 27 | 0 | 5562 | 2276 | 2276 | 0.0 | 0.0042 | 1 | 0 | 627401 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/reader/apply | 31 | 2 | 27 | 0 | 4905 | 1648 | 1648 | 0.0 | 0.0042 | 3 | 0 | 626743 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/30dfcecd-bc35-4875-bf86-f1c178b69b32 | 31 | 0 | 29 | 0 | 4888 | 1516 | 1516 | 0.0 | 0.0042 | 4 | 0 | 705222 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/d07353aa-8357-4bef-9a94-5f24326eaebd | 31 | 0 | 29 | 0 | 5498 | 1452 | 1452 | 0.0 | 0.0042 | 1 | 0 | 705268 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/dd6bd3cb-76a8-4176-a706-30cfc54f8aa0 | 31 | 0 | 29 | 0 | 8345 | 2064 | 2428 | 0.0 | 0.0042 | 1 | 0 | 704970 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | 31 | 0 | 29 | 0 | 14080 | 5608 | 5608 | 0.0 | 0.0039 | 6 | 0 | 705196 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/8986c52b-4959-47f3-b4a8-65f1ac0d0e4c | 31 | 0 | 29 | 0 | 10157 | 5920 | 5920 | 0.0 | 0.0039 | 2 | 0 | 705153 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/5d12f152-decd-4d32-bf40-11b28fd91a3e | 31 | 0 | 29 | 0 | 4963 | 1124 | 1124 | 0.0 | 0.0039 | 4 | 0 | 705152 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | 31 | 1 | 28 | 0 | 6298 | 2764 | 3108 | 0.0 | 0.0071 | 1 | 0 | 726710 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 31 | 2 | 27 | 0 | 7038 | 2656 | 2972 | 0.0 | 0.0071 | 1 | 0 | 627629 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 31 | 2 | 27 | 0 | 7922 | 1804 | 1804 | 0.0 | 0.0071 | 1 | 0 | 629066 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | 30 | 0 | 28 | 0 | 6990 | 2084 | 2084 | 0.0 | 0.0042 | 3 | 0 | 725952 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | 30 | 0 | 28 | 0 | 10448 | 5632 | 5632 | 0.0 | 0.0180 | 2 | 0 | 642162 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | 30 | 2 | 26 | 0 | 8525 | 2956 | 2956 | 0.0 | 0.0039 | 3 | 0 | 627758 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/07e40f3a-8aad-4260-af12-26586c048b38 | 30 | 0 | 28 | 0 | 9687 | 3692 | 4028 | 0.0 | 0.0072 | 2 | 0 | 680610 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/de78776f-5892-4790-823f-b132be54609d | 30 | 0 | 28 | 0 | 7691 | 1448 | 1448 | 0.0 | 0.0071 | 2 | 0 | 680810 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | 30 | 0 | 28 | 0 | 9362 | 1640 | 1640 | 0.0 | 0.0267 | 2 | 0 | 642049 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/5a454764-2a4a-41db-9d7b-0b2cb451d876 | 30 | 0 | 28 | 0 | 6037 | 1256 | 1256 | 0.0 | 0.0072 | 3 | 0 | 673586 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/f7039a71-8a13-4e89-9f9b-79f0f56eb615 | 30 | 0 | 28 | 0 | 7083 | 3552 | 3884 | 0.0 | 0.0072 | 3 | 0 | 673545 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | 29 | 0 | 27 | 0 | 10681 | 1988 | 1988 | 0.0 | 0.0043 | 13 | 0 | 642943 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile | 29 | 0 | 27 | 0 | 8408 | 2968 | 2968 | 0.0 | 0.0489 | 2 | 0 | 636077 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers | 29 | 0 | 27 | 0 | 5071 | 1296 | 1296 | 0.0 | 0.0042 | 2 | 0 | 628783 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | 29 | 0 | 27 | 0 | 7014 | 2292 | 2292 | 0.0 | 0.0042 | 4 | 0 | 636547 |
+| Critical | auth-public | logged-out | mobile | /vi | 29 | 0 | 27 | 0 | 7786 | 2636 | 2988 | 0.0 | 0.0000 | 1 | 0 | 606266 |
+| Critical | auth-public | logged-in-reader | mobile | /vi | 29 | 0 | 27 | 0 | 7468 | 1896 | 2248 | 0.0 | 0.0439 | 1 | 0 | 607783 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | 29 | 0 | 27 | 0 | 10447 | 1892 | 2196 | 0.0 | 0.1024 | 5 | 0 | 636832 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/gamification | 29 | 0 | 27 | 0 | 6405 | 1460 | 1460 | 0.0 | 0.0071 | 1 | 0 | 636999 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading | 28 | 0 | 26 | 0 | 10505 | 3192 | 3192 | 0.0 | 0.0042 | 3 | 0 | 641450 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | 28 | 0 | 26 | 0 | 8430 | 1792 | 1792 | 0.0 | 0.0000 | 24 | 0 | 624058 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | 28 | 0 | 26 | 0 | 15966 | 12976 | 13288 | 0.0 | 0.0042 | 1 | 0 | 627164 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 10162 | 1608 | 2476 | 0.0 | 0.0042 | 2 | 0 | 624590 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 5058 | - | - | 0.0 | 0.0000 | 27 | 0 | 624103 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | 28 | 0 | 26 | 0 | 6418 | 2368 | 2368 | 0.0 | 0.0042 | 3 | 0 | 625004 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/history | 28 | 0 | 26 | 0 | 11019 | 6952 | 6952 | 0.0 | 0.0043 | 1 | 0 | 625959 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 6877 | 1728 | 1728 | 0.0 | 0.0042 | 3 | 0 | 624130 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 7821 | 1488 | 1488 | 0.0 | 0.0042 | 4 | 0 | 624526 |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | 28 | 0 | 26 | 0 | 6826 | 1832 | 1832 | 0.0 | 0.0039 | 3 | 0 | 631642 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 16999 | 1912 | 1912 | 0.0 | 0.0039 | 2 | 0 | 627231 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | 28 | 0 | 26 | 0 | 12735 | 5392 | 5392 | 0.0 | 0.0044 | 3 | 0 | 624983 |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/reader/apply | 28 | 0 | 26 | 0 | 6622 | 2624 | 2992 | 0.0 | 0.0039 | 3 | 0 | 625613 |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 8074 | 4792 | 4792 | 0.0 | 0.0039 | 1 | 0 | 624262 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 7147 | - | - | 0.0 | 0.0000 | 23 | 0 | 630489 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | 28 | 0 | 26 | 0 | 6157 | 1756 | 2096 | 0.0 | 0.0071 | 1 | 0 | 633961 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 5298 | 1312 | 1312 | 0.0 | 0.0071 | 1 | 0 | 632232 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 8552 | 1776 | 1776 | 0.0 | 0.0000 | 22 | 0 | 630712 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | 28 | 0 | 26 | 0 | 5608 | 1592 | 1928 | 0.0 | 0.0074 | 1 | 0 | 631807 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 4544 | 1208 | 1208 | 0.0 | 0.0071 | 1 | 0 | 632656 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 6281 | 2796 | 2796 | 0.0 | 0.0071 | 1 | 0 | 631055 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 16013 | 2620 | 2972 | 0.0 | 0.0071 | 3 | 0 | 631039 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 9521 | 5896 | 6232 | 0.0 | 0.0071 | 5 | 0 | 631166 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 8945 | 2148 | 2352 | 0.0 | 0.0071 | 2 | 0 | 625600 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | 28 | 0 | 26 | 0 | 6294 | 2324 | 2676 | 0.0 | 0.0071 | 2 | 0 | 624643 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | 28 | 0 | 26 | 0 | 5626 | 1144 | 1144 | 0.0 | 0.0071 | 2 | 0 | 627185 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 7151 | 1436 | 1436 | 0.0 | 0.0071 | 2 | 0 | 624830 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 9715 | 2428 | 2768 | 0.0 | 0.0071 | 2 | 0 | 624966 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 10065 | 5772 | 6112 | 0.0 | 0.0401 | 2 | 0 | 626069 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/notifications | 28 | 0 | 26 | 0 | 9665 | 4672 | 4672 | 0.0 | 0.0087 | 2 | 0 | 625441 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/reader/apply | 28 | 0 | 26 | 0 | 7892 | 4468 | 4804 | 0.0 | 0.0071 | 2 | 0 | 625539 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 4868 | 1060 | 1060 | 0.0 | 0.0071 | 3 | 0 | 625840 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 8632 | 4008 | 4008 | 0.0 | 0.0071 | 2 | 0 | 624559 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 9099 | 4308 | 4644 | 0.0 | 0.0071 | 2 | 0 | 624584 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 8293 | 2620 | 2964 | 0.0 | 0.0071 | 2 | 0 | 626050 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 7747 | 4296 | 4636 | 0.0 | 0.0071 | 3 | 0 | 626127 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 6706 | 3032 | 3032 | 0.0 | 0.0014 | 1 | 0 | 520173 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 6340 | 1724 | 2028 | 0.0 | 0.0055 | 1 | 0 | 525996 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 5360 | 1828 | 1828 | 0.0 | 0.0055 | 1 | 0 | 520098 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | 24 | 0 | 22 | 0 | 8939 | 1336 | 1336 | 36.0 | 0.0000 | 19 | 0 | 511107 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | 24 | 0 | 22 | 0 | 27074 | - | - | 0.0 | 0.0000 | 23 | 0 | 511084 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 12066 | - | - | 0.0 | 0.0023 | 21 | 0 | 511191 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/login | 24 | 0 | 22 | 0 | 4877 | 1548 | 1548 | 65.0 | 0.0000 | 16 | 0 | 511102 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | 24 | 0 | 22 | 0 | 4166 | 1980 | 1980 | 0.0 | 0.0000 | 18 | 0 | 511225 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 8893 | 1376 | 1376 | 0.0 | 0.0000 | 23 | 0 | 511244 |
+| Critical | auth-public | logged-out | mobile | /vi/login | 24 | 0 | 22 | 0 | 4880 | 1744 | 1744 | 0.0 | 0.0000 | 1 | 0 | 512280 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | 24 | 0 | 22 | 0 | 4838 | - | - | 0.0 | 0.0000 | 20 | 0 | 511115 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | 24 | 0 | 22 | 0 | 5657 | 1420 | 1420 | 0.0 | 0.0384 | 17 | 0 | 511135 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 4636 | 1120 | 1120 | 0.0 | 0.0000 | 1 | 0 | 511125 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | 24 | 0 | 22 | 0 | 7255 | 1904 | 1904 | 0.0 | 0.0384 | 21 | 0 | 511030 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | 24 | 0 | 22 | 0 | 8354 | 1276 | 1276 | 0.0 | 0.0384 | 20 | 0 | 511110 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 7688 | 1204 | 1204 | 0.0 | 0.0000 | 14 | 0 | 511192 |
+| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha | 35 | 0 | 33 | 0 | 6997 | 1372 | 1372 | 0.0 | 0.0042 | 0 | 0 | 733423 |
+| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha/history | 33 | 2 | 29 | 0 | 4830 | 1548 | 1548 | 0.0 | 0.0039 | 0 | 0 | 726929 |
+| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/leaderboard | 33 | 2 | 29 | 0 | 6238 | 1440 | 1440 | 0.0 | 0.0267 | 0 | 0 | 653802 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers | 32 | 2 | 28 | 0 | 6055 | 1504 | 1800 | 0.0 | 0.0039 | 0 | 0 | 638642 |
+| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/gamification | 32 | 3 | 27 | 0 | 5660 | 1648 | 1988 | 0.0 | 0.0071 | 0 | 0 | 646740 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | 31 | 2 | 27 | 0 | 17378 | 13928 | 13928 | 0.0 | 0.0042 | 0 | 0 | 627828 |
+| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/leaderboard | 31 | 1 | 28 | 0 | 5743 | 1368 | 1368 | 0.0 | 0.0177 | 0 | 0 | 650748 |
+| High | reading | logged-in-reader | desktop | /vi/reading/history | 31 | 2 | 27 | 0 | 4804 | 1044 | 1044 | 0.0 | 0.0039 | 0 | 0 | 628376 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile | 31 | 2 | 27 | 0 | 8276 | 3952 | 3952 | 0.0 | 0.0760 | 0 | 0 | 648257 |
+| High | reader-chat | logged-in-admin | mobile | /vi/reader/apply | 31 | 2 | 27 | 0 | 5975 | 1536 | 1536 | 0.0 | 0.0071 | 0 | 0 | 636623 |
+| High | reading | logged-in-reader | mobile | /vi/reading | 31 | 2 | 27 | 0 | 5217 | 1452 | 1452 | 0.0 | 0.0071 | 0 | 0 | 645607 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit/history | 30 | 2 | 26 | 0 | 6739 | 2824 | 2824 | 0.0 | 0.0039 | 0 | 0 | 626515 |
+| High | reader-chat | logged-in-admin | mobile | /vi/chat | 30 | 2 | 26 | 0 | 7370 | 3972 | 3972 | 0.0 | 0.0071 | 0 | 0 | 633711 |
+| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | 29 | 0 | 27 | 0 | 8100 | 1132 | 1132 | 0.0 | 0.0039 | 0 | 0 | 641710 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile | 29 | 0 | 27 | 0 | 4771 | 952 | 1240 | 0.0 | 0.0726 | 0 | 0 | 635927 |
+| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/gamification | 29 | 0 | 27 | 0 | 6185 | 1232 | 1672 | 0.0 | 0.0190 | 0 | 0 | 643416 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers | 29 | 0 | 27 | 0 | 6048 | 1564 | 1900 | 0.0 | 0.0071 | 0 | 0 | 634056 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 6904 | 3216 | 3216 | 0.0 | 0.0042 | 0 | 0 | 625413 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 6681 | 3076 | 3076 | 0.0 | 0.0042 | 0 | 0 | 624275 |
+| High | reading | logged-in-reader | desktop | /vi/reading | 28 | 0 | 26 | 0 | 4082 | 768 | 1116 | 0.0 | 0.0039 | 0 | 0 | 641397 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/mfa | 28 | 0 | 26 | 0 | 4821 | 1908 | 1908 | 0.0 | 0.0039 | 0 | 0 | 631245 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/reader | 28 | 0 | 26 | 0 | 3716 | 1104 | 1104 | 0.0 | 0.0039 | 0 | 0 | 632150 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet | 28 | 0 | 26 | 0 | 5165 | 1788 | 1788 | 0.0 | 0.0040 | 0 | 0 | 633855 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 6318 | 2264 | 2264 | 0.0 | 0.0039 | 0 | 0 | 624369 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 4635 | 2004 | 2004 | 0.0 | 0.0039 | 0 | 0 | 624418 |
+| High | reading | logged-in-admin | mobile | /vi/reading | 28 | 0 | 26 | 0 | 4928 | 1212 | 1212 | 0.0 | 0.0071 | 0 | 0 | 641672 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 6261 | 2076 | 2076 | 0.0 | 0.0071 | 0 | 0 | 631291 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 7869 | 2144 | 2368 | 0.0 | 0.0071 | 0 | 0 | 631341 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 6023 | 2560 | 2908 | 0.0 | 0.0071 | 0 | 0 | 624378 |
+| High | auth-public | logged-out | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 4957 | 992 | 992 | 0.0 | 0.0000 | 0 | 0 | 525710 |
+| High | auth-public | logged-out | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 5330 | 2512 | 2512 | 0.0 | 0.0000 | 0 | 0 | 525786 |
+| High | auth-public | logged-out | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 5707 | 1600 | 1916 | 0.0 | 0.0000 | 0 | 0 | 525843 |
+| High | auth-public | logged-in-admin | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 8084 | 4112 | 4112 | 0.0 | 0.0020 | 0 | 0 | 519899 |
+| High | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 14181 | 3316 | 3316 | 0.0 | 0.0020 | 0 | 0 | 520196 |
+| High | auth-public | logged-in-reader | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 11621 | 8400 | 8400 | 0.0 | 0.0019 | 0 | 0 | 519903 |
+| High | auth-public | logged-in-reader | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3832 | 1276 | 1276 | 0.0 | 0.0019 | 0 | 0 | 519586 |
+| High | auth-public | logged-in-reader | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 5030 | 788 | 788 | 0.0 | 0.0019 | 0 | 0 | 520237 |
+| High | auth-public | logged-out | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 4228 | 1388 | 1704 | 0.0 | 0.0000 | 0 | 0 | 525654 |
+| High | auth-public | logged-out | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3670 | 952 | 1288 | 0.0 | 0.0000 | 0 | 0 | 525911 |
+| High | auth-public | logged-out | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 4156 | 1340 | 1340 | 0.0 | 0.0000 | 0 | 0 | 525901 |
+| High | auth-public | logged-in-admin | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 6968 | 1876 | 2220 | 0.0 | 0.0055 | 0 | 0 | 526007 |
+| High | auth-public | logged-in-admin | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 10780 | 5996 | 5996 | 0.0 | 0.0055 | 0 | 0 | 526269 |
+| High | auth-public | logged-in-reader | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 6614 | 1996 | 2304 | 0.0 | 0.0055 | 0 | 0 | 520224 |
+| High | auth-public | logged-in-reader | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 4316 | 780 | 780 | 0.0 | 0.0055 | 0 | 0 | 519944 |
+| High | auth-public | logged-out | desktop | /vi/login | 24 | 0 | 22 | 0 | 4952 | 1756 | 1756 | 0.0 | 0.0000 | 0 | 0 | 512183 |
+| High | auth-public | logged-out | desktop | /vi/register | 24 | 0 | 22 | 0 | 9022 | 5304 | 5304 | 0.0 | 0.0000 | 0 | 0 | 512696 |
+| High | auth-public | logged-out | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 5252 | 1756 | 1756 | 0.0 | 0.0000 | 0 | 0 | 511751 |
+| High | auth-public | logged-out | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 4423 | 1252 | 1252 | 0.0 | 0.0000 | 0 | 0 | 511899 |
+| High | auth-public | logged-out | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 5423 | 2504 | 2504 | 0.0 | 0.0000 | 0 | 0 | 511989 |
+| High | auth-public | logged-in-admin | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 6400 | 1260 | 1260 | 0.0 | 0.0000 | 0 | 0 | 511861 |
+| High | auth-public | logged-in-admin | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 14052 | 6028 | 6028 | 0.0 | 0.0000 | 0 | 0 | 512010 |
+| High | auth-public | logged-in-reader | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 12084 | 3716 | 3716 | 0.0 | 0.0000 | 0 | 0 | 511867 |
+| High | auth-public | logged-in-reader | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 5779 | 2392 | 2392 | 0.0 | 0.0001 | 0 | 0 | 512049 |
+| High | auth-public | logged-out | mobile | /vi/register | 24 | 0 | 22 | 0 | 4833 | 1420 | 1420 | 0.0 | 0.0000 | 0 | 0 | 512816 |
+| High | auth-public | logged-out | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 3787 | 744 | 744 | 0.0 | 0.0000 | 0 | 0 | 511819 |
+| High | auth-public | logged-out | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 4448 | 1116 | 1116 | 0.0 | 0.0000 | 0 | 0 | 511972 |
+| High | auth-public | logged-out | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 4998 | 1524 | 1524 | 0.0 | 0.0000 | 0 | 0 | 512053 |
+| High | auth-public | logged-in-admin | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 6204 | 2664 | 2664 | 0.0 | 0.0000 | 0 | 0 | 511944 |
+| High | auth-public | logged-in-admin | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 4534 | 1524 | 1524 | 0.0 | 0.0000 | 0 | 0 | 512034 |
+| High | auth-public | logged-in-reader | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 8599 | 4592 | 4592 | 0.0 | 0.0000 | 0 | 0 | 511926 |
+| High | auth-public | logged-in-reader | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 17656 | 11588 | 11588 | 0.0 | 0.0004 | 0 | 0 | 511969 |
 
 ## Major Issues Found
 
-- Critical: 75 page(s) có request count >35, pending request, failed request, hoặc issue nghiêm trọng.
-- High: 86 page(s) vượt ngưỡng >25 requests hoặc có request >800ms.
-- Medium: 2 page(s) có request trong dải 400-800ms.
-- Duplicate: 2 nhóm duplicate request cần kiểm tra over-fetch/cache key.
-- Pending: 69 page(s) có pending request không phải websocket/eventsource.
+- Critical: 100 page(s) có request count >35, pending request, failed request, hoặc issue nghiêm trọng.
+- High: 61 page(s) vượt ngưỡng >25 requests hoặc có request >800ms.
+- Medium: chưa phát hiện page Medium theo benchmark hiện tại.
+- Duplicate: 1 nhóm duplicate request cần kiểm tra over-fetch/cache key.
+- Pending: 95 page(s) có pending request không phải websocket/eventsource.
 
 ### Slow Requests
 
 | Severity | Feature | Scenario | Viewport | Route | Method | Status | Duration (ms) | TTFB (ms) | Category | URL |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 18462 | 2341 | static | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 18460 | 2341 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 18454 | 2341 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 18450 | 2341 | static | https://www.tarotnow.xyz/_next/static/chunks/13onjvrcl5bfv.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 18445 | 2254 | static | https://www.tarotnow.xyz/_next/static/chunks/0-7mtii.hadxk.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 18251 | 2341 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | GET | 200 | 17834 | 2248 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10970 | 582 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10969 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/06ujm1m6ocbc1.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10966 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10543 | 885 | static | https://www.tarotnow.xyz/_next/static/chunks/06ujm1m6ocbc1.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10540 | 910 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10534 | 1965 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10530 | 1944 | static | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10500 | 896 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10492 | 863 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10478 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10476 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10475 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 10377 | 884 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10167 | 1001 | static | https://www.tarotnow.xyz/_next/static/chunks/03kmcz0ax1e4~.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 10157 | 581 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9645 | 1075 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9644 | 1081 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9638 | 1074 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9637 | 1058 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9622 | 1053 | static | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9609 | 1049 | static | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 9533 | 54 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 9488 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 9488 | 1060 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 9482 | 2427 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 9134 | 3912 | static | https://www.tarotnow.xyz/_next/static/chunks/06ujm1m6ocbc1.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 9117 | 2079 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 9113 | 3913 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 9072 | 862 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 8913 | 3914 | static | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 8904 | 3913 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 8801 | 3914 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8593 | 8205 | static | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8591 | 8205 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8587 | 8205 | static | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8570 | 8209 | static | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8536 | 8174 | static | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8535 | 8192 | static | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | GET | 200 | 8492 | 8252 | html | https://www.tarotnow.xyz/vi/profile/reader |
-| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | GET | 200 | 8286 | 7214 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8203 | 8166 | static | https://www.tarotnow.xyz/_next/static/media/2a65768255d6b625-s.14by5b4al-y~f.woff2 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | GET | 200 | 8198 | 8178 | static | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7975 | 1749 | static | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7964 | 1776 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7962 | 1838 | static | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7960 | 2395 | static | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7959 | 2394 | static | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7958 | 2055 | static | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7956 | 2394 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/chat | GET | 200 | 7829 | 655 | html | https://www.tarotnow.xyz/vi/chat |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 7693 | 34 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7605 | 360 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7597 | 358 | static | https://www.tarotnow.xyz/_next/static/chunks/06ujm1m6ocbc1.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7596 | 363 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7596 | 361 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7596 | 361 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7593 | 358 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7587 | 162 | static | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7398 | 302 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7250 | 919 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7248 | 919 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7247 | 917 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7246 | 915 | static | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7244 | 945 | static | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7243 | 914 | static | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7239 | 945 | static | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7230 | 937 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7087 | 42 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 7002 | 3921 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 6900 | 673 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | GET | 200 | 6896 | 35 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | GET | 200 | 6700 | 831 | html | https://www.tarotnow.xyz/vi/reader/apply |
-| Critical | auth-public | logged-in-admin | mobile | /vi/legal/ai-disclaimer | GET | 200 | 6578 | 1206 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi | GET | 200 | 20674 | 20480 | html | https://www.tarotnow.xyz/vi |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | GET | 200 | 14739 | 5923 | static | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | GET | 200 | 14678 | 6198 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 14082 | 811 | static | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 14013 | 736 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 14012 | 757 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13990 | 723 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 13815 | 1163 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13782 | 687 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13402 | 160 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13387 | 1409 | static | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13326 | 1534 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13287 | 1516 | static | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13287 | 1525 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13283 | 1354 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13282 | 1509 | static | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13260 | 1489 | static | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13237 | 1489 | static | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 13119 | 10599 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 13112 | 10603 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 13110 | 53 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 13081 | 575 | static | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 13008 | 10160 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12992 | 513 | static | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12920 | 491 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12919 | 233 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12917 | 420 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12901 | 242 | static | https://www.tarotnow.xyz/_next/static/chunks/0ddj0tt3hbb_o.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | GET | 200 | 12890 | 12444 | html | https://www.tarotnow.xyz/vi/wallet |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12868 | 453 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 12865 | 10167 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12855 | 417 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 12846 | 10157 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12841 | 439 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12698 | 48 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12687 | 218 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12463 | 570 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12454 | 492 | static | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12440 | 554 | static | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12436 | 472 | static | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12428 | 464 | static | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12426 | 272 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12409 | 520 | static | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12404 | 516 | static | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 12156 | 243 | static | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 11962 | 2128 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 11922 | 175 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | GET | 200 | 11913 | 161 | static | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 11897 | 2055 | static | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 11860 | 1792 | static | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | GET | 200 | 11851 | 1790 | static | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11761 | 623 | static | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11500 | 490 | static | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11457 | 528 | static | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11429 | 596 | static | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11426 | 404 | static | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11383 | 403 | static | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11364 | 565 | static | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11358 | 561 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11356 | 561 | static | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/verify-email | GET | 200 | 11283 | 11125 | html | https://www.tarotnow.xyz/vi/verify-email |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11200 | 58 | telemetry | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 11024 | 194 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10997 | 199 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10963 | 191 | static | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10932 | 194 | static | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 10899 | 8185 | static | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | GET | 200 | 10827 | 8473 | static | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10820 | 374 | static | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10819 | 375 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10818 | 375 | static | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10800 | 377 | static | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10799 | 392 | static | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10799 | 377 | static | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10771 | 344 | static | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | GET | 200 | 10738 | 356 | static | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | GET | 200 | 10612 | 400 | static | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | GET | 200 | 10602 | 386 | static | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | GET | 200 | 10602 | 400 | static | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | GET | 200 | 10549 | 364 | static | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 
 ### Duplicate API / Request Candidates
 
 | Severity | Feature | Scenario | Viewport | Route | Count | Request Key |
 | --- | --- | --- | --- | --- | ---: | --- |
-| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/community | 2 | POST https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | 2 | POST https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | 2 | POST https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 
 ### Pending Requests
 
 | Severity | Feature | Scenario | Viewport | Route | URL |
 | --- | --- | --- | --- | --- | --- |
-| Critical | auth-public | logged-in-admin | desktop | /vi | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=384&q=75 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-out | desktop | /vi | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | auth-public | logged-in-admin | desktop | /vi | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | auth-public | logged-in-admin | desktop | /vi | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi | https://www.tarotnow.xyz/api/readers?page=1&pageSize=4 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/login | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/147.fw.lfq60x.css |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
-| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/register | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F08_The_Chariot_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F10_The_Hermit_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F13_The_Hanged_Man_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F15_Temperance_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F16_The_Devil_50_20260325_181357.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/2a65768255d6b625-s.14by5b4al-y~f.woff2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | https://www.tarotnow.xyz/api/auth/session |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F09_Strength_50_20260325_181351.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F11_Wheel_of%2B_Fortune_50_20260325_181353.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F12_Justice_50_20260325_181353.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F13_The_Hanged_Man_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F14_Death_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F15_Temperance_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F16_The_Devil_50_20260325_181357.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=256&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=128&q=75 |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
 | Critical | reader-chat | logged-in-admin | desktop | /vi/readers | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 | Critical | reader-chat | logged-in-admin | desktop | /vi/readers | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/chat | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/147.fw.lfq60x.css |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/themes/prismatic-royal.css |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/06ujm1m6ocbc1.js |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
 | Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/90a1dff0-637a-4c24-ae37-1f6d19808a82 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/90a1dff0-637a-4c24-ae37-1f6d19808a82 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/a234d7ae-09a6-4ea5-8183-2599752598ad | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/a234d7ae-09a6-4ea5-8183-2599752598ad | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/a234d7ae-09a6-4ea5-8183-2599752598ad | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/reader/apply | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/reader/apply | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/reader/apply | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/history | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | auth-public | logged-in-admin | desktop | /vi/legal/tos | https://www.tarotnow.xyz/vi/legal/tos |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/30dfcecd-bc35-4875-bf86-f1c178b69b32 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/30dfcecd-bc35-4875-bf86-f1c178b69b32 | https://www.tarotnow.xyz/api/reading/cards-catalog |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/30dfcecd-bc35-4875-bf86-f1c178b69b32 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/30dfcecd-bc35-4875-bf86-f1c178b69b32 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/d07353aa-8357-4bef-9a94-5f24326eaebd | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/dd6bd3cb-76a8-4176-a706-30cfc54f8aa0 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=32&q=75 |
+| Critical | auth-public | logged-in-reader | desktop | /vi | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi | https://www.tarotnow.xyz/api/readers?page=1&pageSize=4 |
-| Critical | auth-public | logged-in-reader | desktop | /vi | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | auth-public | logged-in-reader | desktop | /vi | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/media/2a65768255d6b625-s.14by5b4al-y~f.woff2 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
 | Critical | auth-public | logged-in-reader | desktop | /vi/login | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/api/wallet/balance |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/api/chat/unread-count |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/api/notifications/unread-count |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/api/auth/session?mode=lite |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/vi |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/register | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/2a65768255d6b625-s.14by5b4al-y~f.woff2 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
 | Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
-| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
-| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/cdn-cgi/rum? |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit/history | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit/history | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reading | logged-in-reader | desktop | /vi/reading/session/b9f507fb-919b-488f-b8ca-2b02a8e9fc65 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reading | logged-in-reader | desktop | /vi/reading/session/b9f507fb-919b-488f-b8ca-2b02a8e9fc65 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | auth-public | logged-out | mobile | /vi | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | auth-public | logged-in-admin | mobile | /vi | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/chat | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/vi/wallet/withdraw |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/reader/apply | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/reader/apply | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/reader/apply | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | https://www.tarotnow.xyz/api/reading/cards-catalog |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/ed7a9895-677a-4657-9dc3-ccedc0286480 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/8986c52b-4959-47f3-b4a8-65f1ac0d0e4c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/8986c52b-4959-47f3-b4a8-65f1ac0d0e4c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/5d12f152-decd-4d32-bf40-11b28fd91a3e | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/5d12f152-decd-4d32-bf40-11b28fd91a3e | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=32&q=75 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/5d12f152-decd-4d32-bf40-11b28fd91a3e | https://www.tarotnow.xyz/api/reading/cards-catalog |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/5d12f152-decd-4d32-bf40-11b28fd91a3e | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | auth-public | logged-out | mobile | /vi | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=1200&q=75 |
+| Critical | auth-public | logged-out | mobile | /vi/login | https://www.tarotnow.xyz/cdn-cgi/rum? |
 | Critical | auth-public | logged-in-admin | mobile | /vi | https://www.tarotnow.xyz/api/readers?page=1&pageSize=4 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/themes/prismatic-royal.css |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/login | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/api/wallet/balance |
-| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/vi |
-| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/themes/prismatic-royal.css |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
 | Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F08_The_Chariot_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F10_The_Hermit_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F13_The_Hanged_Man_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F15_Temperance_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F16_The_Devil_50_20260325_181357.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F02_The_Magician_50_20260325_181348.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F03_The_High%2BPriestess%2B_50_20260325_181348.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F04_The_Empress_50_20260325_181348.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F05_The_Emperor_50_20260325_181348.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F06_The_Hierophant_50_20260325_181348.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F07_The_Lovers_50_20260325_181351.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F08_The_Chariot_50_20260325_181351.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F09_Strength_50_20260325_181351.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F10_The_Hermit_50_20260325_181353.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F11_Wheel_of%2B_Fortune_50_20260325_181353.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F12_Justice_50_20260325_181353.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F13_The_Hanged_Man_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F14_Death_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F15_Temperance_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F16_The_Devil_50_20260325_181357.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/147.fw.lfq60x.css |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=384&q=75 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | https://www.tarotnow.xyz/cdn-cgi/rum? |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/13woiho5a~0-..js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0haxg9p1~c1ud.js |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/06ujm1m6ocbc1.js |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0p7wdasoeo.fs.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/17c_y7i3dw8__.js |
 | Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/history | https://www.tarotnow.xyz/cdn-cgi/rum? |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/history | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/history | https://www.tarotnow.xyz/api/auth/session?mode=lite |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/history | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/legal/tos | https://www.tarotnow.xyz/vi/legal/tos |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/history | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
 | Critical | auth-public | logged-in-admin | mobile | /vi/legal/tos | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/session/8dfcd983-416a-4565-870e-7ace00ba2e5d | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/session/797fea9f-b1fc-4e17-8906-c4dfd78107b4 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/session/797fea9f-b1fc-4e17-8906-c4dfd78107b4 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
-| Critical | reading | logged-in-admin | mobile | /vi/reading/session/797fea9f-b1fc-4e17-8906-c4dfd78107b4 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/07e40f3a-8aad-4260-af12-26586c048b38 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/07e40f3a-8aad-4260-af12-26586c048b38 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | https://www.tarotnow.xyz/api/reading/cards-catalog |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/747b4529-82d6-4bc3-86ca-fe3c9eca4373 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/de78776f-5892-4790-823f-b132be54609d | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-admin | mobile | /vi/reading/session/de78776f-5892-4790-823f-b132be54609d | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 | Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/me/runtime-policies |
 | Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=96&q=75 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/cdn-cgi/rum? |
-| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/api/wallet/balance |
-| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/api/auth/session?mode=lite |
-| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/vi |
-| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | auth-public | logged-in-reader | mobile | /vi | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=1200&q=75 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/login | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/themes/prismatic-royal.css |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/125p1933fux_8.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/media/2a65768255d6b625-s.14by5b4al-y~f.woff2 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/register | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/147.fw.lfq60x.css |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/media/2a65768255d6b625-s.14by5b4al-y~f.woff2 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/media/b49b0d9b851e4899-s.0yfy_qj1.2qn0.woff2 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/turbopack-04f4sychnhg.o.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/004blgc4x3yr..js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0m98db.6t5_en.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/05smpou-mjs5j.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/03lv7o3p_.tam.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/174tgx6b~.hvn.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/18afy0ss_4u5l.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0npt-1adflxcq.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/16nwcytuy6f98.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0y1pmpupryerl.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/0cclzt6w8o8v_.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | https://www.tarotnow.xyz/_next/static/media/14e23f9b59180572-s.08.c8psu~gif9.woff2 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Frare_title_lucky_star_50_20260416_165453.avif&w=96&q=75 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
 | Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Fpower_booster_50_20260416_165453.avif&w=256&q=75 |
 | Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F10_The_Hermit_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/mfa | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/mfa | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F0e2a5092da564526beb9b942ecdc0e03-bb32559e68264e6c95cffbca86f9a6cc.webp&w=256&q=75 |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=256&q=75 |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/_next/image?url=%2Fapi%2Fcollection%2Fcard-image%3Fsrc%3Dhttps%253A%252F%252Fimg.tarotnow.xyz%252Flight-god-50%252F14_Death_50_20260325_181356.avif%253Fiv%253D81a3d9698977fda2%2526variant%253Dthumb%26iv%3D81a3d9698977fda2&w=640&q=75 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | https://www.tarotnow.xyz/api/me/runtime-policies |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | https://www.tarotnow.xyz/api/auth/session?mode=lite |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | https://www.tarotnow.xyz/vi/profile |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/gamification | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
 | Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 | Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/withdraw | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
 | Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/notifications | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 | Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/notifications | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/reader/apply | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
 | Critical | reader-chat | logged-in-reader | mobile | /vi/reader/apply | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/tos | https://www.tarotnow.xyz/cdn-cgi/rum? |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/tos | https://www.tarotnow.xyz/api/chat/unread-count |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/tos | https://www.tarotnow.xyz/vi/legal/tos |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/tos | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/privacy | https://www.tarotnow.xyz/cdn-cgi/rum? |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/privacy | https://www.tarotnow.xyz/api/chat/unread-count |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/privacy | https://www.tarotnow.xyz/vi/legal/privacy |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/privacy | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/legal/ai-disclaimer | https://www.tarotnow.xyz/vi/legal/ai-disclaimer |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/history | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/history | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 | Critical | auth-public | logged-in-reader | mobile | /vi/legal/ai-disclaimer | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | https://www.tarotnow.xyz/cdn-cgi/rum? |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | https://www.tarotnow.xyz/api/auth/session?mode=lite |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | https://www.tarotnow.xyz/api/reading/cards-catalog |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/0c7d37f7-e4f1-404c-9baf-bb83661d32da | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/a3c19aa3-0e8f-4421-8a74-0f5f2474dec8 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/a3c19aa3-0e8f-4421-8a74-0f5f2474dec8 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/5a454764-2a4a-41db-9d7b-0b2cb451d876 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/5a454764-2a4a-41db-9d7b-0b2cb451d876 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/5a454764-2a4a-41db-9d7b-0b2cb451d876 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/789b367a-02d2-4de3-b131-a820b8f4446d | https://www.tarotnow.xyz/cdn-cgi/rum? |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/789b367a-02d2-4de3-b131-a820b8f4446d | https://www.tarotnow.xyz/api/reading/cards-catalog |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/789b367a-02d2-4de3-b131-a820b8f4446d | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/789b367a-02d2-4de3-b131-a820b8f4446d | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/f7039a71-8a13-4e89-9f9b-79f0f56eb615 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/f7039a71-8a13-4e89-9f9b-79f0f56eb615 | https://www.tarotnow.xyz/_next/static/chunks/09.78-sm.tf5_.js |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/f7039a71-8a13-4e89-9f9b-79f0f56eb615 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | https://www.tarotnow.xyz/_next/static/chunks/0hen0b13nlrzm.js |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=96&q=75 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
 
 ## Optimization Plan
 
