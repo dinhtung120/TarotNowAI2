@@ -9,6 +9,7 @@ import { useWalletBalanceQuery } from '@/features/wallet/overview/useWalletBalan
 import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { getWithdrawalStatusBadge } from '@/features/wallet/shared/withdrawalStatus';
 import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
+import { parseWholeWithdrawAmount } from './withdrawAmount';
 
 const HISTORY_QUERY_KEY = userStateQueryKeys.wallet.withdrawalsMine();
 
@@ -46,7 +47,7 @@ export function useWithdrawPage() {
  const withdrawalPolicyReady = Boolean(walletPolicy && minWithdrawDiamond > 0 && vndPerDiamond > 0);
  const walletBalance = balanceQuery.data;
 
- const amountNum = useMemo(() => Number.parseInt(amount, 10) || 0, [amount]);
+ const amountNum = useMemo(() => parseWholeWithdrawAmount(amount) ?? 0, [amount]);
  const grossVnd = amountNum * vndPerDiamond;
  const feeVnd = Math.ceil(grossVnd * withdrawFeeRate);
  const netVnd = grossVnd - feeVnd;
@@ -89,7 +90,7 @@ export function useWithdrawPage() {
    setError(null);
    setSuccess(false);
    const normalizedAmount = formData.amount.trim();
-   const normalizedAmountNum = Number.parseInt(normalizedAmount, 10) || 0;
+   const normalizedAmountNum = parseWholeWithdrawAmount(normalizedAmount) ?? 0;
    const normalizedUserNote = formData.userNote.trim();
 
    if (!payoutConfigured) {

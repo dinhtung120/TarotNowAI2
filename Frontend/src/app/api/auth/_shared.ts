@@ -337,10 +337,12 @@ export function clearAuthCookies(response: NextResponse, request?: NextRequest):
 
  appendClearCookieHeader(AUTH_COOKIE.ACCESS);
  appendClearCookieHeader(AUTH_COOKIE.REFRESH);
+ appendClearCookieHeader(AUTH_COOKIE.DEVICE);
 
  for (const domain of cleanupDomains) {
   appendClearCookieHeader(AUTH_COOKIE.ACCESS, domain);
   appendClearCookieHeader(AUTH_COOKIE.REFRESH, domain);
+  appendClearCookieHeader(AUTH_COOKIE.DEVICE, domain);
  }
 }
 

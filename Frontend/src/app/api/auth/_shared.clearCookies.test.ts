@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
+import { AUTH_COOKIE } from '@/shared/auth/authConstants';
 
 const ORIGINAL_AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN;
 const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
@@ -48,6 +49,7 @@ describe('clearAuthCookies', () => {
 
   expect(joinedHeaders).toContain('accessToken=');
   expect(joinedHeaders).toContain('refreshToken=');
+  expect(cookieHeaders.some((header) => header.startsWith(`${AUTH_COOKIE.DEVICE}=`) && header.includes('Max-Age=0'))).toBe(true);
   expect(joinedHeaders).toContain('Domain=www.tarotnow.xyz');
   expect(joinedHeaders).toContain('Domain=tarotnow.xyz');
   expect(joinedHeaders).toContain('Max-Age=0');

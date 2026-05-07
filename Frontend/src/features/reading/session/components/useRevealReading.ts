@@ -20,6 +20,7 @@ export function useRevealReading({
   const [isRevealing, setIsRevealing] = useState(false);
 
   const flipTimersRef = useRef<number[]>([]);
+  const isRevealingRef = useRef(false);
 
   const clearFlipTimers = useCallback(() => {
     flipTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
@@ -29,6 +30,11 @@ export function useRevealReading({
   useEffect(() => clearFlipTimers, [clearFlipTimers]);
 
   const revealCards = useCallback(async () => {
+    if (isRevealingRef.current) {
+      return false;
+    }
+
+    isRevealingRef.current = true;
     setIsRevealing(true);
     setError("");
     clearFlipTimers();
@@ -38,6 +44,7 @@ export function useRevealReading({
 
     if (!response.success || !response.data) {
       setError(response.error || revealFailedMessage);
+      isRevealingRef.current = false;
       setIsRevealing(false);
       return false;
     }
@@ -52,6 +59,7 @@ export function useRevealReading({
     });
 
     await onProfileRefresh();
+    isRevealingRef.current = false;
     setIsRevealing(false);
     return true;
   }, [clearFlipTimers, onProfileRefresh, revealFailedMessage, sessionId]);

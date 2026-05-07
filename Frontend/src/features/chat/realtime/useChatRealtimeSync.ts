@@ -316,9 +316,6 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
           invalidateInboxQueries();
         }
 
-        if (message.senderId !== currentUserId) {
-          patchUnreadBadge(1);
-        }
       };
       hubConnection.on('message.created.fast', applyIncomingMessage);
       hubConnection.on('message.created', applyIncomingMessage);

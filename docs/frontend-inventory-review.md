@@ -1,1367 +1,1522 @@
 # Frontend Inventory Review
 
+Tài liệu này đã được làm mới theo source `Frontend` hiện tại sau refactor feature-first. Các thư mục generated/vendor như `.next`, `node_modules`, `coverage`, `playwright-report`, `test-results`, `.turbo`, `.DS_Store`, `tsconfig.tsbuildinfo` không được đưa vào inventory.
+
 ## Root/config/workflow
 
-- /Frontend/.env.example | 20 dòng | Cung cấp mẫu biến môi trường cho app Frontend. | Review: đặt đúng root; nên giữ làm tài liệu cấu hình, cần đồng bộ với config Next/proxy khi refactor.
-- /Frontend/.github/workflows/playwright.yml | 38 dòng | Chạy build và Playwright e2e trên GitHub Actions. | Review: đặt đúng workflow; cần giữ vì bảo vệ smoke/e2e, không liên quan đến phân mảnh source.
-- /Frontend/.github/workflows/release-gate.yml | 23 dòng | Chạy gate release kiểm tra evidence backend event. | Review: đặt đúng workflow; là guard triển khai, không nên gộp vào source FE.
-- /Frontend/.gitignore | 50 dòng | Khai báo file/thư mục local và generated bị bỏ qua. | Review: đặt đúng root; nên bổ sung nếu artifact review phát hiện chưa bị ignore.
-- /Frontend/.prettierrc | 3 dòng | Cấu hình Prettier và plugin Tailwind. | Review: đặt đúng root; file nhỏ hợp lý vì là config chuẩn.
-- /Frontend/Dockerfile | 53 dòng | Định nghĩa image container production cho Frontend qua các stage deps, builder và runner. | Review: đặt đúng root; giữ riêng, không liên quan đến chia feature, nhưng cần đồng bộ ARG/ENV với cấu hình deploy.
-- /Frontend/eslint.config.mjs | 63 dòng | Cấu hình ESLint và một số rule biên kiến trúc FE. | Review: đặt đúng root; hợp lý, nhưng các exception cần được rà khi refactor clean architecture.
-- /Frontend/knip.json | 6 dòng | Cấu hình Knip để tìm file/dependency không dùng. | Review: đặt đúng root; nên dùng làm công cụ xác minh deadcode sau báo cáo thủ công.
-- /Frontend/next-env.d.ts | 7 dòng | File type declaration do Next.js quản lý, bao gồm tham chiếu typed routes. | Review: generated chuẩn của Next; không refactor thủ công.
-- /Frontend/next.config.ts | 219 dòng | Cấu hình Next.js, next-intl, bundle analyzer, backend rewrites, security headers, image remote patterns và server actions. | Review: đặt đúng root nhưng khá dài; helper origin/host/image có thể tách nếu tiếp tục tăng, hiện chứa logic bảo mật/runtime quan trọng cần giữ gần config.
-- /Frontend/package-lock.json | 11683 dòng | Khóa phiên bản dependency npm. | Review: đặt đúng root; không review kiến trúc source, chỉ giữ để reproducible install.
-- /Frontend/package.json | 76 dòng | Khai báo dependency và script lint/test/build của Frontend. | Review: đặt đúng root; là nguồn gate chính, nên giữ các script kiến trúc rõ ràng.
-- /Frontend/playwright.config.ts | 45 dòng | Cấu hình Playwright e2e và webServer test. | Review: đặt đúng root; hợp lý vì test e2e ngoài src dùng chung.
-- /Frontend/postcss.config.mjs | 8 dòng | Cấu hình PostCSS dùng plugin Tailwind CSS. | Review: đặt đúng root; file nhỏ hợp lý, không cần gộp.
-- /Frontend/proxy.ts | 90 dòng | Middleware/proxy Next xử lý locale, auth redirect và route protection. | Review: đặt đúng root theo Next convention; chứa auth orchestration đáng theo dõi, nên giữ mỏng và đẩy policy chi tiết vào shared config/server nếu phình thêm.
-- /Frontend/README.md | 37 dòng | README mặc định của create-next-app hướng dẫn chạy dev và tài liệu Next.js. | Review: nội dung đang generic/lỗi thời so với kiến trúc TarotNow; nên viết lại trước bàn giao nếu giữ trong repo.
-- /Frontend/scripts/check-auth-fail-closed.mjs | 42 dòng | Guard đảm bảo auth server/protected route fail-closed khi thiếu verifier. | Review: đặt đúng scripts; liên quan bảo mật, nên giữ riêng và cập nhật theo đường dẫn auth mới nếu refactor.
-- /Frontend/scripts/check-benchmark-gates.mjs | 328 dòng | So sánh benchmark hiện tại với baseline và enforce các ngưỡng perf cho auth/admin/collection. | Review: đặt đúng scripts nhưng khá dài; có thể tách parser/metric helpers nếu tiếp tục mở rộng, chưa nên động vào trong bước inventory.
-- /Frontend/scripts/check-clean-architecture.mjs | 245 dòng | Guard kiểm tra layer direction, domain purity, client boundary và public API route. | Review: đặt đúng scripts; rất quan trọng cho refactor, cần dùng kết quả guard để xác nhận di chuyển file.
-- /Frontend/scripts/check-component-size.mjs | 173 dòng | Guard giới hạn size component TSX và baseline nợ kích thước. | Review: đặt đúng scripts; rule hiện đã nới hơn rule cũ, baseline cần rà sau khi gộp file phân mảnh.
-- /Frontend/scripts/check-hook-action-size.mjs | 118 dòng | Guard giới hạn size hook/action trong shared application và feature application. | Review: đặt đúng scripts; phù hợp kiểm soát application logic, tránh tạo lại phân mảnh giả.
-- /Frontend/scripts/check-next-image-policy.mjs | 39 dòng | Guard kiểm soát Next Image unoptimized theo allowlist. | Review: đặt đúng scripts; giữ riêng vì liên quan image policy.
-- /Frontend/scripts/check-risk-coverage.mjs | 289 dòng | Đọc coverage-summary và enforce ngưỡng coverage cho các file risk-tier quan trọng. | Review: đặt đúng scripts; nên tách danh sách rule ra cấu hình riêng nếu risk-tier tiếp tục tăng.
-- /Frontend/scripts/component-size-baseline.json | 5 dòng | Baseline ratchet component-size hiện chỉ khai báo limit và entries rỗng. | Review: đặt đúng scripts; cần sync lại sau refactor gộp/tách component nếu phát sinh baseline entry.
-- /Frontend/scripts/hook-action-size-baseline.json | 161 dòng | Baseline line-count cho các file hook/action/application được guard theo dõi. | Review: đặt đúng scripts; cập nhật có chủ đích sau refactor vì ảnh hưởng ratchet line-count.
-- /Frontend/scripts/image-unoptimized-allowlist.json | 24 dòng | Allowlist các vị trí được dùng Next Image unoptimized. | Review: đặt đúng scripts; nên giữ dữ liệu tách khỏi guard.
-- /Frontend/scripts/lib/cleanArchitectureGuard.mjs | 153 dòng | Helper phân loại layer và phát hiện vi phạm clean architecture. | Review: đặt hợp lý dưới scripts/lib; có thể là nguồn sự thật khi quyết định file nên ở shared/features/app.
-- /Frontend/scripts/lib/cleanArchitectureGuard.test.ts | 48 dòng | Test cho helper clean architecture guard. | Review: đặt cạnh script helper hợp lý; nên giữ vì bảo vệ rule refactor.
-- /Frontend/scripts/verify-backend-event-evidence.mjs | 170 dòng | Kiểm tra evidence backend domain-event cho các path nhạy cảm FE. | Review: đặt đúng scripts; cần giữ nếu refactor chạm event/protected backend paths.
-- /Frontend/tests/auth-session-refresh.spec.ts | 133 dòng | E2E kiểm tra luồng refresh session/auth. | Review: đặt đúng tests; liên quan auth critical, không chuyển vào src.
-- /Frontend/tests/example.spec.ts | 15 dòng | Playwright smoke test unauthenticated redirect và stream proxy reject. | Review: tên file còn generic; nên đổi tên theo auth/stream guard nếu giữ để tránh bị nhầm là placeholder.
-- /Frontend/tests/helpers/viewportMetrics.ts | 80 dòng | Helper đo metric viewport cho Playwright QA. | Review: đặt hợp lý dưới tests/helpers; chỉ nên giữ nếu viewport QA vẫn chạy.
-- /Frontend/tests/helpers/viewportQaData.ts | 79 dòng | Dữ liệu route/viewport dùng cho QA e2e. | Review: đặt hợp lý dưới tests/helpers; cần đồng bộ nếu route thay đổi sau refactor.
-- /Frontend/tests/smoke-flows.spec.ts | 60 dòng | E2E smoke test các luồng navigation chính. | Review: đặt đúng tests; nên cập nhật theo feature public routes sau refactor.
-- /Frontend/tests/tarotnow-navigation-benchmark.spec.ts | 2400 dòng | Benchmark Playwright rất lớn cho navigation toàn app. | Review: file quá lớn, nên tách data/helper/expectation nếu còn duy trì; không phù hợp để chỉnh thủ công trong bước inventory.
-- /Frontend/tests/viewport-qa.spec.ts | 137 dòng | E2E QA kiểm tra viewport và layout cơ bản. | Review: đặt đúng tests; có thể giữ nếu helper/data còn dùng.
-- /Frontend/tsconfig.json | 34 dòng | Cấu hình TypeScript path alias và compiler options. | Review: đặt đúng root; alias `@/*` ảnh hưởng toàn bộ review import/layer.
-- /Frontend/vitest.config.ts | 72 dòng | Cấu hình Vitest, setup và coverage thresholds. | Review: đặt đúng root; thresholds theo file critical cần cập nhật nếu di chuyển đường dẫn.
+- /Frontend/.env.example | 20 dòng | Mẫu biến môi trường frontend cho base URL, backend, cookie, media CDN/R2 và tùy chọn host canonical.
+- /Frontend/.github/workflows/playwright.yml | 38 dòng | Workflow GitHub Actions chạy build và Playwright e2e cho frontend.
+- /Frontend/.github/workflows/release-gate.yml | 23 dòng | Workflow release gate kiểm tra evidence backend event khi deploy.
+- /Frontend/.gitignore | 50 dòng | Khai báo file local, dependency, cache và generated output bị bỏ qua.
+- /Frontend/.prettierrc | 3 dòng | Cấu hình Prettier kèm plugin sắp xếp Tailwind.
+- /Frontend/Dockerfile | 52 dòng | Dockerfile production nhiều stage cho install, build và runner Next standalone.
+- /Frontend/README.md | 36 dòng | README frontend hiện tại. | Review: nội dung vẫn generic; nên viết lại theo kiến trúc TarotNow nếu dùng để onboarding.
+- /Frontend/certificates/localhost-key.pem | 28 dòng | Private key local HTTPS development.
+- /Frontend/certificates/localhost.pem | 26 dòng | Certificate local HTTPS development.
+- /Frontend/eslint.config.mjs | 63 dòng | Cấu hình ESLint Next/TypeScript và ignore generated artifacts.
+- /Frontend/knip.json | 6 dòng | Cấu hình Knip cho entry test/setup và ignore dependency dùng qua tooling.
+- /Frontend/next-env.d.ts | 6 dòng | Type declaration generated/managed bởi Next.js.
+- /Frontend/next.config.ts | 218 dòng | Cấu hình Next.js, next-intl, rewrites, security headers, image policy và server actions. | Review: config chứa logic runtime/security; tránh phình thêm nếu không tách helper.
+- /Frontend/package-lock.json | 11682 dòng | Khóa phiên bản dependency npm để cài đặt reproducible.
+- /Frontend/package.json | 76 dòng | Khai báo dependency và script lint/test/build/perf gate của frontend.
+- /Frontend/playwright.config.ts | 45 dòng | Cấu hình Playwright e2e và web server test.
+- /Frontend/postcss.config.mjs | 7 dòng | Cấu hình PostCSS dùng Tailwind CSS plugin.
+- /Frontend/proxy.ts | 90 dòng | Proxy Next root xử lý locale, auth redirect và route protection. | Review: auth/locale middleware quan trọng; giữ fail-closed khi chỉnh route protection.
+- /Frontend/tsconfig.json | 34 dòng | Cấu hình TypeScript compiler và path alias.
+- /Frontend/vitest.config.ts | 72 dòng | Cấu hình Vitest, jsdom setup và coverage thresholds.
+
+## Frontend docs
+
+- /Frontend/docs/superpowers/plans/2026-05-06-shared-feature-encapsulation.md | 533 dòng | Tài liệu/spec/plan Superpowers cho công việc frontend.
+- /Frontend/docs/superpowers/shared-inventory-2026-05-06.md | 292 dòng | Tài liệu/spec/plan Superpowers cho công việc frontend.
+- /Frontend/docs/superpowers/specs/2026-05-06-shared-feature-encapsulation-design.md | 41 dòng | Tài liệu/spec/plan Superpowers cho công việc frontend.
 
 ## messages
 
-- /Frontend/messages/en/admin/admin.json | 519 dòng | Chứa bản dịch giao diện admin theo locale. | Review: đúng vị trí localization nhưng file lớn; nên kiểm tra key trùng/lỗi thời trước khi refactor UI.
-- /Frontend/messages/en/auth/auth.json | 98 dòng | Chứa bản dịch luồng đăng nhập, đăng ký, OTP và MFA theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/chat/chat.json | 120 dòng | Chứa bản dịch giao diện chat theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/collection/collection.json | 20 dòng | Chứa bản dịch bộ sưu tập theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/community/community.json | 72 dòng | Chứa bản dịch cộng đồng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/gacha/gacha.json | 44 dòng | Chứa bản dịch gacha/quay thưởng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/gamification/gamification.json | 55 dòng | Chứa bản dịch nhiệm vụ, điểm và gamification theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/home/index.json | 41 dòng | Chứa bản dịch trang home theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/inventory/inventory.json | 20 dòng | Chứa bản dịch kho đồ theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/legal/legal.json | 36 dòng | Chứa bản dịch trang pháp lý theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/notifications/notifications.json | 24 dòng | Chứa bản dịch thông báo theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/profile/profile.json | 131 dòng | Chứa bản dịch hồ sơ người dùng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/readers/reader-apply.json | 82 dòng | Chứa bản dịch luồng đăng ký reader theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/readers/readers.json | 58 dòng | Chứa bản dịch danh sách/chi tiết reader theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/reading/ai-interpretation.json | 18 dòng | Chứa bản dịch phần diễn giải AI theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/reading/history.json | 26 dòng | Chứa bản dịch lịch sử trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/reading/session.json | 43 dòng | Chứa bản dịch phiên đọc/trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/reading/setup.json | 32 dòng | Chứa bản dịch cấu hình trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/en/reading/tarot.json | 340 dòng | Chứa bản dịch bộ bài, ý nghĩa lá bài và UI tarot theo locale. | Review: đúng vị trí localization nhưng file lớn; nên kiểm tra key trùng/lỗi thời trước khi refactor UI.
-- /Frontend/messages/en/shared/common.json | 20 dòng | Chứa nhãn common như app metadata, loading, modal, menu và streak theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/footer.json | 22 dòng | Chứa bản dịch tagline, link, legal/social và copyright footer theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/http-errors.json | 10 dòng | Chứa bản dịch lỗi API/HTTP dùng chung theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/language-switcher.json | 10 dòng | Chứa bản dịch nhãn và aria cho bộ đổi ngôn ngữ theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/navigation.json | 29 dòng | Chứa bản dịch điều hướng chính cho home, tarot, social, game và account theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/pagination.json | 7 dòng | Chứa bản dịch page info và nút previous/next theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/user-nav.json | 11 dòng | Chứa bản dịch nhóm menu user nav theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/shared/validation.json | 36 dòng | Chứa validation message dùng chung cho Profile, Auth, ReaderApply và ReadingSetup theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/en/wallet/wallet.json | 125 dòng | Chứa bản dịch ví/nạp tiền/lịch sử giao dịch theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/admin/admin.json | 519 dòng | Chứa bản dịch giao diện admin theo locale. | Review: đúng vị trí localization nhưng file lớn; nên kiểm tra key trùng/lỗi thời trước khi refactor UI.
-- /Frontend/messages/vi/auth/auth.json | 98 dòng | Chứa bản dịch luồng đăng nhập, đăng ký, OTP và MFA theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/chat/chat.json | 120 dòng | Chứa bản dịch giao diện chat theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/collection/collection.json | 20 dòng | Chứa bản dịch bộ sưu tập theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/community/community.json | 72 dòng | Chứa bản dịch cộng đồng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/gacha/gacha.json | 44 dòng | Chứa bản dịch gacha/quay thưởng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/gamification/gamification.json | 55 dòng | Chứa bản dịch nhiệm vụ, điểm và gamification theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/home/index.json | 41 dòng | Chứa bản dịch trang home theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/inventory/inventory.json | 20 dòng | Chứa bản dịch kho đồ theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/legal/legal.json | 36 dòng | Chứa bản dịch trang pháp lý theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/notifications/notifications.json | 24 dòng | Chứa bản dịch thông báo theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/profile/profile.json | 131 dòng | Chứa bản dịch hồ sơ người dùng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/readers/reader-apply.json | 82 dòng | Chứa bản dịch luồng đăng ký reader theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/readers/readers.json | 58 dòng | Chứa bản dịch danh sách/chi tiết reader theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/reading/ai-interpretation.json | 18 dòng | Chứa bản dịch phần diễn giải AI theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/reading/history.json | 26 dòng | Chứa bản dịch lịch sử trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/reading/session.json | 43 dòng | Chứa bản dịch phiên đọc/trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/reading/setup.json | 32 dòng | Chứa bản dịch cấu hình trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/vi/reading/tarot.json | 340 dòng | Chứa bản dịch bộ bài, ý nghĩa lá bài và UI tarot theo locale. | Review: đúng vị trí localization nhưng file lớn; nên kiểm tra key trùng/lỗi thời trước khi refactor UI.
-- /Frontend/messages/vi/shared/common.json | 20 dòng | Chứa nhãn common như app metadata, loading, modal, menu và streak theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/footer.json | 22 dòng | Chứa bản dịch tagline, link, legal/social và copyright footer theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/http-errors.json | 10 dòng | Chứa bản dịch lỗi API/HTTP dùng chung theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/language-switcher.json | 10 dòng | Chứa bản dịch nhãn và aria cho bộ đổi ngôn ngữ theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/navigation.json | 29 dòng | Chứa bản dịch điều hướng chính cho home, tarot, social, game và account theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/pagination.json | 7 dòng | Chứa bản dịch page info và nút previous/next theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/user-nav.json | 11 dòng | Chứa bản dịch nhóm menu user nav theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/shared/validation.json | 36 dòng | Chứa validation message dùng chung cho Profile, Auth, ReaderApply và ReadingSetup theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/vi/wallet/wallet.json | 125 dòng | Chứa bản dịch ví/nạp tiền/lịch sử giao dịch theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/admin/admin.json | 519 dòng | Chứa bản dịch giao diện admin theo locale. | Review: đúng vị trí localization nhưng file lớn; nên kiểm tra key trùng/lỗi thời trước khi refactor UI.
-- /Frontend/messages/zh/auth/auth.json | 98 dòng | Chứa bản dịch luồng đăng nhập, đăng ký, OTP và MFA theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/chat/chat.json | 120 dòng | Chứa bản dịch giao diện chat theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/collection/collection.json | 20 dòng | Chứa bản dịch bộ sưu tập theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/community/community.json | 72 dòng | Chứa bản dịch cộng đồng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/gacha/gacha.json | 44 dòng | Chứa bản dịch gacha/quay thưởng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/gamification/gamification.json | 55 dòng | Chứa bản dịch nhiệm vụ, điểm và gamification theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/home/index.json | 41 dòng | Chứa bản dịch trang home theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/inventory/inventory.json | 20 dòng | Chứa bản dịch kho đồ theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/legal/legal.json | 36 dòng | Chứa bản dịch trang pháp lý theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/notifications/notifications.json | 24 dòng | Chứa bản dịch thông báo theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/profile/profile.json | 131 dòng | Chứa bản dịch hồ sơ người dùng theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/readers/reader-apply.json | 82 dòng | Chứa bản dịch luồng đăng ký reader theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/readers/readers.json | 58 dòng | Chứa bản dịch danh sách/chi tiết reader theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/reading/ai-interpretation.json | 18 dòng | Chứa bản dịch phần diễn giải AI theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/reading/history.json | 26 dòng | Chứa bản dịch lịch sử trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/reading/session.json | 43 dòng | Chứa bản dịch phiên đọc/trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/reading/setup.json | 32 dòng | Chứa bản dịch cấu hình trải bài theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
-- /Frontend/messages/zh/reading/tarot.json | 340 dòng | Chứa bản dịch bộ bài, ý nghĩa lá bài và UI tarot theo locale. | Review: đúng vị trí localization nhưng file lớn; nên kiểm tra key trùng/lỗi thời trước khi refactor UI.
-- /Frontend/messages/zh/shared/common.json | 20 dòng | Chứa nhãn common như app metadata, loading, modal, menu và streak theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/footer.json | 22 dòng | Chứa bản dịch tagline, link, legal/social và copyright footer theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/http-errors.json | 10 dòng | Chứa bản dịch lỗi API/HTTP dùng chung theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/language-switcher.json | 10 dòng | Chứa bản dịch nhãn và aria cho bộ đổi ngôn ngữ theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/navigation.json | 29 dòng | Chứa bản dịch điều hướng chính cho home, tarot, social, game và account theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/pagination.json | 7 dòng | Chứa bản dịch page info và nút previous/next theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/user-nav.json | 11 dòng | Chứa bản dịch nhóm menu user nav theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/shared/validation.json | 36 dòng | Chứa validation message dùng chung cho Profile, Auth, ReaderApply và ReadingSetup theo locale. | Review: đúng nhóm shared localization; cần giữ đồng bộ key giữa vi/en/zh.
-- /Frontend/messages/zh/wallet/wallet.json | 125 dòng | Chứa bản dịch ví/nạp tiền/lịch sử giao dịch theo locale. | Review: đúng namespace feature/page localization; cần giữ đồng bộ key giữa vi/en/zh khi di chuyển UI.
+- /Frontend/messages/en/admin/admin.json | 519 dòng | Chứa bản dịch locale en cho namespace `admin/admin.json`. | Review: namespace dịch lớn; cần kiểm tra đồng bộ key giữa vi/en/zh khi sửa UI.
+- /Frontend/messages/en/auth/auth.json | 98 dòng | Chứa bản dịch locale en cho namespace `auth/auth.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/chat/chat.json | 120 dòng | Chứa bản dịch locale en cho namespace `chat/chat.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/collection/collection.json | 20 dòng | Chứa bản dịch locale en cho namespace `collection/collection.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/community/community.json | 72 dòng | Chứa bản dịch locale en cho namespace `community/community.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/gacha/gacha.json | 44 dòng | Chứa bản dịch locale en cho namespace `gacha/gacha.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/gamification/gamification.json | 55 dòng | Chứa bản dịch locale en cho namespace `gamification/gamification.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/home/index.json | 41 dòng | Chứa bản dịch locale en cho namespace `home/index.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/inventory/inventory.json | 20 dòng | Chứa bản dịch locale en cho namespace `inventory/inventory.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/legal/legal.json | 36 dòng | Chứa bản dịch locale en cho namespace `legal/legal.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/notifications/notifications.json | 24 dòng | Chứa bản dịch locale en cho namespace `notifications/notifications.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/profile/profile.json | 131 dòng | Chứa bản dịch locale en cho namespace `profile/profile.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/readers/reader-apply.json | 82 dòng | Chứa bản dịch locale en cho namespace `readers/reader-apply.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/readers/readers.json | 58 dòng | Chứa bản dịch locale en cho namespace `readers/readers.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/reading/ai-interpretation.json | 18 dòng | Chứa bản dịch locale en cho namespace `reading/ai-interpretation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/reading/history.json | 26 dòng | Chứa bản dịch locale en cho namespace `reading/history.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/reading/session.json | 43 dòng | Chứa bản dịch locale en cho namespace `reading/session.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/reading/setup.json | 32 dòng | Chứa bản dịch locale en cho namespace `reading/setup.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/reading/tarot.json | 340 dòng | Chứa bản dịch locale en cho namespace `reading/tarot.json`. | Review: namespace dịch lớn; cần kiểm tra đồng bộ key giữa vi/en/zh khi sửa UI.
+- /Frontend/messages/en/shared/common.json | 20 dòng | Chứa bản dịch locale en cho namespace `shared/common.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/footer.json | 22 dòng | Chứa bản dịch locale en cho namespace `shared/footer.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/http-errors.json | 10 dòng | Chứa bản dịch locale en cho namespace `shared/http-errors.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/language-switcher.json | 10 dòng | Chứa bản dịch locale en cho namespace `shared/language-switcher.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/navigation.json | 29 dòng | Chứa bản dịch locale en cho namespace `shared/navigation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/pagination.json | 7 dòng | Chứa bản dịch locale en cho namespace `shared/pagination.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/user-nav.json | 11 dòng | Chứa bản dịch locale en cho namespace `shared/user-nav.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/shared/validation.json | 36 dòng | Chứa bản dịch locale en cho namespace `shared/validation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/en/wallet/wallet.json | 125 dòng | Chứa bản dịch locale en cho namespace `wallet/wallet.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/admin/admin.json | 519 dòng | Chứa bản dịch locale vi cho namespace `admin/admin.json`. | Review: namespace dịch lớn; cần kiểm tra đồng bộ key giữa vi/en/zh khi sửa UI.
+- /Frontend/messages/vi/auth/auth.json | 98 dòng | Chứa bản dịch locale vi cho namespace `auth/auth.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/chat/chat.json | 120 dòng | Chứa bản dịch locale vi cho namespace `chat/chat.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/collection/collection.json | 20 dòng | Chứa bản dịch locale vi cho namespace `collection/collection.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/community/community.json | 72 dòng | Chứa bản dịch locale vi cho namespace `community/community.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/gacha/gacha.json | 44 dòng | Chứa bản dịch locale vi cho namespace `gacha/gacha.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/gamification/gamification.json | 55 dòng | Chứa bản dịch locale vi cho namespace `gamification/gamification.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/home/index.json | 41 dòng | Chứa bản dịch locale vi cho namespace `home/index.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/inventory/inventory.json | 20 dòng | Chứa bản dịch locale vi cho namespace `inventory/inventory.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/legal/legal.json | 36 dòng | Chứa bản dịch locale vi cho namespace `legal/legal.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/notifications/notifications.json | 24 dòng | Chứa bản dịch locale vi cho namespace `notifications/notifications.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/profile/profile.json | 131 dòng | Chứa bản dịch locale vi cho namespace `profile/profile.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/readers/reader-apply.json | 82 dòng | Chứa bản dịch locale vi cho namespace `readers/reader-apply.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/readers/readers.json | 58 dòng | Chứa bản dịch locale vi cho namespace `readers/readers.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/reading/ai-interpretation.json | 18 dòng | Chứa bản dịch locale vi cho namespace `reading/ai-interpretation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/reading/history.json | 26 dòng | Chứa bản dịch locale vi cho namespace `reading/history.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/reading/session.json | 43 dòng | Chứa bản dịch locale vi cho namespace `reading/session.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/reading/setup.json | 32 dòng | Chứa bản dịch locale vi cho namespace `reading/setup.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/reading/tarot.json | 340 dòng | Chứa bản dịch locale vi cho namespace `reading/tarot.json`. | Review: namespace dịch lớn; cần kiểm tra đồng bộ key giữa vi/en/zh khi sửa UI.
+- /Frontend/messages/vi/shared/common.json | 20 dòng | Chứa bản dịch locale vi cho namespace `shared/common.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/footer.json | 22 dòng | Chứa bản dịch locale vi cho namespace `shared/footer.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/http-errors.json | 10 dòng | Chứa bản dịch locale vi cho namespace `shared/http-errors.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/language-switcher.json | 10 dòng | Chứa bản dịch locale vi cho namespace `shared/language-switcher.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/navigation.json | 29 dòng | Chứa bản dịch locale vi cho namespace `shared/navigation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/pagination.json | 7 dòng | Chứa bản dịch locale vi cho namespace `shared/pagination.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/user-nav.json | 11 dòng | Chứa bản dịch locale vi cho namespace `shared/user-nav.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/shared/validation.json | 36 dòng | Chứa bản dịch locale vi cho namespace `shared/validation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/vi/wallet/wallet.json | 125 dòng | Chứa bản dịch locale vi cho namespace `wallet/wallet.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/admin/admin.json | 519 dòng | Chứa bản dịch locale zh cho namespace `admin/admin.json`. | Review: namespace dịch lớn; cần kiểm tra đồng bộ key giữa vi/en/zh khi sửa UI.
+- /Frontend/messages/zh/auth/auth.json | 98 dòng | Chứa bản dịch locale zh cho namespace `auth/auth.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/chat/chat.json | 120 dòng | Chứa bản dịch locale zh cho namespace `chat/chat.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/collection/collection.json | 20 dòng | Chứa bản dịch locale zh cho namespace `collection/collection.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/community/community.json | 72 dòng | Chứa bản dịch locale zh cho namespace `community/community.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/gacha/gacha.json | 44 dòng | Chứa bản dịch locale zh cho namespace `gacha/gacha.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/gamification/gamification.json | 55 dòng | Chứa bản dịch locale zh cho namespace `gamification/gamification.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/home/index.json | 41 dòng | Chứa bản dịch locale zh cho namespace `home/index.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/inventory/inventory.json | 20 dòng | Chứa bản dịch locale zh cho namespace `inventory/inventory.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/legal/legal.json | 36 dòng | Chứa bản dịch locale zh cho namespace `legal/legal.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/notifications/notifications.json | 24 dòng | Chứa bản dịch locale zh cho namespace `notifications/notifications.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/profile/profile.json | 131 dòng | Chứa bản dịch locale zh cho namespace `profile/profile.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/readers/reader-apply.json | 82 dòng | Chứa bản dịch locale zh cho namespace `readers/reader-apply.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/readers/readers.json | 58 dòng | Chứa bản dịch locale zh cho namespace `readers/readers.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/reading/ai-interpretation.json | 18 dòng | Chứa bản dịch locale zh cho namespace `reading/ai-interpretation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/reading/history.json | 26 dòng | Chứa bản dịch locale zh cho namespace `reading/history.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/reading/session.json | 43 dòng | Chứa bản dịch locale zh cho namespace `reading/session.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/reading/setup.json | 32 dòng | Chứa bản dịch locale zh cho namespace `reading/setup.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/reading/tarot.json | 340 dòng | Chứa bản dịch locale zh cho namespace `reading/tarot.json`. | Review: namespace dịch lớn; cần kiểm tra đồng bộ key giữa vi/en/zh khi sửa UI.
+- /Frontend/messages/zh/shared/common.json | 20 dòng | Chứa bản dịch locale zh cho namespace `shared/common.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/footer.json | 22 dòng | Chứa bản dịch locale zh cho namespace `shared/footer.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/http-errors.json | 10 dòng | Chứa bản dịch locale zh cho namespace `shared/http-errors.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/language-switcher.json | 10 dòng | Chứa bản dịch locale zh cho namespace `shared/language-switcher.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/navigation.json | 29 dòng | Chứa bản dịch locale zh cho namespace `shared/navigation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/pagination.json | 7 dòng | Chứa bản dịch locale zh cho namespace `shared/pagination.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/user-nav.json | 11 dòng | Chứa bản dịch locale zh cho namespace `shared/user-nav.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/shared/validation.json | 36 dòng | Chứa bản dịch locale zh cho namespace `shared/validation.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/messages/zh/wallet/wallet.json | 125 dòng | Chứa bản dịch locale zh cho namespace `wallet/wallet.json`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
 
 ## public
 
-- /Frontend/public/locales/en/common.json | 31 dòng | Chứa bản dịch public locale common legacy cho en. | Review: có thể trùng vai trò với `/Frontend/messages`; cần xác minh còn được load trước khi giữ lâu dài.
-- /Frontend/public/locales/vi/common.json | 31 dòng | Chứa bản dịch public locale common legacy cho vi. | Review: có thể trùng vai trò với `/Frontend/messages`; cần xác minh còn được load trước khi giữ lâu dài.
-- /Frontend/public/lottie/epic-drop.json | 87 dòng | Định nghĩa animation Lottie cho hiệu ứng epic drop. | Review: asset JSON runtime hợp lý trong public/lottie; cần xác minh usage trước khi xóa/gộp.
-- /Frontend/public/lottie/legendary-drop.json | 87 dòng | Định nghĩa animation Lottie cho hiệu ứng legendary drop. | Review: asset JSON runtime hợp lý trong public/lottie; cần xác minh usage trước khi xóa/gộp.
-- /Frontend/public/lottie/mythic-drop.json | 87 dòng | Định nghĩa animation Lottie cho hiệu ứng mythic drop. | Review: asset JSON runtime hợp lý trong public/lottie; cần xác minh usage trước khi xóa/gộp.
-- /Frontend/public/themes/arctic-frost.css | 76 dòng | Khai báo CSS variables và nền giao diện cho theme arctic frost. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/astral-premium.css | 199 dòng | Khai báo CSS variables và nền giao diện cho theme astral premium. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/candy-holo.css | 76 dòng | Khai báo CSS variables và nền giao diện cho theme candy holo. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/jade-lotus.css | 76 dòng | Khai báo CSS variables và nền giao diện cho theme jade lotus. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/lunar-bloom.css | 230 dòng | Khai báo CSS variables và nền giao diện cho theme lunar bloom. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/matrix-arcane.css | 75 dòng | Khai báo CSS variables và nền giao diện cho theme matrix arcane. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/moonstone-silver.css | 338 dòng | Khai báo CSS variables và nền giao diện cho theme moonstone silver. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/mystic-dark.css | 196 dòng | Khai báo CSS variables và nền giao diện cho theme mystic dark. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/neon-oracle.css | 117 dòng | Khai báo CSS variables và nền giao diện cho theme neon oracle. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
-- /Frontend/public/themes/obsidian-gold.css | 338 dòng | Khai báo CSS variables và nền giao diện cho theme obsidian gold. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/paper-grimoire.css | 302 dòng | Khai báo CSS variables và nền giao diện cho theme paper grimoire. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/prismatic-aurora.css | 337 dòng | Khai báo CSS variables và nền giao diện cho theme prismatic aurora. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/prismatic-opaline.css | 337 dòng | Khai báo CSS variables và nền giao diện cho theme prismatic opaline. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/prismatic-royal.css | 268 dòng | Khai báo CSS variables và nền giao diện cho theme prismatic royal. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/starlit-abyss.css | 338 dòng | Khai báo CSS variables và nền giao diện cho theme starlit abyss. | Review: theme CSS khá lớn; nên kiểm tra token trùng và cân nhắc generator/tokens chung nếu refactor theme.
-- /Frontend/public/themes/zen-garden.css | 80 dòng | Khai báo CSS variables và nền giao diện cho theme zen garden. | Review: đúng vị trí theme public; giữ riêng theo theme để runtime load độc lập.
+- /Frontend/public/file.svg | 1 dòng | Asset SVG tĩnh `file.svg`.
+- /Frontend/public/globe.svg | 1 dòng | Asset SVG tĩnh `globe.svg`.
+- /Frontend/public/images/collection/back-card.svg | 19 dòng | Asset hình ảnh tĩnh `back-card.svg` phục vụ UI.
+- /Frontend/public/img/01_The_Fool_50_20260325_181348.avif | 988 dòng | Asset hình ảnh tĩnh `01_The_Fool_50_20260325_181348.avif` phục vụ UI.
+- /Frontend/public/img/02_The_Magician_50_20260325_181348.avif | 918 dòng | Asset hình ảnh tĩnh `02_The_Magician_50_20260325_181348.avif` phục vụ UI.
+- /Frontend/public/img/03_The_High Priestess _50_20260325_181348.avif | 694 dòng | Asset hình ảnh tĩnh `03_The_High Priestess _50_20260325_181348.avif` phục vụ UI.
+- /Frontend/public/img/04_The_Empress_50_20260325_181348.avif | 1320 dòng | Asset hình ảnh tĩnh `04_The_Empress_50_20260325_181348.avif` phục vụ UI.
+- /Frontend/public/img/05_The_Emperor_50_20260325_181348.avif | 693 dòng | Asset hình ảnh tĩnh `05_The_Emperor_50_20260325_181348.avif` phục vụ UI.
+- /Frontend/public/img/06_The_Hierophant_50_20260325_181348.avif | 902 dòng | Asset hình ảnh tĩnh `06_The_Hierophant_50_20260325_181348.avif` phục vụ UI.
+- /Frontend/public/img/07_The_Lovers_50_20260325_181351.avif | 823 dòng | Asset hình ảnh tĩnh `07_The_Lovers_50_20260325_181351.avif` phục vụ UI.
+- /Frontend/public/img/08_The_Chariot_50_20260325_181351.avif | 609 dòng | Asset hình ảnh tĩnh `08_The_Chariot_50_20260325_181351.avif` phục vụ UI.
+- /Frontend/public/img/09_Strength_50_20260325_181351.avif | 776 dòng | Asset hình ảnh tĩnh `09_Strength_50_20260325_181351.avif` phục vụ UI.
+- /Frontend/public/img/10_The_Hermit_50_20260325_181353.avif | 462 dòng | Asset hình ảnh tĩnh `10_The_Hermit_50_20260325_181353.avif` phục vụ UI.
+- /Frontend/public/img/11_Wheel_of _Fortune_50_20260325_181353.avif | 1240 dòng | Asset hình ảnh tĩnh `11_Wheel_of _Fortune_50_20260325_181353.avif` phục vụ UI.
+- /Frontend/public/img/12_Justice_50_20260325_181353.avif | 825 dòng | Asset hình ảnh tĩnh `12_Justice_50_20260325_181353.avif` phục vụ UI.
+- /Frontend/public/img/13_The_Hanged_Man_50_20260325_181356.avif | 710 dòng | Asset hình ảnh tĩnh `13_The_Hanged_Man_50_20260325_181356.avif` phục vụ UI.
+- /Frontend/public/img/14_Death_50_20260325_181356.avif | 556 dòng | Asset hình ảnh tĩnh `14_Death_50_20260325_181356.avif` phục vụ UI.
+- /Frontend/public/img/15_Temperance_50_20260325_181356.avif | 708 dòng | Asset hình ảnh tĩnh `15_Temperance_50_20260325_181356.avif` phục vụ UI.
+- /Frontend/public/img/16_The_Devil_50_20260325_181357.avif | 395 dòng | Asset hình ảnh tĩnh `16_The_Devil_50_20260325_181357.avif` phục vụ UI.
+- /Frontend/public/img/17_The_Tower_50_20260325_181357.avif | 709 dòng | Asset hình ảnh tĩnh `17_The_Tower_50_20260325_181357.avif` phục vụ UI.
+- /Frontend/public/img/18_The_Star_50_20260325_181357.avif | 519 dòng | Asset hình ảnh tĩnh `18_The_Star_50_20260325_181357.avif` phục vụ UI.
+- /Frontend/public/img/19_The_Moon_50_20260325_181359.avif | 593 dòng | Asset hình ảnh tĩnh `19_The_Moon_50_20260325_181359.avif` phục vụ UI.
+- /Frontend/public/img/20_The_Sun_50_20260325_181359.avif | 415 dòng | Asset hình ảnh tĩnh `20_The_Sun_50_20260325_181359.avif` phục vụ UI.
+- /Frontend/public/img/21_Judgement_50_20260325_181359.avif | 855 dòng | Asset hình ảnh tĩnh `21_Judgement_50_20260325_181359.avif` phục vụ UI.
+- /Frontend/public/img/22_The_World_50_20260325_181401.avif | 973 dòng | Asset hình ảnh tĩnh `22_The_World_50_20260325_181401.avif` phục vụ UI.
+- /Frontend/public/img/23_Ace_of_Cups_50_20260325_181401.avif | 378 dòng | Asset hình ảnh tĩnh `23_Ace_of_Cups_50_20260325_181401.avif` phục vụ UI.
+- /Frontend/public/img/24_Two_of_Cups_50_20260325_181401.avif | 1055 dòng | Asset hình ảnh tĩnh `24_Two_of_Cups_50_20260325_181401.avif` phục vụ UI.
+- /Frontend/public/img/25_Three_of_Cups_50_20260325_181402.avif | 992 dòng | Asset hình ảnh tĩnh `25_Three_of_Cups_50_20260325_181402.avif` phục vụ UI.
+- /Frontend/public/img/26_Four_of_Cups_50_20260325_181402.avif | 551 dòng | Asset hình ảnh tĩnh `26_Four_of_Cups_50_20260325_181402.avif` phục vụ UI.
+- /Frontend/public/img/27_Five_of_Cups_50_20260325_181402.avif | 429 dòng | Asset hình ảnh tĩnh `27_Five_of_Cups_50_20260325_181402.avif` phục vụ UI.
+- /Frontend/public/img/28_Six_of_Cups_50_20260325_181405.avif | 785 dòng | Asset hình ảnh tĩnh `28_Six_of_Cups_50_20260325_181405.avif` phục vụ UI.
+- /Frontend/public/img/29_Seven_of_Cups_50_20260325_181405.avif | 588 dòng | Asset hình ảnh tĩnh `29_Seven_of_Cups_50_20260325_181405.avif` phục vụ UI.
+- /Frontend/public/img/30_Eight_of_Cups_50_20260325_181405.avif | 308 dòng | Asset hình ảnh tĩnh `30_Eight_of_Cups_50_20260325_181405.avif` phục vụ UI.
+- /Frontend/public/img/31_Nine_of_Cups_50_20260325_181406.avif | 898 dòng | Asset hình ảnh tĩnh `31_Nine_of_Cups_50_20260325_181406.avif` phục vụ UI.
+- /Frontend/public/img/32_Ten_of_Cups_50_20260325_181406.avif | 929 dòng | Asset hình ảnh tĩnh `32_Ten_of_Cups_50_20260325_181406.avif` phục vụ UI.
+- /Frontend/public/img/33_Page_of_Cups_50_20260325_181406.avif | 766 dòng | Asset hình ảnh tĩnh `33_Page_of_Cups_50_20260325_181406.avif` phục vụ UI.
+- /Frontend/public/img/34_Knight_of_Cups_50_20260325_181408.avif | 916 dòng | Asset hình ảnh tĩnh `34_Knight_of_Cups_50_20260325_181408.avif` phục vụ UI.
+- /Frontend/public/img/35_Queen_of_Cups_50_20260325_181408.avif | 993 dòng | Asset hình ảnh tĩnh `35_Queen_of_Cups_50_20260325_181408.avif` phục vụ UI.
+- /Frontend/public/img/36_King_of_Cups_50_20260325_181408.avif | 514 dòng | Asset hình ảnh tĩnh `36_King_of_Cups_50_20260325_181408.avif` phục vụ UI.
+- /Frontend/public/img/37_Ace_of_Pentacles_50_20260325_181411.avif | 717 dòng | Asset hình ảnh tĩnh `37_Ace_of_Pentacles_50_20260325_181411.avif` phục vụ UI.
+- /Frontend/public/img/38_Two_of_Pentacles_50_20260325_181411.avif | 690 dòng | Asset hình ảnh tĩnh `38_Two_of_Pentacles_50_20260325_181411.avif` phục vụ UI.
+- /Frontend/public/img/39_Three_of_Pentacles_50_20260325_181411.avif | 788 dòng | Asset hình ảnh tĩnh `39_Three_of_Pentacles_50_20260325_181411.avif` phục vụ UI.
+- /Frontend/public/img/40_Four_of_Pentacles_50_20260325_181413.avif | 830 dòng | Asset hình ảnh tĩnh `40_Four_of_Pentacles_50_20260325_181413.avif` phục vụ UI.
+- /Frontend/public/img/41_Five_of_Pentacles_50_20260325_181413.avif | 831 dòng | Asset hình ảnh tĩnh `41_Five_of_Pentacles_50_20260325_181413.avif` phục vụ UI.
+- /Frontend/public/img/42_Six_of_Pentacles_50_20260325_181413.avif | 753 dòng | Asset hình ảnh tĩnh `42_Six_of_Pentacles_50_20260325_181413.avif` phục vụ UI.
+- /Frontend/public/img/43_Seven_of_Pentacles_50_20260325_181416.avif | 646 dòng | Asset hình ảnh tĩnh `43_Seven_of_Pentacles_50_20260325_181416.avif` phục vụ UI.
+- /Frontend/public/img/44_Eight_of_Pentacles_50_20260325_181416.avif | 659 dòng | Asset hình ảnh tĩnh `44_Eight_of_Pentacles_50_20260325_181416.avif` phục vụ UI.
+- /Frontend/public/img/45_Nine_of_Pentacles_50_20260325_181416.avif | 944 dòng | Asset hình ảnh tĩnh `45_Nine_of_Pentacles_50_20260325_181416.avif` phục vụ UI.
+- /Frontend/public/img/46_Ten_of_Pentacles_50_20260325_181417.avif | 968 dòng | Asset hình ảnh tĩnh `46_Ten_of_Pentacles_50_20260325_181417.avif` phục vụ UI.
+- /Frontend/public/img/47_Page_of_Pentacles_50_20260325_181417.avif | 956 dòng | Asset hình ảnh tĩnh `47_Page_of_Pentacles_50_20260325_181417.avif` phục vụ UI.
+- /Frontend/public/img/48_Knight_of_Pentacles_50_20260325_181417.avif | 389 dòng | Asset hình ảnh tĩnh `48_Knight_of_Pentacles_50_20260325_181417.avif` phục vụ UI.
+- /Frontend/public/img/49_Queen_of_Pentacles_50_20260325_181419.avif | 1334 dòng | Asset hình ảnh tĩnh `49_Queen_of_Pentacles_50_20260325_181419.avif` phục vụ UI.
+- /Frontend/public/img/50_King_of_Pentacles_50_20260325_181419.avif | 1032 dòng | Asset hình ảnh tĩnh `50_King_of_Pentacles_50_20260325_181419.avif` phục vụ UI.
+- /Frontend/public/img/51_Ace_of_Swords_50_20260325_181419.avif | 931 dòng | Asset hình ảnh tĩnh `51_Ace_of_Swords_50_20260325_181419.avif` phục vụ UI.
+- /Frontend/public/img/52_Two_of_Swords_50_20260325_181422.avif | 309 dòng | Asset hình ảnh tĩnh `52_Two_of_Swords_50_20260325_181422.avif` phục vụ UI.
+- /Frontend/public/img/53_Three_of_Swords_50_20260325_181422.avif | 261 dòng | Asset hình ảnh tĩnh `53_Three_of_Swords_50_20260325_181422.avif` phục vụ UI.
+- /Frontend/public/img/54_Four_of_Swords_50_20260325_181422.avif | 767 dòng | Asset hình ảnh tĩnh `54_Four_of_Swords_50_20260325_181422.avif` phục vụ UI.
+- /Frontend/public/img/55_Five_of_Swords_50_20260325_181424.avif | 499 dòng | Asset hình ảnh tĩnh `55_Five_of_Swords_50_20260325_181424.avif` phục vụ UI.
+- /Frontend/public/img/56_Six_of_Swords_50_20260325_181424.avif | 306 dòng | Asset hình ảnh tĩnh `56_Six_of_Swords_50_20260325_181424.avif` phục vụ UI.
+- /Frontend/public/img/57_Seven_of_Swords_50_20260325_181424.avif | 478 dòng | Asset hình ảnh tĩnh `57_Seven_of_Swords_50_20260325_181424.avif` phục vụ UI.
+- /Frontend/public/img/58_Eight_of_Swords_50_20260325_181426.avif | 261 dòng | Asset hình ảnh tĩnh `58_Eight_of_Swords_50_20260325_181426.avif` phục vụ UI.
+- /Frontend/public/img/59_Nine_of_Swords_50_20260325_181426.avif | 268 dòng | Asset hình ảnh tĩnh `59_Nine_of_Swords_50_20260325_181426.avif` phục vụ UI.
+- /Frontend/public/img/60_Ten_of_Swords_50_20260325_181426.avif | 202 dòng | Asset hình ảnh tĩnh `60_Ten_of_Swords_50_20260325_181426.avif` phục vụ UI.
+- /Frontend/public/img/61_Page_of_Swords_50_20260325_181427.avif | 470 dòng | Asset hình ảnh tĩnh `61_Page_of_Swords_50_20260325_181427.avif` phục vụ UI.
+- /Frontend/public/img/62_Knight_of_Swords_50_20260325_181427.avif | 703 dòng | Asset hình ảnh tĩnh `62_Knight_of_Swords_50_20260325_181427.avif` phục vụ UI.
+- /Frontend/public/img/63_Queen_of_Swords_50_20260325_181427.avif | 442 dòng | Asset hình ảnh tĩnh `63_Queen_of_Swords_50_20260325_181427.avif` phục vụ UI.
+- /Frontend/public/img/64_King_of_Swords_50_20260325_181428.avif | 764 dòng | Asset hình ảnh tĩnh `64_King_of_Swords_50_20260325_181428.avif` phục vụ UI.
+- /Frontend/public/img/65_Ace_of_Wands_50_20260325_181428.avif | 708 dòng | Asset hình ảnh tĩnh `65_Ace_of_Wands_50_20260325_181428.avif` phục vụ UI.
+- /Frontend/public/img/66_Two_of_Wands_50_20260325_181428.avif | 973 dòng | Asset hình ảnh tĩnh `66_Two_of_Wands_50_20260325_181428.avif` phục vụ UI.
+- /Frontend/public/img/67_Three_of_Wands_50_20260325_181431.avif | 544 dòng | Asset hình ảnh tĩnh `67_Three_of_Wands_50_20260325_181431.avif` phục vụ UI.
+- /Frontend/public/img/68_Four_of_Wands_50_20260325_181431.avif | 718 dòng | Asset hình ảnh tĩnh `68_Four_of_Wands_50_20260325_181431.avif` phục vụ UI.
+- /Frontend/public/img/69_Five_of _Wands_50_20260325_181431.avif | 704 dòng | Asset hình ảnh tĩnh `69_Five_of _Wands_50_20260325_181431.avif` phục vụ UI.
+- /Frontend/public/img/70_Six_of_Wands_50_20260325_181433.avif | 744 dòng | Asset hình ảnh tĩnh `70_Six_of_Wands_50_20260325_181433.avif` phục vụ UI.
+- /Frontend/public/img/71_Seven_of_Wands_50_20260325_181433.avif | 500 dòng | Asset hình ảnh tĩnh `71_Seven_of_Wands_50_20260325_181433.avif` phục vụ UI.
+- /Frontend/public/img/72_Eight_of_Wands_50_20260325_181433.avif | 384 dòng | Asset hình ảnh tĩnh `72_Eight_of_Wands_50_20260325_181433.avif` phục vụ UI.
+- /Frontend/public/img/73_Nine_of_Wands_50_20260325_181435.avif | 676 dòng | Asset hình ảnh tĩnh `73_Nine_of_Wands_50_20260325_181435.avif` phục vụ UI.
+- /Frontend/public/img/74_Ten_of_Wands_50_20260325_181435.avif | 581 dòng | Asset hình ảnh tĩnh `74_Ten_of_Wands_50_20260325_181435.avif` phục vụ UI.
+- /Frontend/public/img/75_Page_of_Wands_50_20260325_181435.avif | 396 dòng | Asset hình ảnh tĩnh `75_Page_of_Wands_50_20260325_181435.avif` phục vụ UI.
+- /Frontend/public/img/76_Knight_of_Wands_50_20260325_181436.avif | 956 dòng | Asset hình ảnh tĩnh `76_Knight_of_Wands_50_20260325_181436.avif` phục vụ UI.
+- /Frontend/public/img/77_Queen_of_Wands_50_20260325_181436.avif | 716 dòng | Asset hình ảnh tĩnh `77_Queen_of_Wands_50_20260325_181436.avif` phục vụ UI.
+- /Frontend/public/img/78_King_of_Wands_50_20260325_181436.avif | 704 dòng | Asset hình ảnh tĩnh `78_King_of_Wands_50_20260325_181436.avif` phục vụ UI.
+- /Frontend/public/locales/en/common.json | 31 dòng | File locale public legacy `common.json`.
+- /Frontend/public/locales/vi/common.json | 31 dòng | File locale public legacy `common.json`.
+- /Frontend/public/lottie/epic-drop.json | 87 dòng | Định nghĩa animation Lottie `epic-drop` dùng ở runtime.
+- /Frontend/public/lottie/legendary-drop.json | 87 dòng | Định nghĩa animation Lottie `legendary-drop` dùng ở runtime.
+- /Frontend/public/lottie/mythic-drop.json | 87 dòng | Định nghĩa animation Lottie `mythic-drop` dùng ở runtime.
+- /Frontend/public/next.svg | 1 dòng | Asset SVG tĩnh `next.svg`.
+- /Frontend/public/themes/arctic-frost.css | 76 dòng | Khai báo CSS variables và theme runtime `arctic-frost`.
+- /Frontend/public/themes/astral-premium.css | 199 dòng | Khai báo CSS variables và theme runtime `astral-premium`.
+- /Frontend/public/themes/candy-holo.css | 76 dòng | Khai báo CSS variables và theme runtime `candy-holo`.
+- /Frontend/public/themes/jade-lotus.css | 76 dòng | Khai báo CSS variables và theme runtime `jade-lotus`.
+- /Frontend/public/themes/lunar-bloom.css | 230 dòng | Khai báo CSS variables và theme runtime `lunar-bloom`.
+- /Frontend/public/themes/matrix-arcane.css | 75 dòng | Khai báo CSS variables và theme runtime `matrix-arcane`.
+- /Frontend/public/themes/moonstone-silver.css | 338 dòng | Khai báo CSS variables và theme runtime `moonstone-silver`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/mystic-dark.css | 196 dòng | Khai báo CSS variables và theme runtime `mystic-dark`.
+- /Frontend/public/themes/neon-oracle.css | 117 dòng | Khai báo CSS variables và theme runtime `neon-oracle`.
+- /Frontend/public/themes/obsidian-gold.css | 338 dòng | Khai báo CSS variables và theme runtime `obsidian-gold`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/paper-grimoire.css | 302 dòng | Khai báo CSS variables và theme runtime `paper-grimoire`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/prismatic-aurora.css | 337 dòng | Khai báo CSS variables và theme runtime `prismatic-aurora`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/prismatic-opaline.css | 337 dòng | Khai báo CSS variables và theme runtime `prismatic-opaline`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/prismatic-royal.css | 268 dòng | Khai báo CSS variables và theme runtime `prismatic-royal`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/starlit-abyss.css | 338 dòng | Khai báo CSS variables và theme runtime `starlit-abyss`. | Review: theme CSS lớn; cân nhắc token/generator nếu refactor theme.
+- /Frontend/public/themes/zen-garden.css | 80 dòng | Khai báo CSS variables và theme runtime `zen-garden`.
+- /Frontend/public/vercel.svg | 1 dòng | Asset SVG tĩnh `vercel.svg`.
+- /Frontend/public/window.svg | 1 dòng | Asset SVG tĩnh `window.svg`.
+
+## scripts
+
+- /Frontend/scripts/audit-shared-direct-imports.mjs | 108 dòng | Guard phát hiện import trực tiếp vào shared internals thay vì public boundary. | Review: cần cập nhật allowlist khi cố ý đổi boundary shared/feature.
+- /Frontend/scripts/check-auth-fail-closed.mjs | 42 dòng | Guard đảm bảo auth verifier và protected route fail-closed. | Review: giữ chặt khi đổi auth/proxy/session.
+- /Frontend/scripts/check-benchmark-gates.mjs | 328 dòng | Gate so sánh benchmark navigation với baseline perf. | Review: file khá lớn; nếu mở rộng metric nên tách parser/threshold helper.
+- /Frontend/scripts/check-clean-architecture.mjs | 235 dòng | Entry guard clean architecture cho dependency direction và public API. | Review: cập nhật rule có chủ đích khi refactor layer.
+- /Frontend/scripts/check-component-size.mjs | 173 dòng | Guard ratchet kích thước component TSX.
+- /Frontend/scripts/check-hook-action-size.mjs | 121 dòng | Guard ratchet kích thước hook/action application.
+- /Frontend/scripts/check-next-image-policy.mjs | 39 dòng | Guard kiểm soát `next/image` unoptimized theo allowlist.
+- /Frontend/scripts/check-risk-coverage.mjs | 289 dòng | Gate coverage cho các file risk-tier quan trọng. | Review: cần đồng bộ path risk-tier khi di chuyển file.
+- /Frontend/scripts/component-size-baseline.json | 7 dòng | Baseline ratchet cho component-size guard.
+- /Frontend/scripts/hook-action-size-baseline.json | 24 dòng | Baseline ratchet cho hook/action-size guard.
+- /Frontend/scripts/image-unoptimized-allowlist.json | 25 dòng | Allowlist vị trí được phép dùng Next Image `unoptimized`.
+- /Frontend/scripts/lib/cleanArchitectureGuard.mjs | 203 dòng | Helper phân loại layer/path và phát hiện vi phạm clean architecture.
+- /Frontend/scripts/lib/cleanArchitectureGuard.test.ts | 97 dòng | Test cho helper clean architecture guard.
+- /Frontend/scripts/verify-backend-event-evidence.mjs | 170 dòng | Guard kiểm tra evidence backend domain-event cho path nhạy cảm FE. | Review: cần đồng bộ path khi frontend chạm event/protected backend flow.
+
+## tests
+
+- /Frontend/tests/auth-session-refresh.spec.ts | 133 dòng | Playwright e2e kiểm tra refresh session/auth.
+- /Frontend/tests/example.spec.ts | 15 dòng | Smoke e2e tối thiểu cho redirect unauthenticated và stream proxy reject. | Review: tên file còn generic; nên đổi nếu tiếp tục giữ như smoke auth/stream guard.
+- /Frontend/tests/helpers/viewportMetrics.ts | 80 dòng | Helper đo metric viewport trong Playwright QA.
+- /Frontend/tests/helpers/viewportQaData.ts | 79 dòng | Dữ liệu route/viewport cho QA layout.
+- /Frontend/tests/smoke-flows.spec.ts | 60 dòng | Smoke e2e cho navigation các luồng chính.
+- /Frontend/tests/tarotnow-navigation-benchmark.spec.ts | 2400 dòng | Benchmark Playwright navigation toàn app. | Review: file rất lớn; nên tách data/helper/expectation nếu tiếp tục duy trì.
+- /Frontend/tests/viewport-qa.spec.ts | 137 dòng | E2E QA kiểm tra viewport/layout cơ bản.
 
 ## src/app
 
-- /Frontend/src/app/[locale]/(auth)/forgot-password/page.tsx | 15 dòng | Render entry page cho route `[locale]/(auth)/forgot-password`. | Review: đúng route auth, có redirect guard nhẹ; page nên tiếp tục import qua feature public.
-- /Frontend/src/app/[locale]/(auth)/layout.tsx | 17 dòng | Layout cho nhóm route auth. | Review: route wrapper mỏng hợp lý; giữ trong app router.
-- /Frontend/src/app/[locale]/(auth)/loading.tsx | 10 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(auth)/login/page.tsx | 15 dòng | Render entry page cho route `[locale]/(auth)/login`. | Review: đúng route auth, có redirect guard nhẹ; page nên tiếp tục import qua feature public.
-- /Frontend/src/app/[locale]/(auth)/register/page.tsx | 15 dòng | Render entry page cho route `[locale]/(auth)/register`. | Review: đúng route auth, có redirect guard nhẹ; page nên tiếp tục import qua feature public.
-- /Frontend/src/app/[locale]/(auth)/reset-password/page.tsx | 3 dòng | Render entry page cho route `[locale]/(auth)/reset-password`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(auth)/verify-email/page.tsx | 3 dòng | Render entry page cho route `[locale]/(auth)/verify-email`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(site)/layout.tsx | 41 dòng | Layout segment site bootstrap auth nhẹ, navbar/sidebar và bottom tab. | Review: composition route hợp lý nhưng phụ thuộc shared layout cũ; cần rà sau khi chuẩn hóa shared/components.
-- /Frontend/src/app/[locale]/(site)/legal/ai-disclaimer/page.tsx | 4 dòng | Render entry page cho route `[locale]/(site)/legal/ai-disclaimer`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(site)/legal/loading.tsx | 10 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(site)/legal/privacy/page.tsx | 4 dòng | Render entry page cho route `[locale]/(site)/legal/privacy`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(site)/legal/tos/page.tsx | 4 dòng | Render entry page cho route `[locale]/(site)/legal/tos`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(site)/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(site)/page.tsx | 3 dòng | Render entry page cho route `[locale]/(site)`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(user)/chat/[id]/page.tsx | 17 dòng | Render entry page cho route `[locale]/(user)/chat/[id]`. | Review: đúng app route; nếu có data/orchestration ngoài wrapper thì nên chuyển xuống feature public/shared server helper.
-- /Frontend/src/app/[locale]/(user)/chat/layout.tsx | 15 dòng | Layout segment chat prefetch inbox shell và bọc `ChatSegmentShell`. | Review: có server prefetch trong route layout; hợp lý nếu orchestration giữ qua shared prefetch helper và feature public shell.
-- /Frontend/src/app/[locale]/(user)/chat/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/chat/page.tsx | 3 dòng | Render entry page cho route `[locale]/(user)/chat`. | Review: route wrapper rất mỏng, hợp lý nếu import từ feature public; không gộp vào feature vì Next cần page.tsx.
-- /Frontend/src/app/[locale]/(user)/collection/page.tsx | 15 dòng | Prefetch collection data rồi render `CollectionPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic UI/business.
-- /Frontend/src/app/[locale]/(user)/community/page.tsx | 18 dòng | Prefetch community feed rồi render `FeedPage` trong main shell tối. | Review: route có server prefetch và wrapper UI nền; nên giữ logic fetch qua shared helper/feature public, cân nhắc chuyển shell styling xuống feature nếu mở rộng.
-- /Frontend/src/app/[locale]/(user)/error.tsx | 36 dòng | Error boundary UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu logic/copy lặp nên dùng shared error component/localization.
-- /Frontend/src/app/[locale]/(user)/gacha/history/page.tsx | 15 dòng | Prefetch gacha history rồi render `GachaHistoryPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic gacha.
-- /Frontend/src/app/[locale]/(user)/gacha/page.tsx | 15 dòng | Prefetch gacha data rồi render `GachaPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic gacha.
-- /Frontend/src/app/[locale]/(user)/gamification/GamificationSections.tsx | 17 dòng | Dynamic import các section UI của gamification page. | Review: helper này thuộc riêng route gamification nhưng đang nằm trong app; nếu UI tiếp tục mở rộng nên chuyển xuống feature gamification/public hoặc presentation.
-- /Frontend/src/app/[locale]/(user)/gamification/metadata.ts | 15 dòng | Sinh metadata localized cho route gamification. | Review: helper metadata đặt cạnh page hợp lý; nếu metadata nhiều route gamification hơn thì cân nhắc chuyển sang feature public SEO helper.
-- /Frontend/src/app/[locale]/(user)/gamification/page.styles.ts | 61 dòng | Tập trung class Tailwind cho layout và card của gamification page. | Review: style helper thuộc riêng route; nên chuyển vào feature gamification presentation nếu refactor page khỏi app route.
-- /Frontend/src/app/[locale]/(user)/gamification/page.tsx | 50 dòng | Prefetch gamification hub, lấy translation metadata text và compose các section gamification. | Review: route đang chứa composition UI đáng kể; nên chuyển phần page content vào feature gamification public/presentation, giữ app page làm wrapper mỏng.
-- /Frontend/src/app/[locale]/(user)/inventory/page.tsx | 15 dòng | Prefetch inventory data rồi render `InventoryPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic inventory.
-- /Frontend/src/app/[locale]/(user)/layout.tsx | 46 dòng | Layout segment user yêu cầu session, prefetch shell, hydrate query và bọc navigation/user layout. | Review: route layout có orchestration auth/prefetch đáng kể nhưng qua shared helpers; nếu mở rộng thêm nên tách shell rõ hơn khỏi app route.
-- /Frontend/src/app/[locale]/(user)/leaderboard/metadata.ts | 17 dòng | Sinh metadata localized cho route leaderboard. | Review: helper metadata đặt cạnh page hợp lý; nếu metadata gamification/leaderboard tăng nên chuyển sang feature SEO helper chung.
-- /Frontend/src/app/[locale]/(user)/leaderboard/page.tsx | 48 dòng | Prefetch leaderboard, lấy translation và compose header cùng `LeaderboardTable`. | Review: route đang chứa composition UI đáng kể; nên chuyển page content vào feature gamification/public hoặc presentation, giữ app page làm wrapper mỏng.
-- /Frontend/src/app/[locale]/(user)/leaderboard/pageStyles.ts | 13 dòng | Tập trung class Tailwind cho layout/header leaderboard page. | Review: style helper thuộc riêng route; nên chuyển vào feature gamification presentation nếu refactor leaderboard khỏi app route.
-- /Frontend/src/app/[locale]/(user)/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/notifications/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/notifications/page.tsx | 15 dòng | Prefetch notifications rồi render `NotificationsPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic notifications.
-- /Frontend/src/app/[locale]/(user)/profile/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/profile/mfa/page.tsx | 15 dòng | Prefetch MFA profile data rồi render `ProfileMfaPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic MFA.
-- /Frontend/src/app/[locale]/(user)/profile/page.tsx | 15 dòng | Prefetch profile data rồi render `ProfilePage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic profile.
-- /Frontend/src/app/[locale]/(user)/profile/reader/page.tsx | 31 dòng | Guard role tarot_reader, prefetch reader settings và render `ProfileReaderSettingsPage`. | Review: route chứa authorization redirect và prefetch; guard gần route hợp lý nhưng page content/data vẫn nên đi qua shared helper và feature public entry.
-- /Frontend/src/app/[locale]/(user)/reader/apply/page.tsx | 15 dòng | Prefetch reader application data rồi render `ReaderApplyPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic reader apply.
-- /Frontend/src/app/[locale]/(user)/readers/[id]/page.tsx | 20 dòng | Lấy reader id từ params, prefetch public profile và render `ReaderPublicProfilePage`. | Review: route có orchestration params/prefetch tối thiểu; giữ logic fetch qua shared helper và feature public entry.
-- /Frontend/src/app/[locale]/(user)/readers/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/readers/page.tsx | 15 dòng | Prefetch readers directory rồi render `ReadersDirectoryPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic reader directory.
-- /Frontend/src/app/[locale]/(user)/reading/history/[id]/page.tsx | 20 dòng | Lấy reading id từ params, prefetch history detail và render `ReadingHistoryDetailPage`. | Review: route có orchestration params/prefetch tối thiểu; giữ logic fetch qua shared helper và feature public entry.
-- /Frontend/src/app/[locale]/(user)/reading/history/page.tsx | 15 dòng | Prefetch reading history list rồi render `ReadingHistoryPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic reading history.
-- /Frontend/src/app/[locale]/(user)/reading/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/reading/page.tsx | 15 dòng | Prefetch reading setup data rồi render `ReadingSetupPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic reading setup.
-- /Frontend/src/app/[locale]/(user)/reading/session/[id]/page.tsx | 18 dòng | Dynamic import `ReadingSessionPage` và bọc Suspense fallback cho reading session. | Review: route wrapper mỏng hợp lý; session logic vẫn nằm trong feature reading public entry.
-- /Frontend/src/app/[locale]/(user)/wallet/deposit/history/page.tsx | 15 dòng | Prefetch deposit history rồi render `WalletDepositHistoryPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic wallet.
-- /Frontend/src/app/[locale]/(user)/wallet/deposit/page.tsx | 15 dòng | Prefetch deposit page data rồi render `WalletDepositPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic deposit.
-- /Frontend/src/app/[locale]/(user)/wallet/loading.tsx | 5 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/(user)/wallet/page.tsx | 15 dòng | Prefetch wallet overview rồi render `WalletOverviewPage` qua hydration boundary. | Review: route có orchestration server prefetch nhưng dùng shared helper và feature public entry; giữ mỏng nếu không thêm logic wallet overview.
-- /Frontend/src/app/[locale]/(user)/wallet/withdraw/page.tsx | 31 dòng | Guard role tarot_reader, prefetch withdraw data và render `WalletWithdrawPage`. | Review: route chứa authorization redirect và prefetch; guard gần route hợp lý nhưng wallet logic nên tiếp tục qua shared helper và feature public entry.
-- /Frontend/src/app/[locale]/admin/deposits/page.tsx | 23 dòng | Dynamic import admin deposits, prefetch deposits và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/admin/disputes/page.tsx | 23 dòng | Dynamic import admin disputes, prefetch disputes và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/admin/error.tsx | 27 dòng | Error boundary UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu logic/copy lặp nên dùng shared error component/localization.
-- /Frontend/src/app/[locale]/admin/gamification/page.tsx | 23 dòng | Prefetch admin gamification và render dynamic `AdminGamificationClient`. | Review: route có server prefetch và metadata inline; giữ business/admin UI logic trong feature gamification public entry.
-- /Frontend/src/app/[locale]/admin/layout.tsx | 60 dòng | Layout admin yêu cầu session admin, nạp i18n labels và bọc `AdminLayoutShell`. | Review: route layout có auth/redirect và label mapping đáng kể nhưng qua shared/feature public; nếu menu/label phình nên chuyển thêm vào feature admin.
-- /Frontend/src/app/[locale]/admin/loading.tsx | 10 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/admin/page.tsx | 23 dòng | Dynamic import admin dashboard, prefetch dashboard và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/admin/promotions/page.tsx | 15 dòng | Render entry page cho route `[locale]/admin/promotions`. | Review: đúng app route; cần giữ mỏng theo rule page/layout.
-- /Frontend/src/app/[locale]/admin/reader-requests/page.tsx | 23 dòng | Dynamic import reader requests, prefetch queue và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/admin/readings/page.tsx | 23 dòng | Dynamic import admin readings, prefetch readings và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/admin/system-configs/page.tsx | 34 dòng | Lấy access token, gọi BFF system-configs server-side và truyền initial configs cho admin page. | Review: route chứa fetch trực tiếp bằng server client thay vì shared prefetch; nên cân nhắc đưa query vào admin feature/shared server helper để đồng nhất.
-- /Frontend/src/app/[locale]/admin/users/page.tsx | 23 dòng | Dynamic import admin users, prefetch users và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/admin/withdrawals/page.tsx | 23 dòng | Dynamic import admin withdrawals, prefetch withdrawals queue và render qua hydration boundary. | Review: route có server prefetch chuẩn qua shared helper; giữ mỏng và không thêm business logic admin ở app page.
-- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream/route.test.ts | 228 dòng | Test stream API route cho origin guard, token, idempotency, timeout, legacy follow-up và upstream problem SSE. | Review: test đặt cạnh route hợp lý vì bao phủ security/proxy edge case; giữ khi refactor stream BFF.
-- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream/route.ts | 194 dòng | SSE BFF proxy cho reading session stream với origin/access-token/session guard, timeout và upstream problem-to-SSE mapping. | Review: đúng vị trí BFF boundary nhưng khá nhiều security/proxy logic; giữ provider/business logic ngoài route và cân nhắc tách helper nếu tiếp tục tăng.
-- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream-ticket/route.ts | 94 dòng | POST BFF cấp stream ticket cho follow-up, validate origin/token/session/payload/idempotency rồi forward upstream. | Review: đúng vị trí BFF boundary; validation request khá cụ thể nhưng vẫn là boundary concern, tránh thêm business follow-up logic vào route.
-- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/streamRouteGuards.test.ts | 33 dòng | Test guard stream cho language normalization, follow-up sanitization và session id validation. | Review: test helper đặt cạnh stream route hợp lý; giữ để bảo vệ boundary trước input không tin cậy.
-- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/streamRouteGuards.ts | 23 dòng | Helper chuẩn hóa language, sanitize follow-up question và validate stream session id. | Review: helper boundary nhỏ đặt cạnh stream routes hợp lý; giữ tách khỏi route để test input guard dễ hơn.
-- /Frontend/src/app/[locale]/api/user-context/metadata/route.ts | 14 dòng | GET BFF trả initial metadata qua `getInitialMetadata` và map lỗi auth sang HTTP status. | Review: route mỏng hợp lý; business/user-context logic nằm trong shared application action, không cần tách thêm hiện tại.
-- /Frontend/src/app/[locale]/error.tsx | 38 dòng | Error boundary UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu logic/copy lặp nên dùng shared error component/localization.
-- /Frontend/src/app/[locale]/layout.tsx | 83 dòng | Root locale layout cấu hình font, theme, i18n provider, query provider và auth session manager. | Review: đúng app-level nhưng chứa nhiều composition runtime; chấp nhận nếu chỉ wiring provider, không nên thêm business logic.
-- /Frontend/src/app/[locale]/loading.tsx | 16 dòng | Loading UI cho route segment trong App Router. | Review: đúng vị trí Next convention; nếu lặp skeleton nhiều nơi có thể dùng shared skeleton component.
-- /Frontend/src/app/[locale]/not-found.tsx | 17 dòng | Not-found UI cho locale route. | Review: đúng vị trí Next convention; giữ mỏng và dùng localization/shared UI nếu mở rộng.
-- /Frontend/src/app/api/_shared/forwardUpstreamJsonWithTimeout.test.ts | 58 dòng | Test helper forward upstream JSON cho success, problem payload và timeout 504. | Review: test shared API helper hợp lý; giữ để bảo vệ behavior BFF proxy dùng chung.
-- /Frontend/src/app/api/_shared/forwardUpstreamJsonWithTimeout.ts | 94 dòng | Helper BFF fetch upstream JSON với AbortController timeout và mapping lỗi sang ProblemDetails. | Review: dùng chung cho API routes hợp lý; nếu thêm retry/telemetry cần giữ ở boundary helper, không nhân bản trong từng route.
-- /Frontend/src/app/api/_shared/problemDetails.test.ts | 55 dòng | Test builder ProblemDetails RFC7807 cho title/status/content-type, signature cũ và override type/title. | Review: test shared API helper hợp lý; giữ khi chuẩn hóa lỗi BFF để tránh lệch format.
-- /Frontend/src/app/api/_shared/problemDetails.ts | 65 dòng | Builder `application/problem+json` cho API routes với status/title/detail và optional errorCode. | Review: helper shared đúng vị trí cho BFF error format; overload legacy nên giữ đến khi callers được chuẩn hóa, tránh nhân bản response lỗi.
-- /Frontend/src/app/api/_shared/requireRoleSession.test.ts | 83 dòng | Test role-session guard cho thiếu token, sai role và role match trả token/user. | Review: test shared auth guard hợp lý; cần giữ fail-closed behavior khi refactor admin/API routes.
-- /Frontend/src/app/api/_shared/requireRoleSession.ts | 42 dòng | Shared guard lấy access token/session và enforce role trước khi API route xử lý. | Review: đúng vị trí API shared boundary; cần dùng thống nhất cho admin routes để tránh guard phân tán hoặc fail-open.
-- /Frontend/src/app/api/admin/gamification/_shared.ts | 1 dòng | Re-export `requireAdminSession` cho nhóm admin gamification API routes. | Review: wrapper một dòng giúp import local ngắn hơn nhưng có thể gộp nếu không cần alias theo segment.
-- /Frontend/src/app/api/admin/gamification/achievements/[code]/route.ts | 31 dòng | DELETE BFF xóa achievement admin sau guard admin và validate code. | Review: route mỏng đúng BFF boundary; pattern lặp với quests/titles có thể tách helper nếu CRUD admin gamification mở rộng.
-- /Frontend/src/app/api/admin/gamification/achievements/route.ts | 51 dòng | GET/POST BFF load và lưu achievement definitions sau guard admin. | Review: route mỏng đúng BFF boundary; payload chỉ pass-through, nếu validation phức tạp hơn nên chuyển vào feature/admin form hoặc backend.
-- /Frontend/src/app/api/admin/gamification/quests/[code]/route.ts | 31 dòng | DELETE BFF xóa quest admin sau guard admin và validate code. | Review: route mỏng đúng BFF boundary; pattern lặp với achievements/titles có thể tách helper nếu CRUD admin gamification mở rộng.
-- /Frontend/src/app/api/admin/gamification/quests/route.ts | 51 dòng | GET/POST BFF load và lưu quest definitions sau guard admin. | Review: route mỏng đúng BFF boundary; payload chỉ pass-through, nếu validation phức tạp hơn nên chuyển vào feature/admin form hoặc backend.
-- /Frontend/src/app/api/admin/gamification/titles/[code]/route.ts | 31 dòng | DELETE BFF xóa title admin sau guard admin và validate code. | Review: route mỏng đúng BFF boundary; pattern lặp với achievements/quests có thể tách helper nếu CRUD admin gamification mở rộng.
-- /Frontend/src/app/api/admin/gamification/titles/route.ts | 51 dòng | GET/POST BFF load và lưu title definitions sau guard admin. | Review: route mỏng đúng BFF boundary; payload chỉ pass-through, nếu validation phức tạp hơn nên chuyển vào feature/admin form hoặc backend.
-- /Frontend/src/app/api/auth/_shared/requestUrl.test.ts | 56 dòng | Test build public redirect URL từ forwarded proto/host/port cho auth routes. | Review: test boundary proxy header quan trọng; giữ để tránh redirect sai origin sau deploy reverse proxy.
-- /Frontend/src/app/api/auth/_shared/requestUrl.ts | 107 dòng | Helper dựng public URL cho redirect auth dựa trên forwarded headers và host/port đã normalize. | Review: đúng auth BFF boundary; logic proxy/origin nên giữ tập trung và test kỹ vì ảnh hưởng redirect bảo mật.
-- /Frontend/src/app/api/auth/_shared.clearCookies.test.ts | 55 dòng | Test clear auth cookies cho host-only, configured domain và legacy apex domain variants. | Review: test auth cleanup quan trọng; giữ khi thay đổi cookie domain để tránh session cũ không bị xóa.
-- /Frontend/src/app/api/auth/_shared.test.ts | 31 dòng | Test normalize refresh token cookie và set refresh cookie không double-encode. | Review: test nhỏ nhưng quan trọng cho auth cookie compatibility; giữ khi refactor `_shared.ts`.
-- /Frontend/src/app/api/auth/_shared.ts | 375 dòng | Helper auth BFF cho cookie domain/secure, token normalization, access/refresh/device cookies, unauthorized response và set-cookie forwarding. | Review: đúng nhóm auth API shared nhưng quá lớn/đa trách nhiệm; nên tách cookie parsing/domain cleanup/response helpers khi refactor auth để giảm rủi ro.
-- /Frontend/src/app/api/auth/login/route.ts | 74 dòng | POST login BFF forward credential/device info, set access/refresh/device cookies và clear cookie cũ. | Review: đúng auth BFF boundary; cookie/session side effects tập trung qua `_shared`, tránh thêm business auth logic vào route.
-- /Frontend/src/app/api/auth/logout/route.ts | 53 dòng | POST logout BFF forward revoke request và clear cookies khi logout/unauthorized. | Review: đúng auth BFF boundary; helper clear-cookie dùng chung hợp lý, không nên nhân bản logout cleanup ở client.
-- /Frontend/src/app/api/auth/refresh/refreshRouteHandler.ts | 105 dòng | Handler refresh token BFF tạo idempotency key, forward refresh, rotate cookies và xử lý terminal auth failure. | Review: tách khỏi route 6 dòng hợp lý; logic nhạy cảm nên giữ test/guard chặt nếu tiếp tục chỉnh auth refresh.
-- /Frontend/src/app/api/auth/refresh/route.ts | 6 dòng | Route POST mỏng ủy quyền refresh cho `executeRefreshRoute`. | Review: đúng Next route boundary; business/cookie refresh đã tách sang handler riêng.
-- /Frontend/src/app/api/auth/session/handshake/route.test.ts | 146 dòng | Test session handshake redirect cho document navigation, forwarded public origin, cookie forwarding và loop guard. | Review: test auth navigation boundary quan trọng; giữ khi chỉnh middleware/session handshake để tránh redirect loop hoặc origin sai.
-- /Frontend/src/app/api/auth/session/handshake/route.ts | 209 dòng | GET handshake route cho document navigation, safe next path, login redirect, session lite check, cookie forwarding và loop guard. | Review: đúng auth BFF boundary nhưng nhiều redirect/guard logic; cân nhắc tách guard/redirect helpers nếu tiếp tục tăng để dễ test hơn.
-- /Frontend/src/app/api/auth/session/route.ts | 6 dòng | Route GET mỏng ủy quyền session response cho `getSessionRouteResponse`. | Review: đúng Next route boundary; session/refresh orchestration đã tách sang handler riêng.
-- /Frontend/src/app/api/auth/session/sessionRouteHandler.ts | 166 dòng | Handler session BFF cho full/lite mode, access-token check, refresh fallback, cookie forwarding và unauthorized response. | Review: tách khỏi route hợp lý nhưng orchestration auth khá lớn; cần giữ fail-closed tests nếu refactor session/refresh flow.
-- /Frontend/src/app/api/chat/inbox-preview/route.ts | 32 dòng | GET BFF lấy preview inbox chat active với pageSize cố định sau access-token guard. | Review: route mỏng đúng BFF boundary; limit preview là UI/BFF concern nhỏ, tránh thêm logic conversation vào route.
-- /Frontend/src/app/api/chat/unread-count/route.ts | 24 dòng | GET BFF lấy tổng unread chat count sau access-token guard. | Review: route mỏng đúng BFF boundary; giữ server state/proxy đơn giản, không cần tách thêm hiện tại.
-- /Frontend/src/app/api/collection/card-image/route.ts | 76 dòng | Proxy ảnh card collection từ host allowlist với cache immutable, ETag và content headers. | Review: đúng BFF/media boundary nhưng cần giữ allowlist chặt để tránh SSRF; nếu host policy mở rộng nên tách cấu hình allowlist rõ ràng.
-- /Frontend/src/app/api/collection/route.ts | 25 dòng | GET BFF load user card collection sau access-token guard. | Review: route mỏng đúng BFF boundary; collection logic nằm ngoài route qua upstream/backend và feature action types.
-- /Frontend/src/app/api/gacha/_shared.ts | 14 dòng | Shared helper gacha API yêu cầu server access token và re-export ProblemDetails builder. | Review: helper nhỏ đúng nhóm gacha BFF; có thể gộp với API shared nếu nhiều feature lặp guard token giống nhau.
-- /Frontend/src/app/api/gacha/history/route.ts | 33 dòng | GET BFF gacha history với page/pageSize normalization và access-token guard. | Review: route mỏng đúng BFF boundary; pagination clamp là boundary concern nhỏ, tránh thêm gacha business logic vào route.
-- /Frontend/src/app/api/gacha/pools/[poolCode]/odds/route.ts | 32 dòng | GET BFF load odds theo poolCode sau access-token guard và validate pool code. | Review: route mỏng đúng BFF boundary; giữ encoding/validation ở boundary, không thêm gacha odds logic vào route.
-- /Frontend/src/app/api/gacha/pools/route.ts | 23 dòng | GET BFF load danh sách gacha pools sau access-token guard. | Review: route mỏng đúng BFF boundary; giữ gacha pool logic ngoài route qua upstream/backend.
-- /Frontend/src/app/api/gacha/pull/route.ts | 64 dòng | POST BFF thực hiện gacha pull với idempotency key, count clamp và duration headers. | Review: đúng BFF boundary nhưng có mutation/finance-like idempotency concern; giữ validation tối thiểu và tránh thêm reward business logic vào route.
-- /Frontend/src/app/api/health/route.ts | 15 dòng | Health endpoint force-dynamic trả `{status:"ok"}` với no-store cache. | Review: app-level API route hợp lý; giữ cực mỏng, không biến thành dependency health check phức tạp nếu chưa cần.
-- /Frontend/src/app/api/inventory/route.ts | 78 dòng | GET/POST inventory BFF load inventory và use item với quantity clamp, itemCode/idempotency validation. | Review: đúng BFF mutation boundary nhưng có idempotency concern; giữ inventory business effects ở backend/feature, route chỉ validate input và forward.
-- /Frontend/src/app/api/legal/runtime-policies/route.ts | 18 dòng | Public GET BFF load legal runtime policies không cần auth, no-store upstream. | Review: route mỏng đúng public BFF boundary; giữ policy mapping ngoài route nếu contract phức tạp hơn.
-- /Frontend/src/app/api/me/runtime-policies/route.ts | 25 dòng | Authenticated GET BFF load runtime policies của user hiện tại. | Review: route mỏng đúng BFF boundary; access-token guard nhất quán với các endpoint `/me` khác.
-- /Frontend/src/app/api/notifications/[id]/read/route.ts | 32 dòng | PATCH BFF mark notification read theo id sau access-token guard và validate id. | Review: route mỏng đúng BFF boundary; notification side effects nằm upstream/backend, không nên thêm logic fan-out tại route.
-- /Frontend/src/app/api/notifications/read-all/route.ts | 24 dòng | PATCH BFF mark all notifications read sau access-token guard. | Review: route mỏng đúng BFF boundary; giữ side effect notification ở backend/upstream.
-- /Frontend/src/app/api/notifications/route.ts | 53 dòng | GET BFF list notifications với page/pageSize clamp và optional isRead filter. | Review: route mỏng đúng BFF boundary; query normalization là boundary concern nhỏ, không nên chứa notification business logic.
-- /Frontend/src/app/api/notifications/unread-count/route.ts | 24 dòng | GET BFF lấy unread notification count và fallback count về 0 khi thiếu field. | Review: route mỏng đúng BFF boundary; fallback shape nhỏ hợp lý, tránh thêm aggregation logic ở route.
-- /Frontend/src/app/api/readers/[id]/route.test.ts | 31 dòng | Test reader detail API route map failure status từ ActionResult metadata. | Review: test đặt cạnh route hợp lý; giữ để status lỗi feature action không bị ép sai về 500.
-- /Frontend/src/app/api/readers/[id]/route.ts | 24 dòng | GET reader profile API route gọi feature action và map ActionResult status. | Review: app API gọi feature action trực tiếp thay vì upstream generic; hợp lý nếu action là public application boundary, không thêm UI/business logic vào route.
-- /Frontend/src/app/api/readers/route.test.ts | 31 dòng | Test readers list API route map failure status từ ActionResult metadata. | Review: test đặt cạnh route hợp lý; giữ để lỗi feature action giữ đúng HTTP status.
-- /Frontend/src/app/api/readers/route.ts | 22 dòng | GET readers list API route normalize query và gọi feature `listReaders`. | Review: route mỏng nhưng gọi feature action trực tiếp; hợp lý nếu application action là boundary, tránh thêm filter business logic ở route.
-- /Frontend/src/app/api/reading/cards-catalog/route.ts | 17 dòng | Public GET BFF forward cards catalog từ upstream reading API. | Review: route mỏng đúng BFF boundary; card catalog mapping nên ở feature/backend nếu contract phức tạp hơn.
-- /Frontend/src/app/api/reading/init/route.ts | 33 dòng | POST reading init API route lấy token, parse payload và invoke domain command `reading.session.init`. | Review: route là BFF/domain-command boundary; giữ command orchestration tối thiểu, không thêm reading business logic vào app route.
-- /Frontend/src/app/api/reading/setup-snapshot/route.ts | 25 dòng | GET BFF load reading setup snapshot của user sau access-token guard. | Review: route mỏng đúng BFF boundary; setup mapping nên nằm ở shared action/feature nếu tăng logic.
-- /Frontend/src/app/api/wallet/balance/route.ts | 25 dòng | GET BFF load wallet balance sau access-token guard. | Review: route mỏng đúng BFF boundary; money logic phải ở backend/feature, không thêm tính toán số dư tại route.
-- /Frontend/src/app/api/wallet/ledger/route.ts | 31 dòng | GET BFF load wallet ledger với page/limit clamp sau access-token guard. | Review: route mỏng đúng BFF boundary; pagination normalization ổn, không thêm money aggregation logic vào route.
-- /Frontend/src/app/favicon.ico | 31 dòng | Icon favicon của app Next. | Review: asset app-level hợp lý; không liên quan phân mảnh feature.
-- /Frontend/src/app/globals.css | 6 dòng | CSS global được import ở root locale layout. | Review: đúng vị trí app-level; nên giữ mỏng, token/theme chi tiết nên ở public/themes hoặc shared style.
-- /Frontend/src/app/styles/animations.css | 253 dòng | Khai báo keyframes/class animation global cho nền astral, tarot card motion, shimmer và reduced-motion/mobile tweaks. | Review: app-level style hợp lý nhưng chứa animation feature-specific tarot; nếu refactor UI lớn nên chuyển animation đặc thù vào feature/style module phù hợp.
-- /Frontend/src/app/styles/base.css | 130 dòng | Định nghĩa CSS variables/theme defaults, Tailwind `@theme inline`, body/html base, scrollbar và selection styles. | Review: đúng app-level base style; token theme nên giữ đồng bộ với public themes, tránh phình thành feature-specific CSS.
-- /Frontend/src/app/styles/utilities.css | 4181 dòng | Bộ utility CSS `tn-*` rất lớn cho text, surface, panel, field, gradients và theme-driven UI primitives. | Review: app-level utility quá lớn/khó audit; nên chia theo token/component utility hoặc thay dần bằng Tailwind/theme abstractions khi refactor UI.
+- /Frontend/src/app/[locale]/(auth)/forgot-password/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(auth)/layout.tsx | 17 dòng | Next App Router layout cho segment tương ứng.
+- /Frontend/src/app/[locale]/(auth)/loading.tsx | 10 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(auth)/login/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(auth)/register/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(auth)/reset-password/page.tsx | 3 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(auth)/verify-email/page.tsx | 3 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(site)/layout.tsx | 40 dòng | Next App Router layout cho segment tương ứng. | Review: route/layout có orchestration đáng kể; giữ app route mỏng và đẩy UI/business xuống feature.
+- /Frontend/src/app/[locale]/(site)/legal/ai-disclaimer/page.tsx | 4 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(site)/legal/loading.tsx | 10 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(site)/legal/privacy/page.tsx | 4 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(site)/legal/tos/page.tsx | 4 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(site)/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(site)/page.tsx | 3 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/chat/[id]/page.tsx | 17 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/chat/layout.tsx | 15 dòng | Next App Router layout cho segment tương ứng.
+- /Frontend/src/app/[locale]/(user)/chat/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/chat/page.tsx | 3 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/collection/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/community/page.tsx | 18 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/error.tsx | 36 dòng | Error boundary UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/gacha/history/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/gacha/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/gamification/GamificationSections.tsx | 17 dòng | Dynamic import các section UI gamification ở route level. | Review: vẫn là composition route-level; cân nhắc chuyển xuống feature gamification nếu mở rộng.
+- /Frontend/src/app/[locale]/(user)/gamification/metadata.ts | 15 dòng | Sinh metadata localized cho route gamification.
+- /Frontend/src/app/[locale]/(user)/gamification/page.styles.ts | 61 dòng | Tập trung class/style token cho page gamification route-level.
+- /Frontend/src/app/[locale]/(user)/gamification/page.tsx | 50 dòng | Next App Router page entry cho route tương ứng. | Review: route/layout có orchestration đáng kể; giữ app route mỏng và đẩy UI/business xuống feature.
+- /Frontend/src/app/[locale]/(user)/inventory/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/layout.tsx | 45 dòng | Next App Router layout cho segment tương ứng. | Review: route/layout có orchestration đáng kể; giữ app route mỏng và đẩy UI/business xuống feature.
+- /Frontend/src/app/[locale]/(user)/leaderboard/metadata.ts | 17 dòng | Sinh metadata localized cho route leaderboard.
+- /Frontend/src/app/[locale]/(user)/leaderboard/page.tsx | 48 dòng | Next App Router page entry cho route tương ứng. | Review: route/layout có orchestration đáng kể; giữ app route mỏng và đẩy UI/business xuống feature.
+- /Frontend/src/app/[locale]/(user)/leaderboard/pageStyles.ts | 13 dòng | Tập trung class/style token cho page leaderboard route-level.
+- /Frontend/src/app/[locale]/(user)/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/notifications/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/notifications/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/profile/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/profile/mfa/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/profile/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/profile/reader/page.tsx | 31 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/reader/apply/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/readers/[id]/page.tsx | 20 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/readers/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/readers/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/reading/history/[id]/page.tsx | 20 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/reading/history/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/reading/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/reading/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/reading/session/[id]/page.tsx | 18 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/wallet/deposit/history/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/wallet/deposit/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/wallet/loading.tsx | 5 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/(user)/wallet/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/(user)/wallet/withdraw/page.tsx | 31 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/deposits/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/disputes/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/error.tsx | 27 dòng | Error boundary UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/admin/gamification/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/layout.tsx | 60 dòng | Next App Router layout cho segment tương ứng. | Review: route/layout có orchestration đáng kể; giữ app route mỏng và đẩy UI/business xuống feature.
+- /Frontend/src/app/[locale]/admin/loading.tsx | 10 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/admin/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/promotions/page.tsx | 15 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/reader-requests/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/readings/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/system-configs/page.tsx | 34 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/users/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/admin/withdrawals/page.tsx | 23 dòng | Next App Router page entry cho route tương ứng.
+- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream/route.test.ts | 228 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF route/helper có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream/route.ts | 194 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF route/helper có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream-ticket/route.ts | 94 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/streamRouteGuards.test.ts | 33 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/streamRouteGuards.ts | 23 dòng | Helper TypeScript cho BFF/API boundary. | Review: giữ validation/guard ở boundary.
+- /Frontend/src/app/[locale]/api/user-context/metadata/route.ts | 14 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/[locale]/error.tsx | 38 dòng | Error boundary UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/layout.tsx | 83 dòng | Next App Router layout cho segment tương ứng. | Review: route/layout có orchestration đáng kể; giữ app route mỏng và đẩy UI/business xuống feature.
+- /Frontend/src/app/[locale]/loading.tsx | 16 dòng | Loading UI cho segment App Router tương ứng.
+- /Frontend/src/app/[locale]/not-found.tsx | 17 dòng | Not-found UI cho locale route.
+- /Frontend/src/app/_shared/actions/metadata.ts | 42 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/app-shell/common/AppQueryProvider.tsx | 23 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/app-shell/common/hooks/useAppQueryClient.ts | 10 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/app-shell/common/hooks/useThemeStylesheetManager.ts | 17 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/app-shell/loading/AdminRouteLoadingFallback.tsx | 9 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/app-shell/loading/segment-skeletons.tsx | 80 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/app-shell/loading/site-hero-skeleton.tsx | 28 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/app-shell/theme/ThemeStylesheetManager.tsx | 14 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/gateways/gachaRealtimeDedup.ts | 1 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/gateways/invalidateUserStateQueries.ts | 1 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/gateways/inventoryRealtimeDedup.ts | 1 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/useErrorBoundaryLogger.ts | 9 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.domainEvents.ts | 234 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.heartbeat.ts | 14 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.invalidationScheduler.ts | 91 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.roleLogout.ts | 66 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.statusObservers.ts | 207 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.test.ts | 358 dòng | Test Vitest cho helper App Router tương ứng. | Review: kích thước lớn; tránh mở rộng thêm trách nhiệm khi chỉnh sửa.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.ts | 42 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.registration.wallet.ts | 87 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.test.tsx | 347 dòng | Test/component React trong app-shared. | Review: kích thước lớn; tránh mở rộng thêm trách nhiệm khi chỉnh sửa.
+- /Frontend/src/app/_shared/hooks/usePresenceConnection.ts | 158 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/lib/appQueryClient.ts | 16 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/models/theme.test.ts | 29 dòng | Test Vitest cho route/helper App Router tương ứng.
+- /Frontend/src/app/_shared/models/theme.ts | 41 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/providers/AuthProvider.tsx | 22 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/providers/PresenceProvider.tsx | 18 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/seo/defaultMetadata.ts | 19 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/auth/cachedSessionSnapshot.ts | 10 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/auth/redirectAuthenticatedAuthEntry.test.ts | 144 dòng | Test Vitest cho route/helper App Router tương ứng.
+- /Frontend/src/app/_shared/server/auth/redirectAuthenticatedAuthEntry.ts | 41 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/auth/sessionHandshake.ts | 61 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/appQueryDehydrate.tsx | 21 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/_shared/server/prefetch/runners/admin.ts | 146 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/chat.ts | 24 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/collection.ts | 48 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/community.ts | 30 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/gacha.ts | 51 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/gamification.ts | 53 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/index.ts | 11 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/notifications.ts | 13 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/profile.ts | 31 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/readers.ts | 65 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/readingHistory.ts | 49 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/shared.ts | 16 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/shell.ts | 29 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user/wallet.ts | 53 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners/user.ts | 1 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/server/prefetch/runners.ts | 2 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/theme/clientTheme.ts | 73 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/app/_shared/ui/LoadingSpinner.tsx | 60 dòng | Component hoặc provider app-level dùng bởi App Router.
+- /Frontend/src/app/api/_shared/forwardUpstreamJsonWithTimeout.test.ts | 58 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/_shared/forwardUpstreamJsonWithTimeout.ts | 94 dòng | Helper TypeScript cho BFF/API boundary. | Review: giữ validation/guard ở boundary.
+- /Frontend/src/app/api/_shared/problemDetails.test.ts | 55 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/_shared/problemDetails.ts | 65 dòng | Helper TypeScript cho BFF/API boundary. | Review: giữ validation/guard ở boundary.
+- /Frontend/src/app/api/_shared/requireRoleSession.test.ts | 83 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/_shared/requireRoleSession.ts | 42 dòng | Helper TypeScript cho BFF/API boundary. | Review: giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/_shared.ts | 1 dòng | Helper TypeScript cho BFF/API boundary. | Review: giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/achievements/[code]/route.ts | 31 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/achievements/route.ts | 51 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/quests/[code]/route.ts | 31 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/quests/route.ts | 51 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/titles/[code]/route.ts | 31 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/admin/gamification/titles/route.ts | 51 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/_shared/requestUrl.test.ts | 56 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/_shared/requestUrl.ts | 107 dòng | Helper TypeScript cho BFF/API boundary. | Review: có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/api/auth/_shared.clearCookies.test.ts | 55 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/_shared.test.ts | 31 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/_shared.ts | 375 dòng | Helper TypeScript app-level hoặc route-level. | Review: kích thước lớn; cần tránh mở rộng thêm trách nhiệm khi chỉnh sửa; BFF route/helper có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/api/auth/login/route.ts | 74 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/logout/route.ts | 53 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/refresh/refreshRouteHandler.ts | 105 dòng | Helper TypeScript cho BFF/API boundary. | Review: có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/api/auth/refresh/route.ts | 6 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/session/handshake/route.test.ts | 146 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF route/helper có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/api/auth/session/handshake/route.ts | 209 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF route/helper có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/api/auth/session/route.ts | 6 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/auth/session/sessionRouteHandler.ts | 166 dòng | Helper TypeScript cho BFF/API boundary. | Review: có logic boundary đáng kể; giữ business logic ngoài route.
+- /Frontend/src/app/api/chat/inbox-preview/route.ts | 32 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/chat/unread-count/route.ts | 24 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/collection/card-image/route.ts | 76 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/collection/route.ts | 25 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/gacha/_shared.ts | 14 dòng | Helper TypeScript cho BFF/API boundary. | Review: giữ validation/guard ở boundary.
+- /Frontend/src/app/api/gacha/history/route.ts | 33 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/gacha/pools/[poolCode]/odds/route.ts | 32 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/gacha/pools/route.ts | 23 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/gacha/pull/route.ts | 64 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/health/route.ts | 15 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/inventory/route.ts | 78 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/legal/runtime-policies/route.ts | 18 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/me/runtime-policies/route.ts | 25 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/notifications/[id]/read/route.ts | 32 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/notifications/read-all/route.ts | 24 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/notifications/route.ts | 53 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/notifications/unread-count/route.ts | 24 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/readers/[id]/route.test.ts | 31 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/readers/[id]/route.ts | 24 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/readers/route.test.ts | 31 dòng | Test Vitest cho route/helper App Router tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/readers/route.ts | 22 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/reading/cards-catalog/route.ts | 17 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/reading/init/route.ts | 33 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/reading/setup-snapshot/route.ts | 25 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/wallet/balance/route.ts | 25 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/api/wallet/ledger/route.ts | 31 dòng | Next/BFF API route handler cho endpoint tương ứng. | Review: BFF boundary mỏng; giữ validation/guard ở boundary.
+- /Frontend/src/app/favicon.ico | 31 dòng | Icon ứng dụng.
+- /Frontend/src/app/globals.css | 6 dòng | Style app-level được nạp bởi App Router.
+- /Frontend/src/app/styles/animations.css | 253 dòng | Style app-level được nạp bởi App Router.
+- /Frontend/src/app/styles/base.css | 130 dòng | Style app-level được nạp bởi App Router.
+- /Frontend/src/app/styles/utilities.css | 4181 dòng | Style app-level được nạp bởi App Router.
 
-## src/components
+## src root/test
 
-- /Frontend/src/components/ui/gacha/GachaHistoryPageClient.tsx | 76 dòng | Client page gacha history quản lý pagination, gọi `useGachaHistory` và render table/pagination. | Review: UI/state thuộc feature gacha, nên chuyển từ `src/components/ui/gacha` sang `src/features/gacha/presentation` hoặc public page client.
-- /Frontend/src/components/ui/gacha/GachaHistoryPagination.tsx | 27 dòng | Pagination controls riêng cho gacha history với previous/next labels và loading state. | Review: UI thuộc feature gacha, nên chuyển cùng history page sang `src/features/gacha/presentation`; không phải shared pagination primitive.
-- /Frontend/src/components/ui/gacha/GachaHistoryPreview.tsx | 93 dòng | Preview history gacha trên trang chính, localize reward đầu tiên và link sang history. | Review: UI thuộc feature gacha, nên chuyển vào feature presentation/public; phụ thuộc gacha types/localization nên không phải shared component.
-- /Frontend/src/components/ui/gacha/GachaHistoryTable.tsx | 87 dòng | Table/card list gacha history với localized reward chips, rarity tone và timestamp formatting. | Review: UI thuộc feature gacha, nên chuyển vào feature presentation; helper localization nội bộ nên đi cùng file này.
-- /Frontend/src/components/ui/gacha/GachaPageClient.tsx | 91 dòng | Client page gacha compose pool selector, odds preview, history preview và result modal qua `useGachaPageState`. | Review: feature page composition thuộc gacha, nên chuyển sang `src/features/gacha/presentation` hoặc public entry thay vì shared components.
-- /Frontend/src/components/ui/gacha/GachaPoolCard.tsx | 98 dòng | Card chọn gacha pool, hiển thị cost, pity progress, tooltip và nút pull 1x/10x. | Review: UI/domain copy thuộc feature gacha, nên chuyển vào feature presentation; hard-coded pity hint cần localize khi refactor.
-- /Frontend/src/components/ui/gacha/GachaPoolSelector.tsx | 56 dòng | Grid selector memoized cho danh sách gacha pools và callbacks select/pull. | Review: UI thuộc feature gacha, nên chuyển cùng `GachaPoolCard` vào feature presentation; không phải generic selector shared.
-- /Frontend/src/components/ui/gacha/GachaResultItem.tsx | 72 dòng | Reward item trong modal gacha result, xử lý image fallback, rarity styling và summary text. | Review: UI thuộc feature gacha; nên chuyển vào feature presentation cùng view helper và giữ Next Image policy ở boundary component.
-- /Frontend/src/components/ui/gacha/GachaResultModal.tsx | 76 dòng | Modal kết quả gacha điều phối reveal/result stages, rare-drop Lottie và reduced-motion delay. | Review: UI/interaction thuộc feature gacha, nên chuyển vào feature presentation; timing/reveal state không nên nằm trong shared components.
-- /Frontend/src/components/ui/gacha/GachaResultModalResultStage.tsx | 46 dòng | Stage hiển thị kết quả gacha modal với pool code, pity badge, reward grid và close button. | Review: UI thuộc feature gacha, nên chuyển cùng modal/result item vào feature presentation.
-- /Frontend/src/components/ui/gacha/GachaResultModalRevealStage.tsx | 30 dòng | Stage reveal gacha modal hiển thị Lottie rare drop hoặc fallback glyph theo độ hiếm. | Review: UI animation thuộc feature gacha, nên chuyển vào feature presentation cùng modal.
-- /Frontend/src/components/ui/gacha/GachaRewardPreview.tsx | 92 dòng | Odds/reward preview grid cho gacha pool, localize reward name, value label, rarity badge và probability. | Review: UI thuộc feature gacha, nên chuyển vào feature presentation; hard-coded label “Xác suất” cần localize khi refactor.
-- /Frontend/src/components/ui/gacha/gachaLocalization.ts | 23 dòng | Helper localize tên/mô tả gacha theo locale. | Review: đặt sai dưới components; nên chuyển vào feature gacha domain/presentation utility.
-- /Frontend/src/components/ui/gacha/gachaResultItemView.test.tsx | 35 dòng | Test view/model helper cho UI gacha. | Review: đặt cạnh helper hiện tại nhưng nên đi cùng feature gacha sau khi di chuyển.
-- /Frontend/src/components/ui/gacha/gachaResultItemView.tsx | 34 dòng | View helper gacha result cho rarity config, localized reward name, summary và fallback icon. | Review: feature presentation helper đặt sai dưới components; nên chuyển cùng `GachaResultItem` vào feature gacha.
-- /Frontend/src/components/ui/gacha/useGachaPageState.ts | 61 dòng | Hook orchestration trang gacha kết hợp pools/odds/history queries, pull mutation, modal state và error mapping. | Review: hook thuộc feature gacha, đặt sai dưới src/components; nên chuyển vào feature presentation hook hoặc application-facing UI hook.
-- /Frontend/src/components/ui/inventory/InventoryGrid.tsx | 73 dòng | Grid inventory render empty state và danh sách `InventoryItemCard` theo locale/onSelect. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation; còn comment tiếng Việt mô tả code và copy empty state hard-coded cần dọn khi refactor.
-- /Frontend/src/components/ui/inventory/InventoryItemCard.tsx | 81 dòng | Card inventory item với localized name/description, rarity badge/glow, icon fallback và quantity owned. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation cùng view helper; hard-coded “Owned” cần localize khi refactor.
-- /Frontend/src/components/ui/inventory/InventoryPageClient.tsx | 93 dòng | Client page inventory compose hero/grid/modal, load inventory/owned cards và execute use-item mutation. | Review: feature page composition thuộc inventory, nên chuyển vào `src/features/inventory/presentation` hoặc public page client; state orchestration không nên nằm trong shared components.
-- /Frontend/src/components/ui/inventory/InventoryPageHero.tsx | 64 dòng | Hero trang inventory với icon PackageSearch, metallic title/subtitle và decorative glow. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation; có nhiều comment mô tả visual nên dọn khi refactor.
-- /Frontend/src/components/ui/inventory/InventoryQueryState.tsx | 26 dòng | Trạng thái loading/error đơn giản cho inventory query. | Review: UI thuộc feature inventory; có thể chuyển vào feature presentation hoặc gộp vào page client nếu không tái sử dụng.
-- /Frontend/src/components/ui/inventory/UseItemActionButton.tsx | 55 dòng | CTA dùng vật phẩm trong modal, đóng gói payload itemCode/quantity/targetCardId. | Review: UI/action thuộc feature inventory, nên chuyển vào feature presentation; comment mô tả code nên dọn khi refactor.
-- /Frontend/src/components/ui/inventory/UseItemCardPreview.tsx | 93 dòng | Preview lá bài mục tiêu khi dùng item, normalize image URL và hiển thị stats card. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation; hard-coded stat labels/empty copy cần localize khi refactor.
-- /Frontend/src/components/ui/inventory/UseItemCardSelector.tsx | 43 dòng | Select card target cho use-item modal dựa trên `CardOption[]`. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation; option placeholder hard-coded cần localize khi refactor.
-- /Frontend/src/components/ui/inventory/UseItemModal.tsx | 96 dòng | Modal dùng inventory item compose quantity/card selector, result panel và controller hook. | Review: UI orchestration thuộc feature inventory, nên chuyển vào feature presentation cùng controller/types/subcomponents.
-- /Frontend/src/components/ui/inventory/UseItemModal.types.ts | 28 dòng | Props/label types cho use-item modal và async use-item payload. | Review: type thuộc feature inventory presentation, nên chuyển cùng modal; có thể gộp nếu chỉ dùng nội bộ một component cụm.
-- /Frontend/src/components/ui/inventory/UseItemQuantitySelector.tsx | 96 dòng | Quantity selector cho use-item modal với +/- controls, max clamp 10 và total quantity display. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation; hard-coded aria/label “Tổng” cần localize khi refactor.
-- /Frontend/src/components/ui/inventory/UseItemResultPanel.helpers.ts | 49 dòng | Helper format result use-item: rolled value, effect type label, animation delay và before/after rows. | Review: helper thuộc feature inventory presentation; nên chuyển cùng result panel và localize các label hard-coded khi refactor.
-- /Frontend/src/components/ui/inventory/UseItemResultPanel.tsx | 97 dòng | Result panel use-item hiển thị effect summaries, before/after rows, empty success và done/use-again actions. | Review: UI thuộc feature inventory, nên chuyển vào feature presentation; còn nhiều copy hard-coded cần localize khi refactor.
-- /Frontend/src/components/ui/inventory/inventoryItemCardView.test.ts | 29 dòng | Test helper/view model cho UI inventory. | Review: đặt cạnh helper hiện tại nhưng nên đi cùng feature inventory sau khi di chuyển.
-- /Frontend/src/components/ui/inventory/inventoryItemCardView.ts | 27 dòng | View helper inventory item cho rarity config/glow, rarity normalization và localized name/description. | Review: feature presentation helper đặt sai dưới components; nên chuyển cùng `InventoryItemCard`, đồng thời localize rarity labels nếu cần.
-- /Frontend/src/components/ui/inventory/useUseItemModalController.ts | 88 dòng | Controller hook use-item modal quản lý quantity, selected card, submit/result/error và use-again flow. | Review: hook orchestration thuộc feature inventory, nên chuyển vào feature presentation hook; không nên ở `src/components/ui`.
+- /Frontend/src/README.md | 29 dòng | Tài liệu Markdown của frontend.
+- /Frontend/src/middleware.test.ts | 68 dòng | Helper TypeScript app-level hoặc route-level.
+- /Frontend/src/proxy.ts | 251 dòng | Proxy source entry tái xuất middleware/proxy app theo cấu trúc src.
+- /Frontend/src/test/setup.ts | 1 dòng | Setup/helper test frontend.
 
-## src/features
+## src/i18n
 
-- /Frontend/src/features/admin/application/actions/dashboard.ts | 110 dòng | Server action tổng hợp dashboard summary bằng các upstream admin users/deposits/promotions/readings và normalize count. | Review: đúng application layer; orchestration nhiều endpoint nhưng còn tập trung trong một use-case nhỏ, tránh kéo UI hoặc side-effect khác vào action.
-- /Frontend/src/features/admin/application/actions/deposits.test.ts | 94 dòng | Test admin deposit actions cho thiếu token, idempotent command routing và PascalCase response normalization. | Review: đặt cạnh action hợp lý; giữ để bảo vệ command `wallet.deposit.admin.process` khi refactor wallet/admin flow.
-- /Frontend/src/features/admin/application/actions/deposits.ts | 122 dòng | Server actions list deposits và process deposit qua idempotent domain command `wallet.deposit.admin.process`. | Review: đúng application layer nhưng vừa list vừa mutate; có thể tách query/process action nếu admin deposit flow tiếp tục mở rộng.
-- /Frontend/src/features/admin/application/actions/index.ts | 5 dòng | Re-export các admin actions dashboard, deposits, reader-requests, system-configs và users. | Review: file rất mỏng nhưng hợp lý làm barrel nội bộ; lưu ý promotion actions đang nằm dưới subfolder riêng không được export tại đây.
-- /Frontend/src/features/admin/application/actions/promotion/index.ts | 3 dòng | Re-export promotion list/manage/types actions trong admin. | Review: file rất mỏng; hợp lý nếu presentation import qua boundary promotion, có thể gộp nếu không cần entry riêng.
-- /Frontend/src/features/admin/application/actions/promotion/list.ts | 34 dòng | Server action list deposit promotions với filter `onlyActive`. | Review: đúng application layer; nhỏ và rõ, giữ tách khỏi manage nếu list/query được dùng độc lập.
-- /Frontend/src/features/admin/application/actions/promotion/manage.ts | 94 dòng | Server actions create/update/delete deposit promotion qua admin promotions endpoints. | Review: đúng application layer; ba mutation cùng resource có thể giữ chung, nhưng cân nhắc idempotent command path nếu backend yêu cầu invariants tài chính.
-- /Frontend/src/features/admin/application/actions/promotion/types.ts | 9 dòng | Định nghĩa type `DepositPromotion` cho admin promotion actions/UI. | Review: đúng type gần action hiện tại; nếu domain promotion lớn hơn nên chuyển sang domain/application types để tránh phụ thuộc subfolder action.
-- /Frontend/src/features/admin/application/actions/reader-requests.test.ts | 113 dòng | Test admin reader request actions cho thiếu token, idempotent command routing và normalize list payload. | Review: đặt cạnh action hợp lý; giữ để bảo vệ command `admin.reader-request.process` và mapping PascalCase/camelCase.
-- /Frontend/src/features/admin/application/actions/reader-requests.ts | 242 dòng | Server actions list/process reader requests, normalize raw payload/review history và gửi idempotent command xử lý request. | Review: file application action khá dài; nên tách normalizer/types hoặc query/process use-case nếu refactor admin reader workflow.
-- /Frontend/src/features/admin/application/actions/system-configs.ts | 95 dòng | Server actions list/update system configs và tạo restart request qua `withAdminToken`. | Review: đúng application layer; restart request là side-effect admin rõ ràng, nhưng nên giữ audit payload/endpoint ở use-case riêng nếu mở rộng vận hành.
-- /Frontend/src/features/admin/application/actions/users.test.ts | 203 dòng | Test admin users actions cho missing token, command idempotency, list/create user và PascalCase response handling. | Review: đặt cạnh action hợp lý; giữ để bảo vệ command `admin.user.adjust-balance` vì liên quan balance/role admin nhạy cảm.
-- /Frontend/src/features/admin/application/actions/users.ts | 100 dòng | Server actions list/create/update users, update route qua domain command với idempotency key. | Review: đúng application layer nhưng gom cả list/create/update; user balance update là luồng nhạy cảm nên giữ command/idempotency rõ khi refactor.
-- /Frontend/src/features/admin/application/adminQueryKeys.ts | 38 dòng | Khai báo TanStack Query keys cho dashboard, users, deposits, reader requests, readings, withdrawals và disputes. | Review: đúng application layer; helper normalize filter key hợp lý để tránh cache key lệch do whitespace/null.
-- /Frontend/src/features/admin/application/adminQueryPolicy.ts | 26 dòng | Khai báo policy staleTime/refetch/retry dùng chung cho admin dashboard/list/heavyList/detail queries. | Review: đúng application layer; policy tập trung hợp lý, tránh override rải rác trong presentation nếu không có lý do cụ thể.
-- /Frontend/src/features/admin/dashboard/application/useAdminDashboard.ts | 36 dòng | Client hook TanStack Query lấy admin dashboard summary qua server action và query policy chung. | Review: application hook nằm đúng subfeature dashboard; fallback stats zero hợp lý cho UI nhưng cần tránh che lỗi khi dashboard data hỏng.
-- /Frontend/src/features/admin/dashboard/presentation/AdminDashboardPage.tsx | 55 dòng | Client page dashboard compose stats cards, loading/error, header, shortcuts và insights. | Review: đúng presentation layer; route nên import qua public/dashboard entry nếu có, còn stat card config có thể tách nếu tiếp tục tăng.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardHeader.tsx | 33 dòng | Header dashboard admin với section title và health status localized. | Review: đúng presentation layer; giữ trong dashboard feature, không cần tách thêm hiện tại.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardInsights.tsx | 70 dòng | Dashboard insights cards ước tính revenue từ deposits và hiển thị activity readings theo locale. | Review: đúng presentation layer nhưng công thức `deposits * 50000` là business-ish giả định trong UI; cần xác minh nguồn metric trước bàn giao.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardLoading.tsx | 21 dòng | Loading state dashboard admin với spinner và localized loading text. | Review: component rất nhỏ; có thể gộp vào page nếu chỉ dùng một nơi, nhưng giữ riêng cũng chấp nhận được cho readability.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardMidSection.tsx | 19 dòng | Wrapper mid-section ghép notice panel và shortcuts. | Review: file rất mỏng và chỉ compose hai component; cân nhắc gộp vào `AdminDashboardPage` nếu giảm phân mảnh dashboard.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardNoticePanel.tsx | 60 dòng | Notice panel dashboard với reminder/announcement localized và helper `NoticeItem`. | Review: đúng presentation layer; helper nội bộ hợp lý, giữ trong feature nếu chỉ phục vụ dashboard.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardShortcuts.tsx | 66 dòng | Danh sách nút shortcut dashboard dùng items config và callback navigate typed theo admin route. | Review: đúng presentation layer; tách items riêng giúp giảm JSX nhưng tăng file nhỏ, giữ nếu shortcuts còn mở rộng.
-- /Frontend/src/features/admin/dashboard/presentation/components/AdminDashboardStatsGrid.tsx | 49 dòng | Grid nút stat cards dashboard với icon, count localized và navigation callback. | Review: đúng presentation layer; generic chỉ trong admin dashboard, không nên đưa shared sớm.
-- /Frontend/src/features/admin/dashboard/presentation/components/adminDashboardShortcuts.items.ts | 46 dòng | Khai báo shortcut items admin dashboard với icon, label translation key và hover classes. | Review: config presentation đặt cạnh component hợp lý; có thể gộp lại nếu shortcut list không mở rộng.
-- /Frontend/src/features/admin/dashboard/presentation/components/index.ts | 6 dòng | Barrel export dashboard components và `AdminStatCard` type. | Review: public boundary nội bộ hợp lý cho `AdminDashboardPage`; route/app vẫn nên đi qua feature public entry nếu có.
-- /Frontend/src/features/admin/dashboard/presentation/components/types.ts | 18 dòng | Type `AdminRoute` và `AdminStatCard` cho dashboard navigation/stat cards. | Review: type nhỏ nhưng dùng chung nhiều dashboard components; giữ cạnh components hợp lý hơn gộp nếu tránh import vòng.
-- /Frontend/src/features/admin/deposits/application/useAdminDeposits.ts | 97 dòng | Client hook quản lý deposits query, filter/page state, approve/reject mutation, toast và invalidate query. | Review: đúng application hook cho subfeature deposits; đang ôm cả modal state và mutation UI feedback, cân nhắc tách controller nếu deposits flow mở rộng.
-- /Frontend/src/features/admin/deposits/presentation/AdminDepositsPage.tsx | 58 dòng | Client page deposits compose confirm modal, header, table, summary và labels từ view model. | Review: đúng presentation layer; route nên import qua public entry nếu có, còn modal icon/config có thể tách nếu page tăng.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositAmountCell.tsx | 17 dòng | Table cell format số tiền VND deposit bằng helper currency. | Review: file rất nhỏ; có thể gộp vào row/table nếu giảm phân mảnh, trừ khi cần reuse trong nhiều bảng finance.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositAssetsCell.tsx | 18 dòng | Table cell hiển thị diamond amount của deposit với icon Gem. | Review: file rất nhỏ; có thể gộp vào row/table nếu chỉ dùng một nơi.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositRowActions.tsx | 22 dòng | Placeholder action cell deposits hiện chỉ hiển thị nhãn not available. | Review: props approve/reject/processing đang chưa dùng; cần xác minh roadmap, nếu không dùng nên đơn giản hóa hoặc triển khai actions thật.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositStatusBadge.tsx | 42 dòng | Badge trạng thái deposit success/failed/pending với icon, class và label localized. | Review: đúng presentation layer; logic status nhỏ đặt cạnh bảng hợp lý.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositTableRow.tsx | 31 dòng | Row deposits ghép user, amount, assets, time, status và action cells. | Review: đúng presentation layer; nhiều wrapper cell nhỏ làm bảng dễ đọc nhưng cũng tạo phân mảnh, cân nhắc gộp nếu không reuse.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositTimeCell.tsx | 20 dòng | Table cell format ngày/giờ tạo deposit theo locale. | Review: file rất nhỏ; có thể gộp vào row nếu chỉ dùng một nơi, hoặc giữ nếu table date cells sẽ reuse.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositUserCell.tsx | 25 dòng | Table cell user deposit hiển thị username/system label và prefix user id. | Review: đúng presentation layer; giữ trong feature deposits, không nên đưa shared.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositsHeader.tsx | 55 dòng | Header deposits với section title và filter tabs all/pending/success/failed. | Review: đúng presentation layer; status value dùng PascalCase cần khớp backend/query expectation khi refactor.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositsSummary.tsx | 39 dòng | Summary cards deposits cho confirm flow và ledger note. | Review: đúng presentation layer; giữ trong feature, không cần shared hóa.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositsTable.tsx | 19 dòng | Wrapper table deposits với GlassCard, table head/body và StepPagination. | Review: file rất mỏng nhưng làm boundary table rõ; có thể gộp với body/head nếu muốn giảm file nhỏ.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositsTableBody.tsx | 47 dòng | Table body deposits xử lý loading/error/empty qua `TableStates` và render rows. | Review: đúng presentation layer; helper state dùng shared UI hợp lý.
-- /Frontend/src/features/admin/deposits/presentation/components/AdminDepositsTableHead.tsx | 27 dòng | Table head deposits render các heading localized. | Review: file nhỏ; có thể gộp vào table nếu bảng không mở rộng.
-- /Frontend/src/features/admin/deposits/presentation/components/index.ts | 3 dòng | Barrel export deposits header, summary và table components. | Review: file rất mỏng; hợp lý nếu page import qua barrel, nhưng có thể bỏ nếu chỉ phục vụ một page.
-- /Frontend/src/features/admin/deposits/presentation/components/types.ts | 39 dòng | Type labels/props cho deposits table và row components. | Review: đúng cạnh components; giữ riêng vì nhiều component dùng chung label shape.
-- /Frontend/src/features/admin/deposits/presentation/useAdminDepositsPageLabels.ts | 62 dòng | Label mapper deposits page gom header/table/summary/modal copy từ translator. | Review: presentation helper hợp lý để giảm JSX page; type phụ thuộc return của hook hơi chặt, cân nhắc type translator đơn giản hơn nếu tái dùng.
-- /Frontend/src/features/admin/disputes/application/useAdminDisputes.ts | 87 dòng | Client hook admin disputes load list, runtime default split percent, note/split state và resolve mutation. | Review: application hook hợp lý nhưng phụ thuộc chat actions; nếu disputes là admin subfeature lâu dài nên cân nhắc public action boundary riêng thay vì import sâu từ chat.
-- /Frontend/src/features/admin/disputes/presentation/AdminDisputesPage.tsx | 71 dòng | Client page disputes render header, loading/error/empty states và dispute cards với localized labels. | Review: đúng presentation layer; route nên import qua public entry nếu có, tránh path sâu vào presentation.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputeActions.tsx | 43 dòng | Action buttons release/refund/split cho dispute với shared processing spinner. | Review: đúng presentation layer; spinner lặp trong ba button chấp nhận được, giữ trong admin disputes.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputeCard.tsx | 49 dòng | Card dispute ghép meta grid, note input, split input và action buttons. | Review: đúng presentation layer; component là composition nhỏ hợp lý, không cần shared hóa.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputeMetaGrid.tsx | 41 dòng | Grid metadata dispute hiển thị item id, diamond amount, payer và reader ids. | Review: đúng presentation layer; có ký tự diamond trực tiếp trong UI, cần xác minh có phù hợp localization/accessibility khi refactor.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputeNoteInput.tsx | 25 dòng | Textarea ghi admin note cho dispute resolution. | Review: component rất nhỏ nhưng rõ trách nhiệm; nên thêm accessible label/aria nếu input chỉ có placeholder trong UI thật.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputeSplitInput.tsx | 33 dòng | Number input split percent, clamp giá trị 1-99 trước khi cập nhật state. | Review: đúng presentation layer; clamp ở UI hợp lý nhưng vẫn cần backend validate, giữ trong feature disputes.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputesEmptyState.tsx | 18 dòng | Empty/error state disputes bằng GlassCard với icon và label. | Review: file rất nhỏ; có thể gộp vào page nếu giảm phân mảnh, trừ khi state component reuse.
-- /Frontend/src/features/admin/disputes/presentation/components/AdminDisputesLoadingState.tsx | 13 dòng | Loading state disputes bằng GlassCard và spinner. | Review: file rất nhỏ; có thể gộp vào page nếu chỉ dùng một nơi.
-- /Frontend/src/features/admin/presentation/components/AdminLayout.types.ts | 31 dòng | Type labels/menu items cho admin layout và sidebar navigation. | Review: đúng presentation types; giữ cạnh layout vì chỉ phục vụ admin shell.
-- /Frontend/src/features/admin/presentation/components/AdminLayoutDesktopMenu.tsx | 54 dòng | Desktop admin menu dropdown với toggle, click-outside close và sidebar content. | Review: đúng presentation layer; aria-label đang hard-coded tiếng Anh, cần localize nếu user-facing copy phải đồng bộ.
-- /Frontend/src/features/admin/presentation/components/AdminLayoutMobileDrawer.tsx | 39 dòng | Mobile admin drawer overlay/sidebar với close buttons và sidebar content. | Review: đúng presentation layer; aria-label “Close menu” hard-coded cần localize khi hoàn thiện i18n admin shell.
-- /Frontend/src/features/admin/presentation/components/AdminLayoutMobileTopBar.tsx | 26 dòng | Mobile top bar admin với nút mở menu và title layout. | Review: đúng presentation layer; giữ trong admin layout, không cần shared hóa.
-- /Frontend/src/features/admin/presentation/components/AdminLayoutShell.tsx | 56 dòng | Admin layout shell compose AstralBackground, desktop/mobile nav và content area. | Review: đúng feature layout presentation; dynamic background/shared nav hợp lý, route layout nên import qua public/layout entry nếu có.
-- /Frontend/src/features/admin/presentation/components/AdminSidebarContent.tsx | 40 dòng | Sidebar content compose brand, menu và exit link cho desktop/mobile admin nav. | Review: đúng presentation layer; wrapper Fragment nhỏ nhưng giảm duplication giữa drawer và desktop menu.
-- /Frontend/src/features/admin/presentation/components/admin-sidebar/AdminSidebarBrand.tsx | 33 dòng | Sidebar brand admin hiển thị title/subtitle và shield icon. | Review: component sidebar nhỏ và chuyên biệt; giữ nếu brand styling riêng, có thể gộp vào sidebar content nếu giảm phân mảnh.
-- /Frontend/src/features/admin/presentation/components/admin-sidebar/AdminSidebarExitLink.tsx | 30 dòng | Sidebar exit link về home qua OptimizedLink và đóng menu. | Review: component sidebar nhỏ; giữ trong admin layout, label đã truyền từ localization.
-- /Frontend/src/features/admin/presentation/components/admin-sidebar/AdminSidebarMenu.tsx | 45 dòng | Sidebar menu admin render nav items, active state và close-on-click link. | Review: đúng presentation layer; active helper tách nhỏ, giữ nếu route logic mở rộng.
-- /Frontend/src/features/admin/presentation/components/admin-sidebar/isRouteActive.ts | 4 dòng | Helper xác định route active cho sidebar admin, exact match `/admin` và prefix match route con. | Review: helper rất nhỏ; có thể gộp vào `AdminSidebarMenu` nếu không mở rộng hoặc không test riêng.
-- /Frontend/src/features/admin/presentation/components/useAdminLayoutShellState.ts | 66 dòng | Hook state admin layout quản lý menu items localized, mobile scroll lock, desktop click-outside và pathname. | Review: đúng presentation hook; chứa DOM event/scroll lock nên tách khỏi component shell là hợp lý.
-- /Frontend/src/features/admin/promotions/application/useAdminPromotions.test.tsx | 175 dòng | Test hook promotions cho bootstrap error, retry, create, toggle và delete flows. | Review: đặt cạnh application hook hợp lý; giữ để bảo vệ explicit error state thay vì rơi về empty state.
-- /Frontend/src/features/admin/promotions/application/useAdminPromotions.ts | 153 dòng | Client hook quản lý promotion list state, create/toggle/delete actions, retry, formatter và toast feedback. | Review: đúng application hook nhưng ôm nhiều local form/mutation state; có thể tách create/delete controller nếu promotions flow mở rộng.
-- /Frontend/src/features/admin/promotions/presentation/AdminPromotionsClient.tsx | 59 dòng | Client container promotions compose header, create form, responsive list và delete confirm modal. | Review: đúng presentation layer; route nên import page qua admin public entry, modal icon/config có thể tách nếu tăng.
-- /Frontend/src/features/admin/promotions/presentation/AdminPromotionsPage.test.tsx | 31 dòng | Test server page promotions giữ lỗi bootstrap thành `initialLoadError` cho client. | Review: đặt cạnh page hợp lý; giữ để tránh mất trạng thái lỗi list ban đầu.
-- /Frontend/src/features/admin/promotions/presentation/AdminPromotionsPage.tsx | 17 dòng | Server page promotions bootstrap list promotions rồi truyền data/error vào client. | Review: wrapper mỏng hợp lý vì tách server bootstrap khỏi client state; không nên gộp vào client nếu cần SSR/preload.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionCreateFields.tsx | 65 dòng | Form fields tạo promotion cho min amount và bonus gold với localized labels/placeholders. | Review: đúng presentation layer; input có label visual nhưng thiếu `htmlFor`/id, cần cải thiện accessibility khi chạm form.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionCreateFooter.tsx | 30 dòng | Footer create promotion hiển thị note và submit button loading/success icon. | Review: component nhỏ; có thể gộp vào form nếu giảm phân mảnh, nhưng tách giúp form dưới size guard.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionCreateForm.tsx | 91 dòng | React Hook Form + Zod form tạo promotion, sync state ngoài và submit minAmount/bonusGold. | Review: đúng presentation layer; nhiều effect sync state hai chiều với hook cha, có thể đơn giản hóa bằng form state nội bộ nếu refactor.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionStatusButton.tsx | 40 dòng | Button toggle active/inactive promotion với spinner theo `togglingId`. | Review: đúng presentation layer; dùng lại desktop/mobile hợp lý.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsDesktopRow.tsx | 59 dòng | Desktop table row promotion hiển thị điều kiện tiền, bonus gold, status toggle và delete button. | Review: đúng presentation layer; delete button desktop thiếu aria-label, cần bổ sung nếu chạm UI này.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsDesktopTable.tsx | 71 dòng | Desktop promotions table với table head nội bộ, state block và row list. | Review: đúng presentation layer; table head nội bộ hợp lý vì chỉ dùng tại desktop table.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsHeader.tsx | 39 dòng | Header promotions với SectionHeader và nút bật/tắt create form. | Review: đúng presentation layer; giữ trong feature promotions.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsList.tsx | 16 dòng | Wrapper GlassCard render mobile list và desktop table promotions. | Review: file rất mỏng; có thể gộp vào client nếu muốn giảm phân mảnh, trừ khi responsive list còn mở rộng.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsMobileCard.tsx | 58 dòng | Mobile card promotion hiển thị condition, reward, status toggle và delete action. | Review: đúng presentation layer; aria-label delete đã localized, giữ riêng cho mobile responsive UI.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsMobileList.tsx | 44 dòng | Mobile promotions list render state block hoặc mobile cards với localized labels. | Review: đúng presentation layer; tách khỏi desktop table hợp lý do markup khác nhau.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsStateBlock.test.tsx | 43 dòng | Test state block promotions render lỗi rõ ràng và không hiện empty khi list fail. | Review: đặt cạnh component hợp lý; giữ để bảo vệ UX lỗi tải danh sách.
-- /Frontend/src/features/admin/promotions/presentation/components/AdminPromotionsStateBlock.tsx | 62 dòng | State block promotions cho loading, explicit error với retry và empty state. | Review: đúng presentation layer; xử lý ba trạng thái rõ, giữ trong feature promotions.
-- /Frontend/src/features/admin/promotions/presentation/components/index.ts | 3 dòng | Barrel export promotions header, create form và list components. | Review: file rất mỏng; hợp lý nếu client import qua barrel, có thể bỏ nếu chỉ dùng một nơi.
-- /Frontend/src/features/admin/promotions/presentation/components/types.ts | 22 dòng | Shared props types cho promotions responsive list và create form. | Review: đúng cạnh components; giữ vì desktop/mobile/form dùng chung type shape.
-- /Frontend/src/features/admin/public.ts | 14 dòng | Public API admin re-export layout shell, page entries và system config type. | Review: public boundary hợp lý cho app routes; đảm bảo routes import qua file này thay vì path sâu vào presentation.
-- /Frontend/src/features/admin/reader-requests/application/useAdminReaderRequests.ts | 113 dòng | Client hook quản lý reader request query, status filter/page, selected request, admin note drafts và approve/reject mutation. | Review: đúng application hook nhưng ôm nhiều UI state; có thể tách note/selection controller nếu reader request workflow mở rộng.
-- /Frontend/src/features/admin/reader-requests/presentation/AdminReaderRequestsPage.tsx | 9 dòng | Client page mỏng gọi `useAdminReaderRequests` và forward state vào `ReaderRequestsMain`. | Review: wrapper rất mỏng; hợp lý nếu giữ page entry ổn định cho public export, có thể gộp nếu giảm phân mảnh.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestActions.tsx | 65 dòng | Pending reader request actions gồm admin note input và approve/reject buttons với processing spinner. | Review: đúng presentation layer; input chỉ có placeholder, nên thêm accessible label nếu chạm UI này.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestAdminNote.tsx | 25 dòng | Panel hiển thị admin note đã review nếu request có note. | Review: component nhỏ nhưng rõ trách nhiệm; giữ trong reader-requests.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestCard.tsx | 76 dòng | Card reader request ghép meta, intro/social, admin note, review history và actions khi pending. | Review: đúng presentation layer; composition vừa phải, giữ trong feature.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestCard.types.ts | 37 dòng | Type labels/props cho reader request card và các component con. | Review: đúng cạnh components; giữ riêng vì label shape dùng nhiều nơi.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestIntro.tsx | 62 dòng | Intro section reader request hiển thị bio rút gọn/mở rộng, kinh nghiệm, giá, specialties và social links. | Review: đúng presentation layer; import `ReaderSocialLinksInline` từ feature reader là cross-feature UI dependency cần cân nhắc public/shared boundary.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestMeta.tsx | 35 dòng | Meta header reader request hiển thị status badge, user prefix và createdAt theo locale. | Review: đúng presentation layer; date formatting inline đủ nhỏ nhưng có thể dùng formatter shared nếu nhiều nơi lặp.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestReviewHistory.tsx | 50 dòng | Memoized review history list, sort theo reviewedAt và localize action approve/reject. | Review: đúng presentation layer; `UNKNOWN_REVIEWER` hard-coded “N/A” chấp nhận được nhưng cần localize nếu hiển thị người dùng.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestStatusBadge.tsx | 45 dòng | Status badge pending/approved/rejected cho reader request với icon và localized label. | Review: đúng presentation layer; return null cho status lạ là fail-soft UI, cần backend/domain đảm bảo status hợp lệ.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsContent.tsx | 39 dòng | Content orchestrator render states, list và pagination cho reader requests. | Review: đúng presentation layer; dòng JSX khá dày nhưng trách nhiệm rõ, có thể format/tách nếu tiếp tục tăng.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsFilterTabs.tsx | 36 dòng | Filter tabs reader requests cho pending/approved/rejected/all với icon và active classes. | Review: đúng presentation layer; filter value string cần khớp backend statusFilter.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsHeader.tsx | 43 dòng | Header reader requests với SectionHeader và tổng số request. | Review: đúng presentation layer; giữ trong feature.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsList.tsx | 50 dòng | List reader request cards, bind note getter/change và approve/reject handlers theo request id. | Review: đúng presentation layer; mapping callback rõ, không cần shared hóa.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsMain.tsx | 43 dòng | Main reader requests compose labels, header, filters và content từ hook state. | Review: đúng presentation layer; label object lớn nằm trong component, có thể tách label mapper nếu tiếp tục tăng.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsPagination.tsx | 31 dòng | Wrapper StepPagination cho reader request pages. | Review: file nhỏ; có thể gộp vào content nếu chỉ dùng một nơi.
-- /Frontend/src/features/admin/reader-requests/presentation/components/ReaderRequestsStates.tsx | 48 dòng | Loading/error/empty states cho reader requests bằng spinner hoặc GlassCard. | Review: đúng presentation layer; giữ trong feature, có thể thêm retry nếu list error cần thao tác phục hồi.
-- /Frontend/src/features/admin/readings/application/useAdminReadings.ts | 124 dòng | Client hook admin readings quản lý query history sessions, draft/applied filters, pagination và spread labels. | Review: đúng application hook nhưng phụ thuộc `features/reading/public`; cross-feature admin query hợp lý nếu reading public API là boundary đã chốt.
-- /Frontend/src/features/admin/readings/presentation/AdminReadingsPage.tsx | 45 dòng | Client page readings compose header, filters, table và insights từ `useAdminReadings`. | Review: đúng presentation layer; route nên import qua admin public entry.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsFilterField.tsx | 22 dòng | Wrapper label/icon cho một field filter admin readings. | Review: file nhỏ; label không liên kết `htmlFor` với input con, cần cải thiện accessibility nếu chạm form.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsFilters.tsx | 40 dòng | Form filter readings gồm username, spread type, start/end date và submit. | Review: đúng presentation layer; JSX dày và input thiếu id/label association, nên chỉnh khi refactor form.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsHeader.tsx | 26 dòng | Header admin readings hiển thị total count trong subtitle. | Review: đúng presentation layer; giữ trong feature.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsInsights.tsx | 63 dòng | Insight cards admin readings cho total, update note và monitoring note. | Review: đúng presentation layer; các insight thứ hai/ba là static copy từ i18n, cần xác minh giá trị kinh doanh nếu dùng trong dashboard thật.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsPagination.tsx | 53 dòng | Pagination admin readings với prev/next icon buttons và summary localized. | Review: đúng presentation layer; icon-only buttons thiếu accessible label, cần bổ sung nếu chạm UI.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsSpreadSelect.tsx | 25 dòng | Select spread type filter cho all/daily/spread_3/5/10. | Review: component nhỏ; cần label association từ wrapper form để đạt accessibility.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsStatusBadge.tsx | 21 dòng | Badge trạng thái reading completed/processing với icon và localized label. | Review: file nhỏ nhưng rõ trách nhiệm; có thể gộp vào row nếu giảm phân mảnh.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsTable.tsx | 50 dòng | Wrapper table readings với GlassCard, head/content và pagination. | Review: đúng presentation layer; tách table content/pagination hợp lý nếu giữ trạng thái bảng rõ.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsTableContent.tsx | 77 dòng | Table content readings xử lý loading/error/empty và map rows. | Review: đúng presentation layer; lỗi/empty tách rõ, giữ trong feature.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsTableHead.tsx | 30 dòng | Table head readings render heading timeline/user/spread/question/status từ i18n. | Review: đúng presentation layer; có thể gộp vào table nếu giảm file nhỏ.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsTableRow.tsx | 28 dòng | Row admin readings hiển thị timeline, user, spread label, question và status badge. | Review: đúng presentation layer; JSX cell khá dày nhưng vẫn trong scope row.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsTimelineCell.tsx | 19 dòng | Timeline cell readings format createdAt date/time theo locale hiện tại. | Review: file rất nhỏ; có thể gộp vào row nếu không reuse.
-- /Frontend/src/features/admin/readings/presentation/components/AdminReadingsUserCell.tsx | 26 dòng | User cell readings hiển thị username fallback và prefix user id. | Review: đúng presentation layer; giữ trong feature, không shared hóa.
-- /Frontend/src/features/admin/readings/presentation/components/index.ts | 4 dòng | Barrel export readings header, filters, table và insights. | Review: file rất mỏng; hợp lý nếu page import qua barrel, có thể bỏ nếu chỉ dùng một page.
-- /Frontend/src/features/admin/readings/presentation/components/useAdminReadingsFiltersForm.ts | 66 dòng | Hook React Hook Form + Zod cho readings filters, normalize values và validate date range. | Review: đúng presentation hook; validation message hard-coded tiếng Anh trong schema cần localize nếu surfaced cho user.
-- /Frontend/src/features/admin/system-configs/application/useAdminSystemConfigs.test.tsx | 230 dòng | Test hook system configs cho query error/retry, save cache sync và group/filter configs. | Review: đặt cạnh application hook hợp lý; giữ để bảo vệ explicit load error và cache update behavior.
-- /Frontend/src/features/admin/system-configs/application/useAdminSystemConfigs.ts | 237 dòng | Client hook system configs quản lý query, selected item, drafts JSON/scalar, filtering/grouping, save và restart request. | Review: application hook khá dài và đa trách nhiệm; nên tách draft/value formatting, grouping/filtering hoặc restart controller nếu refactor admin configs.
-- /Frontend/src/features/admin/system-configs/presentation/AdminSystemConfigsPage.tsx | 81 dòng | Client page system configs compose header restart action, list/editor panels và confirm restart modal. | Review: đúng presentation layer; có fallback hard-coded cho restart/cancel copy, cần localize đầy đủ nếu chạm UI này.
-- /Frontend/src/features/admin/system-configs/presentation/SystemConfigsEditorPanel.tsx | 98 dòng | Editor panel system config cho key, valueKind select, description/value textareas, save và load-error/empty states. | Review: đúng presentation layer; form controls được wrap label khá tốt, nhưng option labels scalar/json có thể cần i18n nếu user-facing.
-- /Frontend/src/features/admin/system-configs/presentation/SystemConfigsListPanel.test.tsx | 54 dòng | Test list panel ưu tiên load-error state thay vì empty state. | Review: đặt cạnh component hợp lý; giữ để bảo vệ UX lỗi tải configs.
-- /Frontend/src/features/admin/system-configs/presentation/SystemConfigsListPanel.tsx | 93 dòng | List panel system configs với search, grouped config buttons, valueKind badge, retry load error và empty search state. | Review: đúng presentation layer; search Input thiếu aria label nếu placeholder không đủ, cần kiểm accessibility khi chạm UI.
-- /Frontend/src/features/admin/system-configs/presentation/SystemConfigsLoadErrorState.tsx | 27 dòng | Load error state cho editor panel system configs với retry button. | Review: component nhỏ nhưng reuse cùng VM retry; có thể gộp vào editor nếu giảm phân mảnh.
-- /Frontend/src/features/admin/system-configs/system-config.types.ts | 16 dòng | Type DTO/update params cho admin system config item và update payload. | Review: type nằm ở root subfeature thay vì application/domain; nên chuyển vào application/domain types nếu muốn layer rõ hơn.
-- /Frontend/src/features/admin/users/application/useAdminUsers.config.ts | 56 dòng | Khai báo empty add/edit user forms, Zod schemas create/update user và adapter `createSetStateForm` cho React Hook Form. | Review: đúng application form config; schema message mặc định từ Zod có thể cần localize nếu surfaced trong UI.
-- /Frontend/src/features/admin/users/application/useAdminUsers.ts | 105 dòng | Main client hook admin users quản lý debounced search, users query, modal forms, create/update mutations và list state. | Review: đúng application hook nhưng gom query + forms + mutations qua subhooks; cấu trúc hiện chấp nhận được, tiếp tục tách nếu users flow mở rộng.
-- /Frontend/src/features/admin/users/application/useAdminUsers.types.ts | 14 dòng | Type view user và modal state cho add/edit user trong admin users. | Review: đúng application/view-model types; giữ cạnh hook users, không phải query policy.
-- /Frontend/src/features/admin/users/application/useAdminUsersModalForms.ts | 90 dòng | Hook quản lý add/edit user modal state và React Hook Form state với Zod resolver. | Review: đúng application/controller hook; việc dùng `useWatch` để tạo form snapshot hợp lý nhưng cần kiểm render cost nếu form lớn.
-- /Frontend/src/features/admin/users/application/useAdminUsersMutations.ts | 91 dòng | Hook create/update user mutations, trim create payload, toast kết quả và invalidate users query root. | Review: đúng application mutation hook; user role/balance update là nhạy cảm nên giữ error/toast và invalidation rõ khi refactor.
-- /Frontend/src/features/admin/users/presentation/AdminUsersPage.tsx | 71 dòng | Client page admin users nối `useAdminUsers` với modals, header search/add và users table. | Review: đúng presentation container; prop object khá dày nhưng orchestration chính đã nằm trong hook application.
-- /Frontend/src/features/admin/users/presentation/components/AdminUserTableRow.tsx | 21 dòng | Table row admin user compose identity, rank, balance, role, status và action cells. | Review: component rất mỏng chỉ ghép cell; có thể giữ để table dễ đọc, hoặc gộp nếu giảm phân mảnh row.
-- /Frontend/src/features/admin/users/presentation/components/AdminUsersAddModal.tsx | 32 dòng | Modal tạo user gồm overlay, header, add fields và action buttons. | Review: đúng presentation layer; overlay có aria-label localized, giữ trong feature users.
-- /Frontend/src/features/admin/users/presentation/components/AdminUsersEditModal.tsx | 32 dòng | Modal edit user gồm overlay, header theo user hiện tại, edit fields và action buttons. | Review: đúng presentation layer; subtitle ghép displayName/email phù hợp admin internal, giữ trong feature users.
-- /Frontend/src/features/admin/users/presentation/components/AdminUsersPageHeader.tsx | 34 dòng | Header admin users hiển thị count, search input và nút add user. | Review: đúng presentation layer; search Input chỉ dựa placeholder, nên thêm accessible label nếu chạm UI.
-- /Frontend/src/features/admin/users/presentation/components/AdminUsersPageModals.tsx | 22 dòng | Wrapper render add/edit user modals từ hai prop groups. | Review: file rất mỏng; có thể gộp vào `AdminUsersPage` nếu muốn giảm phân mảnh.
-- /Frontend/src/features/admin/users/presentation/components/AdminUsersTable.tsx | 32 dòng | Bảng users với states loading/error/empty, rows và step pagination. | Review: đúng presentation layer; table/pagination giữ trong feature users, lưu ý pagination page size đang hard-coded 10 khớp hook.
-- /Frontend/src/features/admin/users/presentation/components/types.ts | 54 dòng | Type props/translator cho admin users modals, table và row components. | Review: đúng presentation types nhưng import application view/form types; chấp nhận được trong presentation, tránh để application phụ thuộc ngược.
-- /Frontend/src/features/admin/users/presentation/components/user-modals/AdminUsersAddFields.tsx | 62 dòng | Fields tạo user gồm email, username, displayName, password, role và hiển thị lỗi RHF. | Review: đúng presentation layer; label bọc input ổn, nhưng error text chưa gắn aria-describedby nếu nâng accessibility.
-- /Frontend/src/features/admin/users/presentation/components/user-modals/AdminUsersEditFields.tsx | 62 dòng | Fields edit user cho role/status và gold/diamond balance kèm ledger notice. | Review: đúng presentation layer; balance input là luồng nhạy cảm, giữ cảnh báo ledger gần field khi refactor.
-- /Frontend/src/features/admin/users/presentation/components/user-modals/AdminUsersLedgerNotice.tsx | 15 dòng | Cảnh báo ledger khi admin chỉnh balance thủ công. | Review: component rất nhỏ nhưng chứa cảnh báo nghiệp vụ quan trọng; nên localize text hard-coded nếu user-facing admin đa ngôn ngữ.
-- /Frontend/src/features/admin/users/presentation/components/user-modals/AdminUsersModalActions.tsx | 35 dòng | Footer actions modal users với cancel/confirm buttons, loading spinner và async confirm wrapper. | Review: đúng presentation layer; dùng chung add/edit modal hợp lý, không cần tách thêm.
-- /Frontend/src/features/admin/users/presentation/components/user-modals/AdminUsersModalHeader.tsx | 40 dòng | Header modal users với icon chip, title/subtitle và nút close có aria-label. | Review: đúng presentation layer; component dùng lại add/edit hợp lý, giữ trong users modal folder.
-- /Frontend/src/features/admin/users/presentation/components/user-row/AdminUserActionsCell.tsx | 24 dòng | Cell action admin user hiện chỉ có nút edit user. | Review: component nhỏ; button có title nhưng thiếu aria-label rõ, nên bổ sung nếu chạm UI.
-- /Frontend/src/features/admin/users/presentation/components/user-row/AdminUserBalanceCell.tsx | 30 dòng | Cell hiển thị diamond/gold balances theo locale với icon. | Review: đúng presentation layer; thuộc users table, giữ gần row components.
-- /Frontend/src/features/admin/users/presentation/components/user-row/AdminUserIdentityCell.tsx | 29 dòng | Cell identity user hiển thị avatar initial, displayName và email. | Review: đúng presentation layer; fallback initial “U” hard-coded chấp nhận được cho admin internal.
-- /Frontend/src/features/admin/users/presentation/components/user-row/AdminUserLevelCell.tsx | 25 dòng | Cell rank hiển thị level và exp qua localized row labels. | Review: đúng presentation layer; file nhỏ nhưng giúp row tách trách nhiệm rõ.
-- /Frontend/src/features/admin/users/presentation/components/user-row/AdminUserRoleCell.tsx | 23 dòng | Cell role user hiển thị badge với class/label từ helper `userRole`. | Review: đúng presentation layer; file nhỏ nhưng phụ thuộc helper riêng để tránh lặp role mapping.
-- /Frontend/src/features/admin/users/presentation/components/user-row/AdminUserStatusCell.tsx | 22 dòng | Cell status user hiển thị locked/active icon và label localized. | Review: đúng presentation layer; file nhỏ nhưng row status tách riêng vẫn dễ đọc.
-- /Frontend/src/features/admin/users/presentation/components/user-row/userRole.ts | 14 dòng | Helper map role thành class badge và label localized cho admin users row. | Review: helper rất nhỏ nhưng tránh lặp mapping role; có thể gộp vào RoleCell nếu giảm phân mảnh.
-- /Frontend/src/features/admin/withdrawals/application/useAdminWithdrawals.ts | 122 dòng | Client hook withdrawals quản lý queue/detail queries, admin notes, approve/reject mutation, VND formatter và idempotency key. | Review: đúng application hook; import qua `features/wallet/public` là boundary tốt, nhưng idempotency key theo timestamp/random cần khớp backend policy khi refactor tiền.
-- /Frontend/src/features/admin/withdrawals/presentation/AdminWithdrawalsPage.tsx | 66 dòng | Client page withdrawals compose header, queue states, withdrawal cards và detail modal từ `useAdminWithdrawals`. | Review: đúng presentation container; renderCard phụ thuộc toàn bộ `vm` nên có thể gây memo kém hiệu quả nhưng chấp nhận nếu list nhỏ.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalActions.tsx | 49 dòng | Actions withdrawal card gồm admin note input và approve/reject buttons với loading icons. | Review: đúng presentation layer; note Input chỉ dựa placeholder, nên thêm accessible label nếu chạm UI.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalAmountInfo.tsx | 40 dòng | Hiển thị amount diamond, gross/fee/net VND cho một withdrawal. | Review: đúng presentation layer; có emoji kim cương hard-coded, cân nhắc thay bằng icon/token nếu chuẩn hóa UI.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalBankInfo.tsx | 31 dòng | Hiển thị bank name, account holder và account number trong withdrawal card. | Review: đúng presentation layer; chứa dữ liệu ngân hàng nhạy cảm nên tránh log/copy behavior ngoài UI này.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalCard.tsx | 59 dòng | Memoized withdrawal card ghép amount, meta, bank info, detail button và approve/reject actions. | Review: đúng presentation layer; detail button là text button có type rõ, giữ trong feature withdrawals.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalDetailModal.tsx | 74 dòng | Modal detail withdrawal hiển thị bank transfer info, VietQR image và close action. | Review: đúng presentation layer; dùng Next Image với `shouldUseUnoptimizedImage` hợp guard, nhưng loading text “...” nên localize/diễn đạt rõ hơn nếu chạm UI.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalMetaInfo.tsx | 29 dòng | Hiển thị createdAt localized và user id prefix cho withdrawal. | Review: đúng presentation layer; date parsing trực tiếp trong render ổn cho card nhỏ, cân nhắc formatter nếu tái dùng.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalsEmptyState.tsx | 22 dòng | Empty/error state withdrawals dùng card và success icon với label truyền vào. | Review: component nhỏ; đang dùng icon success cả cho error label nên cần tách visual nếu lỗi tải khác empty.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalsHeader.tsx | 29 dòng | Header withdrawals với SectionHeader và sparkles tag icon. | Review: đúng presentation layer; component mỏng nhưng giữ được page sạch.
-- /Frontend/src/features/admin/withdrawals/presentation/components/AdminWithdrawalsLoadingState.tsx | 21 dòng | Loading state withdrawals với spinner và label localized. | Review: component rất nhỏ; có thể gộp vào page nếu giảm phân mảnh, nhưng hiện rõ trạng thái.
-- /Frontend/src/features/auth/application/actions/index.ts | 3 dòng | Re-export auth server/client actions recovery, registration và session. | Review: file rất mỏng nhưng hợp lý làm barrel nội bộ cho actions; có thể gộp nếu muốn giảm indirection.
-- /Frontend/src/features/auth/application/actions/recovery.ts | 56 dòng | Server actions forgot/reset password gọi upstream auth recovery và map ApiErrors. | Review: đúng application layer; logger hiện log email ở forgot flow, cần cân nhắc privacy nếu audit log nhạy cảm.
-- /Frontend/src/features/auth/application/actions/registration.ts | 75 dòng | Server actions register, verify email và resend verification qua upstream auth endpoints. | Review: đúng application layer; payload registration dài nhưng tập trung theo auth flow, giữ UI ngoài action.
-- /Frontend/src/features/auth/application/actions/session.ts | 148 dòng | Client auth actions login/logout/refresh gọi API routes kèm device id và map auth errors. | Review: đặt trong application nhưng là client gateway; refresh promise dedupe hợp lý, tránh thêm server-only dependency vào file này.
-- /Frontend/src/features/auth/application/authFlowEmail.test.ts | 43 dòng | Test helper auth flow email cho prefill verify-email/login và fallback remembered identity. | Review: đặt cạnh helper hợp lý; giữ để bảo vệ query email prefill khi đổi auth flow.
-- /Frontend/src/features/auth/application/authFlowEmail.ts | 30 dòng | Helper normalize/validate email query và resolve prefill cho login/verify email. | Review: đúng application helper thuần; không phụ thuộc UI, có thể giữ riêng vì được test.
-- /Frontend/src/features/auth/application/useForgotPasswordPage.ts | 58 dòng | Hook forgot password page quản lý RHF/Zod, submit action, success và error state. | Review: đúng application/controller hook; flow nhỏ nên không cần tách thêm.
-- /Frontend/src/features/auth/application/useLoginPage.ts | 96 dòng | Hook login page quản lý remembered identity, RHF validation, login submit và redirect/refresh. | Review: đúng application hook; localStorage và navigation side effects được gom ở đây, giữ presentation form mỏng.
-- /Frontend/src/features/auth/application/useRegisterPage.ts | 82 dòng | Hook register page quản lý runtime minimum age, RHF/Zod schema, register action và redirect verify-email. | Review: đúng application hook; còn comment/docstring giải thích flow có thể rút gọn nếu cleanup style.
-- /Frontend/src/features/auth/application/useResetPasswordPage.ts | 66 dòng | Hook reset password page lấy email query, RHF/Zod submit và success/error state. | Review: đúng application hook; comment tiếng Việt trong hook hơi dư so với style hiện tại, có thể dọn khi chạm file.
-- /Frontend/src/features/auth/application/useVerifyEmailPage.ts | 118 dòng | Hook verify email quản lý email prefill readonly, OTP submit, resend timer/toast và redirect login. | Review: đúng application hook nhưng ôm timer/resend/submit; có thể tách resend controller nếu verify flow mở rộng.
-- /Frontend/src/features/auth/application/validation/schemas.ts | 111 dòng | Factory Zod schemas cho login/register/verify/forgot/reset với localized messages và minimum age policy. | Review: đúng application validation; age calculation thủ công quan trọng, giữ test coverage khi chỉnh policy.
-- /Frontend/src/features/auth/domain/schemas.test.ts | 73 dòng | Test validation schemas auth cho login, register password/age, OTP và forgot email. | Review: tên nằm domain nhưng test import application validation; nên cân nhắc chuyển test cạnh `application/validation` để layer rõ hơn.
-- /Frontend/src/features/auth/domain/schemas.ts | 30 dòng | Type form values cho login/register/verify/forgot/reset password. | Review: type thuần nhưng tên `schemas.ts` dễ nhầm với Zod schemas; nên đổi tên thành form types nếu refactor.
-- /Frontend/src/features/auth/domain/types.ts | 17 dòng | Type `UserProfile` và `AuthResponse` cho auth session payload. | Review: đúng domain/shared auth types; status union PascalCase cần khớp backend contract khi normalize.
-- /Frontend/src/features/auth/presentation/ForgotPasswordPage.tsx | 67 dòng | Forgot password page render form gửi email, success card reset link và back-to-login link. | Review: đúng presentation container; success link encode email từ form, giữ action logic trong hook.
-- /Frontend/src/features/auth/presentation/LoginPage.tsx | 15 dòng | Login page mỏng bọc `LoginForm` trong `AuthLayout` và truyền VM từ hook. | Review: wrapper rất mỏng nhưng hợp lý làm public page entry; có thể gộp nếu giảm phân mảnh.
-- /Frontend/src/features/auth/presentation/RegisterPage.tsx | 47 dòng | Register page compose FormProvider, identity/password/consent fields, submit CTA và login footer. | Review: đúng presentation layer; form composition hợp lý, route nên import qua public entry.
-- /Frontend/src/features/auth/presentation/ResetPasswordPage.tsx | 58 dòng | Reset password page render success card hoặc form reset password theo hook state. | Review: đúng presentation container; success state tách khỏi form rõ, giữ trong feature auth.
-- /Frontend/src/features/auth/presentation/VerifyEmailPage.tsx | 61 dòng | Verify email page render email/OTP form, submit CTA và resend button/timer. | Review: đúng presentation layer; logic resend ở hook, UI form đủ mỏng.
-- /Frontend/src/features/auth/presentation/components/AppAuthSessionManager.tsx | 15 dòng | Adapter nối shared `AuthSessionManager` với `useAuth` logout/refresh. | Review: auth public adapter mỏng hợp lý để app shell không import shared hook trực tiếp.
-- /Frontend/src/features/auth/presentation/components/AppNavbar.tsx | 8 dòng | Adapter navbar truyền `logoutAction` vào shared Navbar. | Review: wrapper rất mỏng; hợp lý nếu app chỉ import qua auth public boundary, có thể gộp nếu boundary đổi.
-- /Frontend/src/features/auth/presentation/components/AuthErrorBanner.tsx | 20 dòng | Banner lỗi auth render message nếu có với dot pulse. | Review: component nhỏ dùng lại nhiều auth pages; thiếu role/aria-live nếu muốn announce lỗi form.
-- /Frontend/src/features/auth/presentation/components/AuthSuccessCard.tsx | 44 dòng | Success card dùng chung cho auth recovery/reset với icon, mô tả và CTA link. | Review: đúng presentation component dùng lại; nhận class glow/icon wrapper hơi style-heavy nhưng tránh duplicate pages.
-- /Frontend/src/features/auth/presentation/components/ForgotPasswordBackLink.tsx | 35 dòng | Link quay lại login cho forgot password với icon arrow. | Review: component nhỏ, có thể inline nếu chỉ dùng một nơi nhưng giữ được page sạch.
-- /Frontend/src/features/auth/presentation/components/LoginForm.tsx | 72 dòng | Login form gồm identity input, password toggle field, remember checkbox, forgot/register links và submit. | Review: đúng presentation layer; link class còn dùng violet hard-code, nên đồng bộ token khi chỉnh UI.
-- /Frontend/src/features/auth/presentation/components/LoginPasswordField.tsx | 38 dòng | Password input login với show/hide toggle. | Review: đúng presentation layer; aria-label hard-coded English cần localize nếu chuẩn hóa i18n/accessibility.
-- /Frontend/src/features/auth/presentation/components/LoginRememberField.tsx | 35 dòng | Remember-me checkbox custom cho login form. | Review: đúng presentation layer; label bọc input ổn, style trùng consent checkbox có thể tái dùng nếu giảm duplication.
-- /Frontend/src/features/auth/presentation/components/RegisterBirthdayInput.tsx | 83 dòng | Birthday input hiển thị DD/MM/YYYY, format draft và emit ISO date cho form. | Review: đúng presentation component; placeholder DD/MM/YYYY hard-coded và parse chưa validate ngày thật, schema phía application đang kiểm lại.
-- /Frontend/src/features/auth/presentation/components/RegisterConsentField.tsx | 97 dòng | Consent checkbox mở modal điều khoản và chính sách bảo mật ngay trong register form. | Review: đúng presentation layer nhưng import legal presentation trực tiếp và modal title hard-coded tiếng Việt; cân nhắc public boundary/i18n khi refactor.
-- /Frontend/src/features/auth/presentation/components/RegisterIdentityFields.tsx | 70 dòng | Nhóm fields email, username, displayName và birthday Controller cho register form. | Review: đúng presentation layer; dùng `useFormContext` để nối birthday custom input hợp lý.
-- /Frontend/src/features/auth/presentation/components/RegisterPasswordFields.tsx | 61 dòng | Nhóm password/confirm password register với show/hide toggles. | Review: đúng presentation layer; aria-label show/hide hard-coded English cần localize nếu chạm UI.
-- /Frontend/src/features/auth/presentation/components/ResetPasswordForm.tsx | 56 dòng | Reset password form gồm email, OTP, new password và submit button. | Review: đúng presentation layer; password không có show/hide như login/register, cần xác minh UX mong muốn.
-- /Frontend/src/features/auth/presentation/components/ResetPasswordForm.types.ts | 25 dòng | Type labels và props cho reset password form. | Review: types nhỏ đặt cạnh component hợp lý; giữ nếu form tiếp tục nhận label object.
-- /Frontend/src/features/auth/presentation/components/VerifyEmailResendButton.tsx | 41 dòng | Button resend verification email với disabled timer và spinner icon. | Review: đúng presentation layer; đủ nhỏ và reusable trong verify email.
-- /Frontend/src/features/auth/presentation/components/registerBirthdayInputValue.test.ts | 17 dòng | Test formatter/parser birthday input display DD/MM/YYYY và ISO output. | Review: đặt cạnh helper hợp lý; giữ để bảo vệ UX nhập ngày khi refactor.
-- /Frontend/src/features/auth/presentation/components/registerBirthdayInputValue.ts | 27 dòng | Helper format/parse birthday display value và draft input cho register birthday field. | Review: helper presentation thuần; nên bổ sung validation ngày nếu logic parse được dùng ngoài display.
-- /Frontend/src/features/auth/public.ts | 7 dòng | Public API auth re-export app adapters và các auth page entries. | Review: public boundary hợp lý; routes/app nên import qua file này để giữ clean architecture.
-- /Frontend/src/features/chat/application/actions/conversations.core.ts | 98 dòng | Server actions core chat cho create/list conversations, unread count, list messages và send message. | Review: đúng application layer; gom query/message core hợp lý, nhưng hard-coded fallback English nên đồng bộ ApiErrors nếu surfaced.
-- /Frontend/src/features/chat/application/actions/conversations.finance.ts | 180 dòng | Server actions chat finance/dispute cho add-money request/respond, open/list/resolve disputes qua domain commands. | Review: đúng application layer nhưng chứa money/dispute logic nhạy cảm; giữ idempotency/failure logging rõ và cân nhắc tách admin disputes khỏi chat nếu bounded context lớn.
-- /Frontend/src/features/chat/application/actions/conversations.flow.ts | 114 dòng | Server actions conversation lifecycle accept/reject/cancel/complete/respond review. | Review: đúng application layer; flow actions khá tuyến tính, tránh thêm UI-specific decisions vào đây.
-- /Frontend/src/features/chat/application/actions/conversations.ts | 121 dòng | Server action facade re-export typed wrappers từ core/flow/finance modules. | Review: facade giữ import public ổn định nhưng nhiều wrapper một dòng; chấp nhận nếu muốn tách file theo use-case.
-- /Frontend/src/features/chat/application/actions/conversations.types.ts | 39 dòng | DTO types cho conversation, message/media payload, inbox tab và admin disputes. | Review: đúng application contract types; nhiều interface viết một dòng khó diff, nên format lại nếu chạm file.
-- /Frontend/src/features/chat/application/actions/index.ts | 9 dòng | Re-export chat actions và DTO types từ conversations modules. | Review: public/action barrel hợp lý; route/feature khác nên import qua boundary này thay vì file con.
-- /Frontend/src/features/chat/application/chat-connection/useChatHistoryState.ts | 193 dòng | Hook quản lý chat history load initial/load more, cursor, cancellable tasks, merge realtime/history và scroll initial. | Review: application hook khá lớn nhưng trách nhiệm rõ; giữ merge logic ở domain helper và cân nhắc tách pagination task nếu tiếp tục tăng.
-- /Frontend/src/features/chat/application/chat-connection/useChatSendActions.ts | 277 dòng | Hook gửi chat text/media với optimistic message, SignalR-first fallback REST, mark-read và inbox unread cache sync. | Review: application hook lớn/nhạy cảm realtime; đã tách khỏi lifecycle tốt, nhưng optimistic/fallback/mark-read có thể cần test riêng khi refactor.
-- /Frontend/src/features/chat/application/chat-connection/useChatSignalRLifecycle.test.tsx | 473 dòng | Test lifecycle SignalR cho connect fallback, retry wakeup, cleanup, callbacks, read receipts và conversation updates. | Review: test lớn nhưng bảo vệ realtime edge cases quan trọng; nên tách theo scenario nếu tiếp tục mở rộng.
-- /Frontend/src/features/chat/application/chat-connection/useChatSignalRLifecycle.ts | 376 dòng | Hook lifecycle SignalR chat tạo connection, join/leave, xử lý message/read/typing/conversation updates, reconnect và cleanup. | Review: file quá lớn và có nhiều comment dài; nên tách handlers/connection factory khi refactor realtime, nhưng hiện là lõi nhạy cảm cần test bảo vệ.
-- /Frontend/src/features/chat/application/chat-connection/utils.ts | 51 dòng | Helper lấy cached conversation từ query cache inbox và tạo SignalR logger custom. | Review: đúng application helper; console logger có chủ đích dev/runtime, tránh log payload nhạy cảm.
-- /Frontend/src/features/chat/application/useChatConnection.ts | 135 dòng | Facade hook chat room kết hợp history, send actions và SignalR lifecycle, trả VM cho UI. | Review: đúng application hook composition; giữ presentation không biết chi tiết SignalR, nhưng VM trả nhiều field nên cần kiểm khi tách UI.
-- /Frontend/src/features/chat/application/useChatInboxPage.ts | 55 dòng | Hook inbox chat quản lý tab, listConversations query, current time tick và refetch. | Review: đúng application hook; query key tự khai báo thay vì shared key có thể lệch cache với userStateQueryKeys.
-- /Frontend/src/features/chat/application/usePaymentOfferActions.ts | 158 dòng | Hook xử lý gửi/chấp nhận/từ chối add-money offer, map lỗi finance và toast tiếng Việt. | Review: application hook cho money flow nhạy cảm; hard-coded Vietnamese error/default reason cần chuyển i18n nếu đa locale, giữ error code mapping rõ.
-- /Frontend/src/features/chat/application/useVoiceRecorder.ts | 103 dòng | Hook ghi âm voice message quản lý MediaRecorder, AudioContext analyser, timers, waveform, stop/cancel/error. | Review: application/browser hook nhiều side-effect nhưng đã tách helper; file nén nhiều statement một dòng, nên format/tách nhỏ nếu refactor voice.
-- /Frontend/src/features/chat/application/voiceRecorderHelpers.ts | 65 dòng | Helper recorder constants, stop stream, chọn MIME type, build waveform bars và map lỗi microphone. | Review: đúng application browser helper; error text hard-coded tiếng Việt cần i18n nếu surfaced đa ngôn ngữ.
-- /Frontend/src/features/chat/domain/mergeMessages.ts | 118 dòng | Domain helper merge/sort/dedupe messages theo id/clientMessageId, giữ trạng thái optimistic khi reconcile. | Review: đúng domain thuần; logic quan trọng cho realtime/optimistic nên cần test riêng nếu chưa có.
-- /Frontend/src/features/chat/domain/participantId.test.ts | 22 dòng | Test normalize/compare participant id case-insensitive và empty handling. | Review: đặt cạnh domain helper hợp lý; giữ để bảo vệ read-receipt/role compare.
-- /Frontend/src/features/chat/domain/participantId.ts | 12 dòng | Helper normalize và so sánh participant id không phân biệt hoa thường. | Review: đúng domain helper thuần; dùng xuyên chat realtime, nên giữ nhỏ và test rõ.
-- /Frontend/src/features/chat/presentation/ChatInboxPage.tsx | 31 dòng | Empty/landing view cho chat inbox khi chưa chọn conversation, hiển thị hướng dẫn chọn cuộc trò chuyện. | Review: đúng presentation page nhưng copy đang hard-coded tiếng Việt; nên localize nếu chat đa ngôn ngữ.
-- /Frontend/src/features/chat/presentation/ChatRoomPage.tsx | 51 dòng | Chat room page dynamic import payment/voice components, lấy VM qua `useChatRoomPageViewModel` và render empty state hoặc `ChatRoomView`. | Review: đúng presentation container; dynamic import voice hợp lý vì browser-only, route nên import qua public entry.
-- /Frontend/src/features/chat/presentation/ChatSegmentShell.tsx | 41 dòng | Shell chat segment chia sidebar conversation và main room theo pathname/mobile state. | Review: đúng presentation layout; heuristic `pathname.split` phụ thuộc route depth, cần cẩn trọng nếu route chat đổi cấu trúc.
-- /Frontend/src/features/chat/presentation/chat-room/ChatActionMenu.tsx | 50 dòng | Action menu button trong chat room mở dropdown dispute/payment/complete actions khi được phép. | Review: đúng presentation layer; title hard-coded tiếng Việt và thiếu aria-label, nên localize/cải thiện accessibility.
-- /Frontend/src/features/chat/presentation/chat-room/ChatCompleteResponseBar.tsx | 38 dòng | Bar phản hồi yêu cầu hoàn thành conversation với nút đồng ý/từ chối. | Review: đúng presentation layer; copy hard-coded tiếng Việt, cần i18n nếu surfaced đa locale.
-- /Frontend/src/features/chat/presentation/chat-room/ChatComposer.tsx | 33 dòng | Chọn footer chat editable hoặc read-only tùy `canShowInput` và forward props tương ứng. | Review: component điều phối mỏng hợp lý; giữ để tách read-only/editable state khỏi room view.
-- /Frontend/src/features/chat/presentation/chat-room/ChatComposerEditableFooter.tsx | 83 dòng | Editable composer footer ghép input row, action menu và hidden image file input. | Review: đúng presentation layer; accept image MIME hard-coded hợp UI, nhưng component nhận nhiều props từ VM nên dễ phình khi thêm attachment.
-- /Frontend/src/features/chat/presentation/chat-room/ChatComposerInputRow.tsx | 55 dòng | Input row gửi text/voice/image, disable theo conversation/upload/sending và hiển thị upload label. | Review: đúng presentation layer; aria-label gửi tin nhắn hard-coded tiếng Việt, cần i18n nếu chạm UI.
-- /Frontend/src/features/chat/presentation/chat-room/ChatReadOnlyFooter.tsx | 51 dòng | Footer read-only hiển thị hint, review CTA, submitted notice và start-new-session CTA. | Review: đúng presentation layer; nhiều copy hard-coded tiếng Việt, nên chuyển sang `Chat` messages.
-- /Frontend/src/features/chat/presentation/chat-room/ChatRoomActionBanners.tsx | 39 dòng | Wrapper render awaiting reader, cancel pending và reader decision banners theo conversation status/role. | Review: đúng presentation orchestration nhỏ; giữ để main pane không chứa nhiều conditional banner.
-- /Frontend/src/features/chat/presentation/chat-room/ChatRoomHeader.tsx | 62 dòng | Header chat room với back button mobile, avatar/identity, escrow badge và warning banner. | Review: đúng presentation layer; back button icon-only thiếu aria-label nếu chạm accessibility.
-- /Frontend/src/features/chat/presentation/chat-room/ChatRoomView.tsx | 13 dòng | Chat room view wrapper ghép main pane và overlays. | Review: file rất mỏng nhưng là boundary rõ giữa layout chính và modal overlays; có thể gộp nếu giảm phân mảnh.
-- /Frontend/src/features/chat/presentation/chat-room/ChatRoomView.types.ts | 97 dòng | Props contract lớn cho `ChatRoomView`, gồm state, dynamic components và toàn bộ handlers chat room. | Review: type đúng presentation nhưng quá rộng; là dấu hiệu VM/UI đang ôm nhiều trách nhiệm, cân nhắc chia props theo pane/composer/overlays.
-- /Frontend/src/features/chat/presentation/chat-room/ConversationReviewModal.tsx | 86 dòng | Modal đánh giá conversation với rating radio stars, comment textarea và submit/skip buttons. | Review: đúng presentation layer; đã dùng i18n và aria radiogroup, giữ gần chat room.
-- /Frontend/src/features/chat/presentation/chat-room/DisputeModal.tsx | 40 dòng | Modal mở dispute conversation với textarea lý do và action buttons. | Review: đúng presentation layer nhưng title/placeholder hard-coded tiếng Việt; nên i18n khi hoàn thiện chat.
-- /Frontend/src/features/chat/presentation/chat-room/action-banners/AwaitingReaderBanner.tsx | 13 dòng | Banner báo conversation đang chờ Reader chấp nhận hoặc từ chối. | Review: component rất nhỏ và copy hard-coded tiếng Việt; có thể gộp vào banners wrapper nếu giảm phân mảnh.
-- /Frontend/src/features/chat/presentation/chat-room/action-banners/CancelPendingBanner.tsx | 41 dòng | Banner cho phép user hủy conversation pending với trạng thái loading theo action. | Review: đúng presentation layer; copy hard-coded tiếng Việt, nên i18n nếu chat đa locale.
-- /Frontend/src/features/chat/presentation/chat-room/action-banners/ReaderDecisionBanner.tsx | 70 dòng | Banner Reader accept/reject conversation kèm input lý do từ chối. | Review: đúng presentation layer; copy pha Việt/Anh và input thiếu label, nên chuẩn hóa i18n/accessibility khi chạm UI.
-- /Frontend/src/features/chat/presentation/chat-room/action-menu/ChatActionMenuDropdown.tsx | 69 dòng | Dropdown action menu cho hoàn thành conversation, tố cáo và yêu cầu cộng tiền. | Review: đúng presentation layer; các menu label hard-coded tiếng Việt, giữ gần chat actions nhưng cần i18n.
-- /Frontend/src/features/chat/presentation/chat-room/action-menu/ChatActionMenuItemButton.tsx | 27 dòng | Button item dùng lại trong chat action menu dropdown. | Review: component nhỏ hợp lý để thống nhất menu item; có thể gộp nếu action menu không mở rộng.
-- /Frontend/src/features/chat/presentation/chat-room/chatRoomUi.types.ts | 143 dòng | Type props cho header, banners, action menu, composer, dispute modal và messages panel của chat room. | Review: đúng presentation contract nhưng đang gom nhiều nhóm props; cân nhắc tách theo header/composer/messages nếu tiếp tục tăng.
-- /Frontend/src/features/chat/presentation/chat-room/header/ChatHeaderAvatar.tsx | 43 dòng | Avatar header chat resolve URL asset, dùng Next Image hoặc fallback chữ cái đầu. | Review: đúng presentation layer; dùng `shouldUseUnoptimizedImage` hợp image guard, alt fallback còn generic.
-- /Frontend/src/features/chat/presentation/chat-room/header/ChatHeaderEscrowBadge.tsx | 23 dòng | Badge hiển thị số diamond đang bị đóng băng trong escrow conversation. | Review: đúng presentation layer cho money indicator; copy hard-coded tiếng Việt nên i18n nếu surfaced đa locale.
-- /Frontend/src/features/chat/presentation/chat-room/header/ChatHeaderIdentity.tsx | 32 dòng | Header identity hiển thị tên đối phương hoặc title và trạng thái reader/loading. | Review: đúng presentation layer; loading placeholder `...` nên thay bằng text/skeleton rõ hơn nếu chạm UI.
-- /Frontend/src/features/chat/presentation/chat-room/mediaPayload.ts | 140 dòng | Helper presentation build payload upload ảnh/voice chat qua shared media upload, validate size/duration/MIME. | Review: chứa orchestration upload nhạy cảm ở presentation; cân nhắc chuyển vào application hook/helper để UI không biết presign/R2 details.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatImageMessage.tsx | 33 dòng | Bubble ảnh chat dùng Next Image với aspect ratio cố định và allowlist unoptimized. | Review: đúng presentation layer; alt `media` còn generic, nên cải thiện accessibility nếu chạm message image.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatMessageListItem.tsx | 64 dòng | Router render từng message theo type system/payment/image/voice/text và tính `isMe`. | Review: đúng presentation switch component; nhiều nhánh type vẫn ổn, tách thêm chỉ khi message types tăng.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatMessagesPanel.tsx | 64 dòng | Panel scroll messages hiển thị loading, load-more, list item và remote typing indicator. | Review: đúng presentation layer; load-more/typing copy hard-coded tiếng Việt, cần i18n nếu chat đa locale.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatPaymentOfferMessage.tsx | 69 dòng | Bubble payment offer hiển thị amount diamond và nút accept/reject cho user. | Review: đúng presentation cho money offer; copy hard-coded tiếng Việt và nút finance cần giữ disabled state rõ khi refactor.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatPaymentResponseMessage.tsx | 84 dòng | Bubble phản hồi payment accept/reject parse note JSON và hiển thị read receipt/time. | Review: đúng presentation layer nhưng title hard-coded tiếng Việt; parse JSON trong UI nhỏ chấp nhận được, cân nhắc helper nếu reuse.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatSystemMessage.tsx | 21 dòng | Bubble system message căn giữa cho nội dung hệ thống trong chat. | Review: component nhỏ đúng presentation; giữ nếu system message style riêng.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatTextMessage.tsx | 50 dòng | Bubble text chat với timestamp locale và read receipt cho tin của mình. | Review: đúng presentation layer; logic format time lặp với voice/payment response, có thể gộp helper nếu chỉnh nhiều.
-- /Frontend/src/features/chat/presentation/chat-room/messages/ChatVoiceMessage.tsx | 63 dòng | Bubble voice chat bọc dynamic `VoiceMessageBubble`, timestamp và read receipt. | Review: đúng presentation layer; format/read receipt lặp với text, cân nhắc shared message meta component nếu giảm trùng.
-- /Frontend/src/features/chat/presentation/chat-room/messages/messageHelpers.ts | 12 dòng | Helper nhận diện các loại system message trong chat. | Review: helper rất nhỏ; hợp lý nếu centralize type set, có thể gộp vào `ChatMessageListItem` nếu không reuse.
-- /Frontend/src/features/chat/presentation/chat-room/modals/DisputeModalActions.tsx | 46 dòng | Action buttons cho dispute modal gồm hủy và gửi tố cáo với loading state. | Review: đúng presentation layer; copy hard-coded tiếng Việt, nên i18n cùng `DisputeModal`.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomConversationActions.ts | 145 dòng | Hook xử lý actions accept/reject/complete/dispute/cancel/start-new-session và toast lỗi cho chat room. | Review: đang ở presentation nhưng gọi server actions/use-case trực tiếp; cân nhắc chuyển phần orchestration này xuống application để view-model mỏng hơn.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomDerivedFlags.ts | 109 dòng | Hook tính flags UI chat room từ conversation/messages như canShowInput, readOnlyHint, banners và offer response map. | Review: chứa rule trạng thái conversation ở presentation; nên cân nhắc application/domain helper nếu các rule này được dùng ngoài UI.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomInputMediaActions.ts | 134 dòng | Hook xử lý input typing, Enter send, upload ảnh/voice media và progress cho chat room. | Review: orchestration media upload nằm ở presentation; nên chuyển upload payload/action xuống application để UI chỉ gọi send media.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomPageState.ts | 82 dòng | Hook compose chat connection, payment offers, UI state, derived flags, media, actions, review và scroll effects. | Review: đúng vai trò composition VM nhưng phụ thuộc nhiều hooks; giữ presentation mỏng, tách theo bounded concern nếu tiếp tục phình.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomPageViewModel.ts | 142 dòng | Hook tạo `ChatRoomViewProps` từ route params, i18n, navigation và state hooks chat room. | Review: view-model lớn nhưng giúp component mỏng; warningText còn hard-coded tiếng Việt dù phần khác dùng `Chat` messages.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomReviewActions.ts | 161 dòng | Hook quản lý modal review conversation, localStorage dismissed state, submit review và cập nhật conversation local. | Review: khá nhiều orchestration ở presentation; có thể giữ vì UI-specific dismissal, nhưng submit/update domain state nên cân nhắc application boundary.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomScrollEffects.ts | 53 dòng | Hook scroll effects cho auto-scroll tin mới/typing và infinite load khi gần top. | Review: đúng presentation/browser effect; giữ riêng để main VM không ôm DOM listener.
-- /Frontend/src/features/chat/presentation/chat-room/useChatRoomUiState.ts | 36 dòng | Hook state UI local cho payment/dispute/action menu và click-outside action menu. | Review: đúng presentation hook; click-outside DOM listener hợp lý ở UI layer.
-- /Frontend/src/features/chat/presentation/chat-room/utils.ts | 30 dòng | Helper parse payment offer response map và map reader status thành label/color. | Review: helper nhỏ nhưng đang swallow JSON parse silently; status label English hard-coded, cần i18n nếu surfaced đa locale.
-- /Frontend/src/features/chat/presentation/chat-room/view/ChatRoomComposerSection.tsx | 44 dòng | Section mapping `ChatRoomViewProps` sang `ChatComposer` props và mở dispute/payment/review UI. | Review: component adapter khá mỏng nhưng giảm props noise trong main pane; có thể gộp nếu giảm phân mảnh.
-- /Frontend/src/features/chat/presentation/chat-room/view/ChatRoomHeaderSection.tsx | 33 dòng | Section ghép `ChatRoomHeader` và `ChatRoomActionBanners` từ props chat room. | Review: adapter mỏng hợp lý để tách header/banner khỏi main pane; có thể gộp nếu đơn giản hóa cây view.
-- /Frontend/src/features/chat/presentation/chat-room/view/ChatRoomMainPane.tsx | 20 dòng | Main pane chat room bọc GlassCard và ghép header, messages, composer sections. | Review: component layout mỏng hợp lý; không chứa logic nghiệp vụ.
-- /Frontend/src/features/chat/presentation/chat-room/view/ChatRoomMessagesSection.tsx | 33 dòng | Section ghép `ChatMessagesPanel` và complete response bar từ props chat room. | Review: adapter nhỏ; giữ nếu muốn main pane dễ đọc, gộp được nếu giảm phân mảnh.
-- /Frontend/src/features/chat/presentation/chat-room/view/ChatRoomOverlays.tsx | 41 dòng | Render dispute, payment offer và review overlays của chat room. | Review: đúng presentation layer; dynamic payment modal submit/close logic nhỏ, giữ gần overlays.
-- /Frontend/src/features/chat/presentation/components/ConversationSidebar.tsx | 48 dòng | Client sidebar chat lấy inbox VM, render tabs, loading/empty và conversation list. | Review: đúng presentation container; dùng `useChatInboxPage` application hook, giữ trong feature chat.
-- /Frontend/src/features/chat/presentation/components/PaymentOfferModal.tsx | 68 dòng | Modal tạo payment offer với amount/note form, runtime state hook và localized labels. | Review: đúng presentation layer; close icon có aria-label English, nên đồng bộ i18n/accessibility.
-- /Frontend/src/features/chat/presentation/components/VoiceMessageBubble.tsx | 84 dòng | Bubble playback voice message với play/pause, waveform bars tĩnh và duration display. | Review: đúng presentation layer; title play/pause hard-coded tiếng Việt, waveform height mapping dài nhưng thuần UI.
-- /Frontend/src/features/chat/presentation/components/VoiceRecorderButton.tsx | 91 dòng | Button media menu cho gửi ảnh/ghi âm, nối `useVoiceRecorder` với active/error inline states. | Review: đúng presentation component nhưng chứa click-outside/menu và recorder state; có thể tách menu nếu tiếp tục tăng.
-- /Frontend/src/features/chat/presentation/components/conversation-sidebar/ConversationListItem.tsx | 48 dòng | Item conversation sidebar hiển thị avatar, unread badge, preview, time ago, status và escrow diamond. | Review: đúng presentation layer; status/preview text phụ thuộc helper hard-coded, cần i18n nếu sidebar đa locale.
-- /Frontend/src/features/chat/presentation/components/conversation-sidebar/ConversationSidebarTabs.tsx | 26 dòng | Tabs active/pending/completed cho conversation sidebar. | Review: component nhỏ đúng presentation; labels hard-coded Việt/Anh lẫn nhau, nên dùng messages `Chat`.
-- /Frontend/src/features/chat/presentation/components/conversation-sidebar/utils.ts | 67 dòng | Helper sidebar map status label, format relative age, lấy participant còn lại và preview text. | Review: presentation helper hợp lý nhưng nhiều copy hard-coded; cân nhắc chuyển status/preview labels sang i18n.
-- /Frontend/src/features/chat/presentation/components/usePaymentOfferModalState.ts | 84 dòng | Hook state/form payment offer modal dùng runtime policy, RHF/Zod và submit guard. | Review: đúng presentation form hook; validation message mặc định từ Zod có thể chưa localized nếu surfaced.
-- /Frontend/src/features/chat/presentation/components/useVoiceMessagePlayback.ts | 126 dòng | Hook playback voice tạo Audio, data URL blob, progress animation frame và cleanup object URL. | Review: browser hook nhiều side effect nhưng đúng presentation/media concern; nên test thủ công voice playback khi refactor.
-- /Frontend/src/features/chat/presentation/components/voice-recorder/VoiceRecorderActiveInline.tsx | 70 dòng | Inline UI khi đang ghi âm, gồm cancel/send buttons, waveform realtime và elapsed duration. | Review: đúng presentation layer; helper height/opacity dài nhưng thuần UI, copy aria/title hard-coded tiếng Việt.
-- /Frontend/src/features/chat/presentation/components/voice-recorder/VoiceRecorderErrorInline.tsx | 26 dòng | Inline error ghi âm hiển thị message và nút dismiss. | Review: component nhỏ đúng presentation; aria/title hard-coded tiếng Việt, localize nếu voice recorder đa locale.
-- /Frontend/src/features/chat/presentation/components/voice-recorder/VoiceRecorderStartButton.tsx | 23 dòng | Button bắt đầu ghi âm với loading requesting state. | Review: file nhỏ và hiện không thấy được dùng trong `VoiceRecorderButton`; cần xác minh usage/deadcode trước khi gộp/xóa.
-- /Frontend/src/features/chat/presentation/components/voice-recorder/voiceRecorderUtils.ts | 10 dòng | Helper format duration ghi âm và fallback waveform levels. | Review: helper rất nhỏ nhưng đang dùng bởi active inline; có thể gộp nếu giảm phân mảnh voice recorder.
-- /Frontend/src/features/chat/presentation/components/voiceMessageUtils.ts | 22 dòng | Helper tạo waveform bars tĩnh theo seed audio URL và format duration playback. | Review: helper nhỏ đang dùng bởi `VoiceMessageBubble`; giữ nếu playback UI còn riêng.
-- /Frontend/src/features/chat/public.ts | 6 dòng | Public API chat re-export createConversation, inbox/room pages và segment shell. | Review: public boundary hợp lý; route/app nên import qua file này, cân nhắc export thêm actions chỉ khi caller ngoài feature cần.
-- /Frontend/src/features/checkin/application/actions.ts | 39 dòng | Server action lấy streak status từ `/checkin/streak` với server access token và logging lỗi. | Review: đúng application action; import type từ `types` ngoài layer chuẩn, nên cân nhắc đưa contract vào domain/application.
-- /Frontend/src/features/checkin/application/hooks.ts | 35 dòng | Client query hook `useStreakStatus` gọi action, gate theo auth store và cấu hình retry/staleTime. | Review: đúng application hook nhưng phụ thuộc trực tiếp root `authStore`; cân nhắc shared auth selector boundary nếu siết layer.
-- /Frontend/src/features/checkin/domain/checkinQueryKeys.ts | 3 dòng | Query key streak status của feature checkin. | Review: file rất nhỏ nhưng hợp lý để tránh lặp key; có thể gộp vào hooks nếu chỉ một query.
-- /Frontend/src/features/checkin/presentation/StreakBadge.tsx | 58 dòng | Badge hiển thị streak hiện tại với icon Flame, title localized và state active/inactive. | Review: đúng presentation component; có dòng trống thừa nhỏ, giữ trong feature checkin nếu chỉ navbar/header dùng.
-- /Frontend/src/features/checkin/types/checkin.types.ts | 13 dòng | Interface streak status payload từ backend checkin. | Review: thư mục `types` nằm ngoài layer chuẩn; nên chuyển vào domain hoặc application contracts để nhất quán clean architecture.
-- /Frontend/src/features/collection/application/actions/index.ts | 1 dòng | Barrel re-export server actions collection từ `user-collection`. | Review: file một dòng hợp lý nếu callers dùng actions barrel; có thể gộp nếu chỉ còn một action.
-- /Frontend/src/features/collection/application/actions/user-collection.ts | 57 dòng | Server action lấy collection của user từ `/reading/collection`, map localized ApiErrors và DTO card stats. | Review: đúng application action; DTO đặt cùng action tiện nhưng cân nhắc contract riêng nếu nhiều hook dùng.
-- /Frontend/src/features/collection/application/collectionCatalogChunked.ts | 120 dòng | Contract và fetchers cho card catalog manifest/chunk/detail, cache keys và image proxy URL. | Review: đúng application gateway/client contract; endpoint constants và DTOs tập trung, không phụ thuộc presentation.
-- /Frontend/src/features/collection/application/gateways/collectionCatalogCacheGateway.ts | 9 dòng | Application gateway re-export cache operations từ infrastructure IndexedDB adapter. | Review: boundary tốt để application hook không import infrastructure trực tiếp, dù file rất mỏng.
-- /Frontend/src/features/collection/application/useCollectionCatalogChunked.ts | 203 dòng | Hook chunked catalog quản lý bootstrap IndexedDB cache, manifest/chunk/detail TanStack queries và visible chunk window. | Review: application hook lớn nhưng có trách nhiệm rõ; tránh để presentation gọi cache/fetcher trực tiếp, cân nhắc tách visible-window nếu mở rộng.
-- /Frontend/src/features/collection/application/useCollectionPage.ts | 129 dòng | Hook collection page quản lý filter/sort/selected card, fetch collection và tính deck/progress từ tarot data. | Review: đúng application hook nhưng còn comment dài/lỗi thời; dùng endpoint `/api/collection` thay vì server action, cần giữ nhất quán cache/auth boundary.
-- /Frontend/src/features/collection/infrastructure/collectionCatalogCache.ts | 163 dòng | IndexedDB KV cache adapter cho collection catalog manifest/chunk/detail và purge version history. | Review: đúng infrastructure layer; failure đang fail-soft trả null/resolve, hợp cache nhưng cần tránh dùng cho dữ liệu bắt buộc.
-- /Frontend/src/features/collection/presentation/CollectionPage.tsx | 70 dòng | Client collection page compose zoom modal, header, filter bar và deck grid từ `useCollectionPageViewModel`. | Review: đúng presentation container; route nên import qua public entry, orchestration chính đã nằm trong VM.
-- /Frontend/src/features/collection/presentation/components/CollectionDeckCard.tsx | 61 dòng | Card button cho từng tarot card trong collection, compose header/visual/footer và owned/unowned state. | Review: đúng presentation component; giữ trong feature collection, không phải shared card primitive.
-- /Frontend/src/features/collection/presentation/components/CollectionDeckGrid.tsx | 91 dòng | Grid collection render card list, empty/error states và IntersectionObserver sentinel load-more. | Review: đúng presentation layer nhưng có browser pagination effect; loading text hard-coded English, nên i18n nếu surfaced.
-- /Frontend/src/features/collection/presentation/components/CollectionEmptyState.tsx | 29 dòng | Empty state collection với icon, text labels và CTA sang `/reading`. | Review: đúng presentation layer; link `/reading` là route coupling hợp feature flow, giữ nếu collection empty luôn dẫn về reading.
-- /Frontend/src/features/collection/presentation/components/CollectionFilterBar.tsx | 31 dòng | Filter bar compose filter tabs và sort tabs từ labels/handlers. | Review: adapter mỏng hợp lý để tách filter/sort controls; có thể gộp nếu giảm phân mảnh.
-- /Frontend/src/features/collection/presentation/components/CollectionFilterBar.types.ts | 20 dòng | Type labels/props cho collection filter bar. | Review: file nhỏ nhưng dùng bởi filter bar/subtabs; giữ nếu props chia sẻ, gộp được nếu chỉ một import.
-- /Frontend/src/features/collection/presentation/components/CollectionHeader.tsx | 50 dòng | Header collection hiển thị tag/title/subtitle và progress collected/total. | Review: đúng presentation layer; nhận labels từ VM nên i18n boundary tốt.
-- /Frontend/src/features/collection/presentation/components/CollectionLoadingState.tsx | 13 dòng | Full-page loading state collection với spinner và glow background. | Review: component rất nhỏ; có thể gộp vào page nếu muốn giảm phân mảnh.
-- /Frontend/src/features/collection/presentation/components/CollectionZoomModal.tsx | 81 dòng | Modal zoom card collection khóa scroll, overlay close và compose card visual/details. | Review: đúng presentation layer; scroll lock ở UI infrastructure hợp lý, component chưa thêm dialog aria semantics rõ nếu chạm accessibility.
-- /Frontend/src/features/collection/presentation/components/collection-grid/CollectionDeckError.tsx | 21 dòng | Error banner collection deck hiển thị icon cảnh báo và message lỗi. | Review: component rất nhỏ; gộp vào `CollectionDeckGrid` được nếu giảm phân mảnh.
-- /Frontend/src/features/collection/presentation/components/deck-card/CollectionDeckCardFooter.tsx | 48 dòng | Footer collection card hiển thị lock khi chưa sở hữu hoặc ATK/DEF khi đã sở hữu. | Review: đúng presentation layer; dùng emoji stat, giữ trong card-specific component.
-- /Frontend/src/features/collection/presentation/components/deck-card/CollectionDeckCardHeader.tsx | 38 dòng | Header collection card hiển thị level và progress EXP tới level tiếp theo. | Review: đúng presentation layer; label `Lv.`/`MAX` hard-coded, cân nhắc i18n nếu cần.
-- /Frontend/src/features/collection/presentation/components/deck-card/CollectionDeckCardVisual.tsx | 70 dòng | Visual collection card dùng Next Image/proxy URL hoặc fallback số lá bài, blur khi chưa sở hữu. | Review: đúng presentation layer; `priority` cho card id đầu có chủ đích perf, giữ gần card visual.
-- /Frontend/src/features/collection/presentation/components/filter-bar/CollectionFilterTabs.tsx | 63 dòng | Filter tabs all/owned/unowned với icons và labels truyền từ VM. | Review: đúng presentation layer; filter config inline ổn vì chỉ dùng tại đây.
-- /Frontend/src/features/collection/presentation/components/filter-bar/CollectionSortTabs.tsx | 56 dòng | Sort tabs id/level/atk/def cho collection với icon emoji và active state. | Review: đúng presentation layer; sort labels/icon hard-coded, cân nhắc đưa vào labels nếu muốn localize toàn bộ.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/CollectionZoomCardCaption.tsx | 36 dòng | Caption overlay trong zoom card hiển thị suit và tên/unknown label theo owned state. | Review: đúng presentation subcomponent; giữ nếu zoom visual còn tách caption/image.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/CollectionZoomCardImage.tsx | 106 dòng | Image zoom card chọn preview/full URL, preload full image rồi reveal, fallback Sparkles/số card. | Review: component có browser preload effect nhưng trách nhiệm rõ; giữ test thủ công ảnh preview/full khi refactor.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/CollectionZoomCardVisual.tsx | 58 dòng | Visual wrapper của zoom card compose image và caption với owned/unowned styling. | Review: đúng presentation layer; adapter mỏng nhưng hợp lý để tách visual khỏi details.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/CollectionZoomDetails.tsx | 68 dòng | Details panel zoom modal hiển thị title, meaning/locked meaning, stats grid và close button. | Review: đúng presentation layer; nhận labels từ VM, giữ i18n tốt.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/CollectionZoomStatCard.tsx | 35 dòng | Card stat nhỏ cho zoom modal hiển thị label/value với class màu truyền vào. | Review: đúng presentation primitive cục bộ; logic inspect `wrapperClassName` hơi brittle nhưng phạm vi nhỏ.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/CollectionZoomStatsGrid.tsx | 59 dòng | Grid stats zoom modal cho level, EXP, ATK và DEF từ user card. | Review: đúng presentation layer; labels EXP/ATK/DEF/MAX hard-coded, cân nhắc i18n nếu cần.
-- /Frontend/src/features/collection/presentation/components/zoom-modal/types.ts | 22 dòng | Type labels/props cho collection zoom modal. | Review: file nhỏ nhưng dùng để chia prop contract giữa modal/details; giữ nếu zoom modal còn nhiều subcomponents.
-- /Frontend/src/features/collection/presentation/useCollectionPageViewModel.ts | 153 dòng | View-model collection ghép page state, chunked catalog, image proxy URL và toàn bộ labels i18n cho UI. | Review: presentation VM khá lớn nhưng giảm logic khỏi component; fallback `Sắp xếp theo` hard-coded và mapping image/name nên giữ gần collection page.
-- /Frontend/src/features/collection/public.ts | 1 dòng | Public API collection re-export `CollectionPage`. | Review: public boundary một dòng hợp lý để routes import qua feature, có thể gộp nếu không enforce public imports.
-- /Frontend/src/features/community/application/actions/communityActions.ts | 124 dòng | Server actions community cho feed, create post, toggle reaction, comments và report post qua backend endpoints. | Review: đúng application action nhưng import types bằng relative `../../types`; nên đưa contracts vào layer chuẩn và format interface dài.
-- /Frontend/src/features/community/application/markdownImageParser.ts | 42 dòng | Parser tách markdown image segments và kiểm URL render được cho community content. | Review: application helper thuần; regex đơn giản đủ cho use hiện tại, không nên coi là markdown parser đầy đủ.
-- /Frontend/src/features/community/components/CommentSection.tsx | 59 dòng | Comment section compose comments query, add comment mutation, auth state, list và composer. | Review: đang nằm trong `components` ngoài presentation chuẩn; nên chuyển vào `presentation` hoặc application/presentation split rõ hơn.
-- /Frontend/src/features/community/components/FeedPage.tsx | 37 dòng | Client feed page quản lý visibility tab, report modal state, composer và feed list. | Review: page/container nằm trong `components` không chuẩn; nên chuyển sang `presentation/FeedPage.tsx` và import qua public boundary.
-- /Frontend/src/features/community/components/FeedPostsSection.tsx | 45 dòng | Feed posts section render pages, post cards, load-more, end và empty states. | Review: presentation component nhưng nằm ngoài `presentation`; có thể giữ tạm, nên di chuyển khi chuẩn hóa community feature.
-- /Frontend/src/features/community/components/FeedVisibilityTabs.tsx | 22 dòng | Tabs public/private cho community feed visibility. | Review: presentation component nhỏ; nên nằm dưới `presentation/components`, hiện path `components` làm lệch layer.
-- /Frontend/src/features/community/components/PostCard.tsx | 24 dòng | Post card community compose header/content/actions và local show-comments state. | Review: presentation card nằm trong `components` ngoài layer chuẩn; nên chuyển dưới `presentation/components/post-card`.
-- /Frontend/src/features/community/components/PostComposer.tsx | 53 dòng | Client composer tạo post với textarea, image upload state, visibility và create mutation. | Review: presentation/container nằm sai layer `components`; nên tách form state vào application/presentation hook chuẩn hơn nếu refactor.
-- /Frontend/src/features/community/components/PostReportActions.tsx | 25 dòng | Action buttons cancel/submit cho modal report post. | Review: presentation subcomponent dùng shared Button; nên nằm dưới `presentation/components` cùng report modal.
-- /Frontend/src/features/community/components/PostReportFields.tsx | 50 dòng | Fields report post gồm reason select, description textarea, errors và counter. | Review: presentation form fields tốt nhưng path layer chưa chuẩn; error text chưa gắn aria-describedby nếu chạm accessibility.
-- /Frontend/src/features/community/components/PostReportModal.tsx | 55 dòng | Modal report post dùng i18n, state hook và compose fields/actions. | Review: presentation container nằm ngoài `presentation`; logic state đã tách hook, nên di chuyển cả cụm report modal vào layer chuẩn.
-- /Frontend/src/features/community/components/ReactionBar.tsx | 60 dòng | Reaction bar hiển thị emoji reactions, counts và toggle mutation theo post/visibility. | Review: UI component đang gọi mutation hook trực tiếp; cân nhắc application hook/VM nếu muốn presentation thuần hơn, và chuyển khỏi `components` root.
-- /Frontend/src/features/community/components/comment-section/CommentComposer.tsx | 84 dòng | Comment composer với textarea, image attach, Enter submit, auth gate và upload progress. | Review: presentation form nằm ngoài layer chuẩn; image button chỉ có title không aria-label, cần cải thiện nếu chạm UI.
-- /Frontend/src/features/community/components/comment-section/CommentItem.tsx | 69 dòng | Comment item hiển thị avatar, author/time và markdown image/text segments. | Review: presentation component nhưng path chưa chuẩn; time format không dùng locale hiện tại, cân nhắc i18n/time helper.
-- /Frontend/src/features/community/components/comment-section/CommentsList.tsx | 37 dòng | Comments list render paged comments, loading/error/empty và load-more button. | Review: presentation list nên chuyển vào `presentation`; component nhỏ, giữ cùng comment section.
-- /Frontend/src/features/community/components/post-card/PostCardActions.tsx | 31 dòng | Post card actions ghép reaction bar, comments toggle và comment section. | Review: presentation component nhưng kéo `CommentSection` query container vào card; cân nhắc tách comments container khi chuẩn hóa.
-- /Frontend/src/features/community/components/post-card/PostCardContent.tsx | 40 dòng | Post content renderer tách markdown image/text và render image bằng Next Image. | Review: presentation renderer dùng application parser; path nên vào `presentation`, logic ảnh có thể dùng chung với comment item.
-- /Frontend/src/features/community/components/post-card/PostCardHeader.tsx | 56 dòng | Post header hiển thị avatar author, date/time, visibility và report button. | Review: presentation component; report button icon-only thiếu aria-label, visibility label chưa localized.
-- /Frontend/src/features/community/components/post-card/usePostCardState.ts | 30 dòng | Hook local state post card cho show comments và formatted date/time. | Review: UI state hook hợp presentation; path `components` root chưa chuẩn, time format không truyền locale.
-- /Frontend/src/features/community/components/post-composer/PostComposerActions.tsx | 44 dòng | Actions của post composer gồm visibility select, image input và submit button. | Review: presentation subcomponent; select thiếu explicit label, path layer chưa chuẩn.
-- /Frontend/src/features/community/components/post-composer/usePostComposerState.ts | 94 dòng | Hook form state post composer dùng RHF/Zod, image upload context và reset sau submit. | Review: hook chứa validation/upload orchestration ở components; nên chuyển sang application/presentation hook boundary rõ hơn.
-- /Frontend/src/features/community/components/useCommentComposerState.ts | 82 dòng | Hook state comment composer dùng RHF/Zod, image upload context, submit/reset và toast upload. | Review: hook orchestration đang nằm trong `components`; nên chuyển vào application/presentation hook chuẩn, nhưng cần giữ cùng composer nếu refactor nhỏ.
-- /Frontend/src/features/community/components/usePostReportModalState.ts | 104 dòng | Hook state report modal quản lý reason/description validation, submit action và toast/close flow. | Review: chứa application action call trong components hook; nên chuyển orchestration xuống application hoặc presentation VM rõ ràng hơn.
-- /Frontend/src/features/community/hooks/useComments.ts | 36 dòng | TanStack hooks infinite comments và add comment mutation, invalidate comments/feed sau submit. | Review: application hook đang ở thư mục `hooks` ngoài layer chuẩn; nên chuyển vào application và dùng query key constant nếu mở rộng.
-- /Frontend/src/features/community/hooks/useCommunityImageUpload.ts | 179 dòng | Hook upload ảnh community nén file, presign/direct upload R2, confirm, markdown placeholder và abort/progress cleanup. | Review: orchestration upload lớn/nhạy cảm nên nằm application/infrastructure boundary thay vì `hooks`; cần test kỹ rollback placeholder khi refactor.
-- /Frontend/src/features/community/hooks/useCreatePost.ts | 20 dòng | Mutation hook create post và invalidate feed theo visibility. | Review: hook nhỏ nhưng đúng application concern; nên đặt trong application hoặc gộp với feed hooks/query keys.
-- /Frontend/src/features/community/hooks/useFeed.ts | 24 dòng | Infinite query hook lấy community feed theo visibility và tính next page từ metadata. | Review: đúng data hook nhưng path `hooks` chưa theo layer; query key string lặp với mutation hooks.
-- /Frontend/src/features/community/hooks/useToggleReaction.ts | 79 dòng | Mutation hook toggle reaction với optimistic update feed cache và rollback on error. | Review: application hook quan trọng cho optimistic UI; nên chuyển vào application, sửa format/indent nhỏ và dùng query key helper.
-- /Frontend/src/features/community/public.ts | 1 dòng | Public API community re-export `FeedPage` từ components. | Review: public boundary tồn tại nhưng đang trỏ vào layer `components` chưa chuẩn; sau khi chuyển FeedPage sang presentation, cập nhật export này.
-- /Frontend/src/features/community/types.ts | 67 dòng | Types community cho post/comment payloads, reactions, report reason và feed response metadata. | Review: contract dùng nhiều layer nhưng đặt root feature; nên cân nhắc chuyển domain/application contracts để tránh thư mục `types` ngoài layer chuẩn.
-- /Frontend/src/features/gacha/presentation/GachaHistoryPage.tsx | 7 dòng | Client entry wrapper render `GachaHistoryPageClient` đang nằm trong shared components gacha. | Review: wrapper đúng presentation entry nhưng implementation chính nằm sai ở `src/components/ui/gacha`; nên chuyển client vào feature gacha.
-- /Frontend/src/features/gacha/presentation/GachaPage.tsx | 7 dòng | Client entry wrapper render `GachaPageClient` từ `src/components/ui/gacha`. | Review: wrapper đúng presentation entry nhưng chỉ che việc UI chính nằm ngoài feature; nên chuyển gacha UI vào feature presentation.
-- /Frontend/src/features/gacha/public.ts | 2 dòng | Public API gacha re-export page entries GachaPage và GachaHistoryPage. | Review: public boundary hợp lý cho route imports; giữ sau khi chuyển implementation từ components vào feature.
-- /Frontend/src/features/gamification/admin/application/adminGamification.types.ts | 48 dòng | DTO/type admin gamification cho quest, achievement, title, rewards và tab/entity state. | Review: đúng application contracts cho admin UI; nếu domain gamification mở rộng nên tách shared domain type khỏi admin-specific DTO.
-- /Frontend/src/features/gamification/admin/application/adminGamificationClient.test.ts | 60 dòng | Test admin gamification client dùng BFF local và encode path khi delete. | Review: test sát client boundary; giữ vì bảo vệ `/api/admin/gamification` và delete path encoding.
-- /Frontend/src/features/gamification/admin/application/adminGamificationClient.ts | 124 dòng | Client API admin gamification list/upsert/delete quests, achievements và titles qua BFF `/api/admin/gamification`. | Review: đúng application client nhưng file gom đủ 3 entity; nếu thêm entity mới nên tách client theo resource hoặc helper request chung.
-- /Frontend/src/features/gamification/admin/application/adminGamificationFormSchema.test.ts | 98 dòng | Test mapping form schema admin gamification giữ multilingual fields, defaults và normalize nullable fields. | Review: test hợp lý cạnh schema; bảo vệ mapping DTO/form quan trọng khi refactor form.
-- /Frontend/src/features/gamification/admin/application/adminGamificationFormSchema.ts | 132 dòng | Zod schemas và mapper form/DTO cho quest, achievement, title admin gamification. | Review: đúng application form mapping; file đang ôm 3 entity nhưng còn chấp nhận được, tách nếu form logic phức tạp thêm.
-- /Frontend/src/features/gamification/admin/application/adminGamificationKeys.ts | 6 dòng | Query key factory admin gamification cho quests, achievements và titles. | Review: file nhỏ nhưng hợp lý để tránh lặp key giữa queries/mutations.
-- /Frontend/src/features/gamification/admin/application/useAdminGamification.test.tsx | 140 dòng | Test hook admin gamification invalidation/toast cho các mutation quest/achievement/title. | Review: test sát mutation behavior; có vài expectation copy tiếng Việt không dấu, nên đồng bộ nếu UI text được localize.
-- /Frontend/src/features/gamification/admin/application/useAdminGamification.ts | 105 dòng | Hook TanStack Query admin gamification fetch/mutate quests, achievements, titles với toast và invalidate cache. | Review: đúng application hook; copy toast hard-coded tiếng Việt không dấu, nên i18n nếu admin UI đa locale.
-- /Frontend/src/features/gamification/admin/application/useAdminGamificationClientState.ts | 168 dòng | Hook state admin gamification quản lý tab, editor/delete dialog, selected entity và submit/delete flows. | Review: application/controller hook khá lớn nhưng rõ trách nhiệm; có thể tách editor/delete state nếu admin gamification mở rộng.
-- /Frontend/src/features/gamification/admin/infrastructure/adminGamificationServer.ts | 40 dòng | Server-side infrastructure fetch admin gamification quests/achievements/titles bằng server token. | Review: đúng infrastructure adapter nhưng đang import shared infrastructure trực tiếp; chỉ dùng từ server boundary, không để client component import.
-- /Frontend/src/features/gamification/admin/presentation/AdminAchievementForm.tsx | 63 dòng | Modal form admin achievement dùng RHF/Zod, multilingual title/description, icon và granted title code. | Review: đúng presentation form; labels hard-coded English và checkbox thiếu label structure rõ nếu chạm accessibility/i18n.
-- /Frontend/src/features/gamification/admin/presentation/AdminAchievementTable.tsx | 55 dòng | Table admin achievements hiển thị code, title VI, active state, granted title và edit/delete actions. | Review: đúng presentation table; icon-only edit/delete buttons thiếu accessible name, text trạng thái lẫn EN/VI.
-- /Frontend/src/features/gamification/admin/presentation/AdminGamificationClient.tsx | 69 dòng | Admin gamification client compose header, tabs, entity tables, form modal và delete confirm dialog. | Review: đúng presentation container; copy hard-coded VI/EN và icon delete dialog dùng Plus chưa khớp ngữ nghĩa.
-- /Frontend/src/features/gamification/admin/presentation/AdminGamificationFormModal.tsx | 40 dòng | Modal switcher chọn form quest/achievement/title theo entityType. | Review: presentation dispatcher mỏng hợp lý; giữ cùng admin gamification nếu chỉ route nội bộ dùng.
-- /Frontend/src/features/gamification/admin/presentation/AdminGamificationTabs.tsx | 40 dòng | Tabs admin gamification cho quests, achievements và titles kèm icons. | Review: đúng presentation component; label hard-coded tiếng Việt, cần i18n nếu admin đa locale.
-- /Frontend/src/features/gamification/admin/presentation/AdminQuestForm.tsx | 73 dòng | Modal form admin quest dùng RHF field array cho rewards, multilingual fields, trigger/target/active. | Review: đúng presentation form; reward fields nằm inline, có thể tách nếu form thêm logic validation/UI.
-- /Frontend/src/features/gamification/admin/presentation/AdminQuestTable.tsx | 53 dòng | Table admin quests hiển thị code, title VI, quest type, target, active state và actions. | Review: đúng presentation table; icon-only actions thiếu accessible name và copy trạng thái chưa localized.
-- /Frontend/src/features/gamification/admin/presentation/AdminTitleForm.tsx | 56 dòng | Modal form admin title với code/rarity, multilingual name/description và active checkbox. | Review: đúng presentation form; labels hard-coded English, cân nhắc i18n/aria nếu admin UI polish.
-- /Frontend/src/features/gamification/admin/presentation/AdminTitleTable.tsx | 59 dòng | Table admin titles hiển thị code, name VI, rarity badge và edit/delete actions. | Review: đúng presentation table; rarity compare dùng literal `Legendary`/`Epic`, cần khớp backend casing khi refactor.
-- /Frontend/src/features/gamification/application/gamification.types.ts | 95 dòng | Contract gamification user-facing cho quests/progress, titles, achievements, leaderboard và claim result. | Review: đúng application contracts nhưng thiếu field ZH so với admin DTO; cần kiểm backend/i18n contract trước khi hợp nhất type.
-- /Frontend/src/features/gamification/application/gamificationQueryKeys.ts | 8 dòng | Query key factory user gamification cho quests, achievements, titles và leaderboard. | Review: file nhỏ hợp lý để chia sẻ giữa hooks/mutations; giữ nếu nhiều cache owner dùng.
-- /Frontend/src/features/gamification/application/gamificationServerActions.ts | 103 dòng | Server actions user gamification fetch quests/achievements/titles/leaderboard, claim quest reward và set active title. | Review: đúng application boundary; dùng throw Error thay ActionResult nên caller query xử lý qua TanStack error state.
-- /Frontend/src/features/gamification/application/useGamification.ts | 66 dòng | TanStack hooks user gamification cho quests, rewards claim, achievements, titles, active title và leaderboard. | Review: đúng application hook; invalidate wallet/profile sau mutation hợp lý, nhưng `type!`/`track!` phụ thuộc enabled guard cần giữ cẩn thận.
-- /Frontend/src/features/gamification/components/AchievementsGrid.tsx | 34 dòng | Achievements grid fetch achievements, filter hidden locked achievements, mở detail modal khi chọn card. | Review: presentation/container đang ở `components` ngoài layer chuẩn; nên chuyển vào `presentation/components` hoặc `presentation/AchievementsGrid`.
-- /Frontend/src/features/gamification/components/GamificationDetailActions.tsx | 69 dòng | Action footer detail modal cho close, claim reward và equip title buttons. | Review: presentation subcomponent; đúng feature nhưng path nên nằm dưới presentation, spinner custom có thể dùng shared loader nếu thống nhất UI.
-- /Frontend/src/features/gamification/components/GamificationDetailBody.tsx | 46 dòng | Body detail modal render description, quest progress/rewards và unlocked info theo loại quest/achievement/title. | Review: presentation body nhận nhiều props nhưng trách nhiệm rõ; path `components` root chưa theo layer chuẩn.
-- /Frontend/src/features/gamification/components/GamificationDetailHeader.tsx | 46 dòng | Header detail modal hiển thị icon quest/achievement, title và badge completed/pending. | Review: presentation component nhỏ hợp lý; nên chuyển dưới presentation cùng modal.
-- /Frontend/src/features/gamification/components/GamificationDetailModal.tsx | 41 dòng | Modal chi tiết gamification compose view model, header/body/actions và handlers claim/equip. | Review: presentation container nằm ngoài `presentation`; line dài và nhiều props inline, nên format/tách VM nếu mở rộng.
-- /Frontend/src/features/gamification/components/GamificationStatsBar.tsx | 34 dòng | Stats bar gamification lấy user/title/achievement data và render level, title, achievement metrics. | Review: presentation container đang gọi auth store/query hooks trực tiếp trong `components`; nên chuyển vào presentation hoặc VM.
-- /Frontend/src/features/gamification/components/LeaderboardCurrentUserCard.tsx | 47 dòng | Current user leaderboard card render live rank hoặc empty state. | Review: presentation subcomponent; copy `Live status` hard-coded English, path nên dưới presentation.
-- /Frontend/src/features/gamification/components/LeaderboardEntryRow.tsx | 55 dòng | Leaderboard row compose rank badge, avatar, display name/title và score. | Review: presentation row hợp lý; giữ cùng leaderboard components, path layer cần chuẩn hóa.
-- /Frontend/src/features/gamification/components/LeaderboardTable.tsx | 87 dòng | Leaderboard container lấy runtime default track, currency/period tabs và leaderboard query/body/current user. | Review: presentation/container có runtime policy parsing và local state; nên chuyển vào presentation, copy subtitle còn hard-coded VI/EN.
-- /Frontend/src/features/gamification/components/NoTitleCard.tsx | 67 dòng | Card chọn trạng thái không dùng danh hiệu, hiển thị active/inactive và hint. | Review: presentation card dùng `div onClick` thay button; cần cải thiện keyboard accessibility nếu chạm UI.
-- /Frontend/src/features/gamification/components/QuestCard.tsx | 89 dòng | Quest card hiển thị title/description, rewards, progress bar và claim button. | Review: presentation card hợp lý nhưng dùng `div onClick` cho card; cần kiểm nested claim button propagation/accessibility.
-- /Frontend/src/features/gamification/components/QuestPanelHeader.tsx | 53 dòng | Header quests panel với daily/weekly toggle và localized labels. | Review: presentation component; path nên dưới presentation, tabs thiếu aria-selected semantics nếu nâng accessibility.
-- /Frontend/src/features/gamification/components/QuestsPanel.tsx | 44 dòng | Quests panel lấy runtime default quest type, query quests, claim handlers và detail modal. | Review: presentation/container đang ở components root; orchestration khá rõ nhưng nên chuyển vào presentation và giữ runtime policy boundary.
-- /Frontend/src/features/gamification/components/TitleCard.tsx | 65 dòng | Title card hiển thị trạng thái owned/active/locked, rarity style và localized title/description. | Review: presentation card dùng `div onClick`; cần keyboard semantics và path presentation chuẩn.
-- /Frontend/src/features/gamification/components/TitleSelector.tsx | 40 dòng | Title selector fetch titles, set active title, render no-title/title cards và detail modal. | Review: presentation/container đang ở components root; toast success và empty text hard-coded cần i18n thống nhất.
-- /Frontend/src/features/gamification/components/achievement/AchievementCard.tsx | 56 dòng | Achievement card hiển thị locked/unlocked state, localized content và unlocked date. | Review: presentation card dùng `div onClick` và date không theo locale; nên chuyển path và cải thiện accessibility/time formatting.
-- /Frontend/src/features/gamification/components/achievement/AchievementsHeader.tsx | 21 dòng | Header achievements section hiển thị icon, title và subtitle. | Review: presentation subcomponent nhỏ; nên đặt dưới presentation, có thể gộp nếu chỉ dùng một nơi.
-- /Frontend/src/features/gamification/components/gamification-detail/QuestProgressSection.tsx | 26 dòng | Section progress trong detail modal hiển thị current/target và progress bar bounded 0-100. | Review: presentation subcomponent hợp lý; giữ cùng detail modal, path layer cần chuẩn hóa.
-- /Frontend/src/features/gamification/components/gamification-detail/QuestRewardsSection.tsx | 54 dòng | Section rewards trong detail modal render reward cards theo type gold/diamond/title/other. | Review: presentation subcomponent; reward icon mapping lặp với quest reward badges, cân nhắc helper chung nếu mở rộng reward types.
-- /Frontend/src/features/gamification/components/gamification-detail/UnlockedInfoSection.tsx | 19 dòng | Section unlocked info hiển thị ngày unlock/grant trong detail modal. | Review: component nhỏ, date format không theo locale; nên dùng formatter chung nếu i18n yêu cầu.
-- /Frontend/src/features/gamification/components/gamification-detail/getDetailModalView.ts | 30 dòng | Helper build view state detail modal cho quest/achievement/title từ dữ liệu selected. | Review: helper presentation thuần; dòng ternary dài khó đọc, có thể tách branch nếu modal logic tăng.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardAvatar.tsx | 35 dòng | Avatar leaderboard dùng asset URL resolver, Next Image hoặc fallback initial. | Review: presentation subcomponent nhưng import shared infrastructure asset resolver; path layer và dependency direction cần kiểm khi siết FE architecture.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardBody.tsx | 37 dòng | Body leaderboard render loading, empty state hoặc danh sách leaderboard rows. | Review: presentation component nhỏ hợp lý; giữ cùng leaderboard table, path nên dưới presentation.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardCurrencyTabs.tsx | 25 dòng | Currency tabs chọn gold/diamond leaderboard với icon và active styling. | Review: presentation tabs; thiếu aria-selected semantics nếu muốn tab accessibility đầy đủ.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardCurrentUserEmpty.tsx | 20 dòng | Empty state cho current user chưa có trên leaderboard. | Review: component nhỏ; dòng phụ hard-coded tiếng Việt, nên truyền label/i18n từ caller.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardCurrentUserIdentity.tsx | 56 dòng | Identity block current user rank gồm avatar, display name và active title fallback. | Review: presentation subcomponent; fallback `TarotNow Traveler` hard-coded và Image chưa dùng unoptimized resolver như avatar row.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardCurrentUserRankContent.tsx | 51 dòng | Current user rank content hiển thị rank, identity và score tiêu thụ. | Review: presentation subcomponent; label `TIÊU THỤ` và en-US number format hard-coded.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardPeriodTabs.tsx | 19 dòng | Period tabs daily/monthly/all cho leaderboard. | Review: presentation tabs nhưng label hard-coded tiếng Việt; nên nhận label từ i18n caller và thêm tab semantics nếu cần.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardRankBadge.tsx | 50 dòng | Rank badge hiển thị medal top 3 hoặc số rank cho leaderboard rows. | Review: presentation helper component hợp lý; có thể giữ riêng vì icon logic rõ.
-- /Frontend/src/features/gamification/components/leaderboard/LeaderboardScore.tsx | 35 dòng | Score cell leaderboard format điểm và label vàng/kim cương. | Review: presentation subcomponent; labels và en-US number format hard-coded, cần i18n/locale nếu surfaced đa ngôn ngữ.
-- /Frontend/src/features/gamification/components/leaderboard/leaderboardRowClass.ts | 15 dòng | Helper className cho màu nền/top-rank leaderboard row theo index. | Review: presentation styling helper; nằm cạnh leaderboard components hợp lý nhưng nên dưới presentation path.
-- /Frontend/src/features/gamification/components/quest-card/QuestClaimButton.tsx | 24 dòng | Claim button hiển thị trạng thái claimed/pending/claiming cho quest card. | Review: presentation subcomponent nhỏ; đang dùng nhiều inline one-line JSX, có thể format lại nếu chạm file.
-- /Frontend/src/features/gamification/components/quest-card/QuestRewardBadges.tsx | 20 dòng | Reward badges trên quest card map reward type sang icon và amount. | Review: presentation helper; icon mapping trùng với detail rewards, cân nhắc helper chung nếu reward types mở rộng.
-- /Frontend/src/features/gamification/components/quest-panel/useQuestClaimHandlers.tsx | 54 dòng | Hook claim quest reward gọi mutation, invalidate wallet/gamification, fetch wallet balance và toast reward. | Review: orchestration mutation/wallet side effect đang dưới components; nên chuyển vào application hook hoặc presentation VM rõ ràng.
-- /Frontend/src/features/gamification/components/stats/StatsMetricCard.tsx | 47 dòng | Metric card hiển thị icon, label, value, detail và optional progress bar. | Review: presentation reusable trong gamification; path nên dưới presentation/stats, component đủ generic nhưng còn feature-styled.
-- /Frontend/src/features/gamification/components/title-card/rarityColors.ts | 34 dòng | Mapping rarity title sang Tailwind classes cho card/icon/text. | Review: presentation styling config; phụ thuộc casing Common/Rare/Epic/Legendary, cần khớp backend data.
-- /Frontend/src/features/gamification/components/title-selector/TitleSelectorHeader.tsx | 21 dòng | Header title selector hiển thị icon, title và subtitle. | Review: presentation subcomponent nhỏ; có thể gộp nếu chỉ dùng một nơi hoặc chuyển cùng title selector.
-- /Frontend/src/features/gamification/presentation/useLocalizedField.ts | 15 dòng | Hook chọn field VI hoặc EN theo locale hiện tại. | Review: đúng presentation helper nhưng chỉ hỗ trợ vi/en, thiếu zh dù dữ liệu/admin có field zh; cần mở rộng nếu gamification đa ngôn ngữ đầy đủ.
-- /Frontend/src/features/gamification/public.ts | 2 dòng | Public API gamification re-export admin client và leaderboard table. | Review: public boundary còn thiếu các page/component gamification user khác nếu route import path sâu; cập nhật sau khi chuẩn hóa presentation.
-- /Frontend/src/features/home/presentation/HomePage.tsx | 28 dòng | Server home page compose AstralBackground, hero, stats, featured readers, core features, CTA và Footer. | Review: đúng presentation entry; route nên import qua public, shared layout components dùng trực tiếp ở page là chấp nhận được.
-- /Frontend/src/features/home/presentation/components/CoreFeaturesSection.tsx | 61 dòng | Server section core features tạo 3 feature cards từ translation Index và icon config. | Review: đúng presentation component; FeatureCard nội bộ hợp lý vì chỉ dùng trong section này.
-- /Frontend/src/features/home/presentation/components/FeaturedReadersSection.tsx | 43 dòng | Server section featured readers render heading/action link và Suspense grid fallback. | Review: đúng presentation section; client fetching nằm trong grid con, route imports nên đi qua HomePage public.
-- /Frontend/src/features/home/presentation/components/FinalCtaSection.tsx | 54 dòng | Server final CTA section lấy translations và render nút tới reading. | Review: đúng presentation component; link bọc Button với tabIndex -1 cần đảm bảo accessibility/focus vẫn ổn.
-- /Frontend/src/features/home/presentation/components/HeroSection.tsx | 35 dòng | Server hero section lấy translations và compose intro, actions, scroll indicator. | Review: đúng presentation section; tách subcomponents hợp lý, chưa thấy orchestration ngoài UI.
-- /Frontend/src/features/home/presentation/components/StatsSection.tsx | 41 dòng | Server stats section render 4 metric cards hard-coded values với localized labels. | Review: đúng presentation component; số liệu marketing hard-coded cần xác minh với business trước bàn giao.
-- /Frontend/src/features/home/presentation/components/featured-readers/FeaturedReaderAvatar.tsx | 47 dòng | Featured reader avatar dùng asset URL resolver, Next Image hoặc initial fallback. | Review: đúng presentation subcomponent; import shared infrastructure asset resolver trong presentation cần kiểm guard nếu siết dependency.
-- /Frontend/src/features/home/presentation/components/featured-readers/FeaturedReaderCard.tsx | 56 dòng | Featured reader card link overlay tới reader profile, status dot, avatar và meta. | Review: đúng presentation card; import normalizeReaderStatus từ reader domain là cross-feature dependency cần cân nhắc qua public/helper shared.
-- /Frontend/src/features/home/presentation/components/featured-readers/FeaturedReaderMeta.tsx | 84 dòng | Metadata featured reader hiển thị rating, specialties, price, experience, social links và CTA. | Review: đúng presentation nhưng dùng ReaderSocialLinksInline từ reader presentation; nên export qua reader public hoặc shared component để tránh import path sâu.
-- /Frontend/src/features/home/presentation/components/featured-readers/FeaturedReadersFallback.tsx | 16 dòng | Skeleton grid fallback cho featured readers. | Review: component nhỏ hợp lý cho Suspense/loading; có thể giữ riêng vì dùng ở section và grid.
-- /Frontend/src/features/home/presentation/components/featured-readers/FeaturedReadersGrid.tsx | 67 dòng | Client grid fetch featured readers qua BFF `/api/readers` với runtime policies và render cards/fallback. | Review: presentation/data container; data fetching nằm trong UI component, cân nhắc application hook nếu readers home logic mở rộng.
-- /Frontend/src/features/home/presentation/components/featured-readers/types.ts | 11 dòng | Props types cho featured reader card/meta dựa trên ReaderProfile. | Review: type nhỏ nhưng hợp lý để tránh cycle giữa card/meta; phụ thuộc reader public type là boundary tốt hơn path sâu.
-- /Frontend/src/features/home/presentation/components/hero/HeroActions.tsx | 54 dòng | Hero CTA actions render reading/readers links bằng shared Button và icons. | Review: đúng presentation component; Link bọc Button với tabIndex -1 cần kiểm keyboard/focus behavior.
-- /Frontend/src/features/home/presentation/components/hero/HeroIntro.tsx | 65 dòng | Hero intro render tagline, animated title và description từ props localized. | Review: đúng presentation component; file đủ lớn nhưng chỉ thuần markup, không cần tách thêm.
-- /Frontend/src/features/home/presentation/components/hero/HeroScrollIndicator.tsx | 30 dòng | Decorative scroll indicator cho hero desktop. | Review: presentation decorative component hợp lý; pointer-events none, không cần tương tác.
-- /Frontend/src/features/home/presentation/components/hero/types.ts | 6 dòng | Props type cho HeroIntro localized content. | Review: file rất nhỏ; có thể gộp vào HeroIntro nếu không bị reuse, nhưng giữ cũng chấp nhận được.
-- /Frontend/src/features/home/presentation/components/stats/StatItem.tsx | 56 dòng | Stat item card render icon, value và label với color style map. | Review: đúng presentation component; style map nội bộ hợp lý vì chỉ phục vụ stats section.
-- /Frontend/src/features/home/public.ts | 1 dòng | Public API home re-export HomePage. | Review: public boundary mỏng hợp lý để route import qua feature.
-- /Frontend/src/features/inventory/presentation/InventoryPage.tsx | 7 dòng | Client entry wrapper render `InventoryPageClient` từ `src/components/ui/inventory`. | Review: wrapper đúng feature entry nhưng implementation chính nằm ngoài feature; nên chuyển inventory UI vào feature presentation.
-- /Frontend/src/features/inventory/public.ts | 1 dòng | Public API inventory re-export InventoryPage. | Review: public boundary hợp lý; cập nhật sau khi chuyển client implementation từ components vào feature.
-- /Frontend/src/features/legal/application/actions/consent-status.ts | 43 dòng | Server action kiểm trạng thái consent legal qua `/legal/consent-status` với optional documentType/version query. | Review: đúng application action; xử lý unauthorized/logging rõ, nhưng import quote style lẫn double/single nên chuẩn hóa khi chạm.
-- /Frontend/src/features/legal/application/actions/legalActions.test.ts | 102 dòng | Unit tests cho legal server actions: unauthorized, record consent success/failure và consent-status query params. | Review: test nằm sát actions hợp lý; mock shared gateways đủ boundary, giữ khi refactor actions.
-- /Frontend/src/features/legal/application/actions/record-consent.ts | 38 dòng | Server action ghi nhận consent legal qua `/legal/consent` với documentType/version payload. | Review: đúng application action; flow tương tự consent-status nên có thể gộp helper token/request nếu actions tăng thêm.
-- /Frontend/src/features/legal/application/actions/types.ts | 6 dòng | Type `ConsentStatus` cho document type, version, trạng thái consent và thời điểm consent. | Review: contract nhỏ hợp lý trong actions; có thể chuyển lên application contracts nếu dùng ngoài legal actions.
-- /Frontend/src/features/legal/presentation/AiDisclaimerPage.tsx | 46 dòng | Page AI disclaimer dùng namespace Legal cho metadata, heading, nội dung và back-home link. | Review: đúng presentation page; nội dung lấy i18n, route nên import qua public metadata/page export.
-- /Frontend/src/features/legal/presentation/PrivacyPolicyPage.tsx | 45 dòng | Page privacy policy dùng namespace Legal cho metadata, heading, nội dung và back-home link. | Review: đúng presentation page; cấu trúc lặp với ToS/disclaimer, cân nhắc component chung nếu chỉnh cả ba page.
-- /Frontend/src/features/legal/presentation/TermsOfServicePage.tsx | 45 dòng | Page terms of service dùng namespace Legal cho metadata, heading, nội dung và back-home link. | Review: đúng presentation page; cấu trúc lặp với privacy/disclaimer, có thể gộp layout section khi refactor legal UI.
-- /Frontend/src/features/legal/presentation/components/LegalContent.tsx | 94 dòng | Các component nội dung legal hard-coded tiếng Việt cho ToS, privacy và AI disclaimer. | Review: cần xác minh usage; nếu không được import bởi legal pages hiện tại thì có dấu hiệu legacy/deadcode, và nội dung không theo i18n.
-- /Frontend/src/features/legal/public.ts | 12 dòng | Public API legal re-export page components và generateMetadata aliases cho disclaimer/privacy/terms. | Review: public boundary hợp lý cho route import; giữ alias metadata rõ để tránh import path sâu.
-- /Frontend/src/features/notifications/application/actions/index.ts | 4 dòng | Barrel export notification actions list, mark-as-read, types và unread-count. | Review: file mỏng nhưng hợp lý để gom server actions; giữ nếu callers import actions từ một entry.
-- /Frontend/src/features/notifications/application/actions/list.ts | 51 dòng | Server action lấy notifications theo page/pageSize/isRead qua backend `/Notification`. | Review: đúng application action; endpoint casing `/Notification` cần nhất quán với backend/BFF khi refactor.
-- /Frontend/src/features/notifications/application/actions/mark-as-read.ts | 60 dòng | Server actions mark một notification hoặc tất cả notifications là đã đọc qua PATCH backend. | Review: đúng application action; hai action lặp token/request pattern, có thể tách helper nếu notifications actions tăng.
-- /Frontend/src/features/notifications/application/actions/types.ts | 18 dòng | DTO notification item/list response với title/body VI/EN, read state và pagination. | Review: đúng application contracts; thiếu ZH fields nên cần kiểm backend/i18n contract nếu notifications đa ngôn ngữ đầy đủ.
-- /Frontend/src/features/notifications/application/actions/unread-count.ts | 32 dòng | Server action lấy unread notification count từ `/Notification/unread-count`. | Review: đúng application action; fallback count về 0 hợp lý nhưng cần giữ phân biệt lỗi qua ActionResult.
-- /Frontend/src/features/notifications/application/notificationCache.test.ts | 78 dòng | Tests cache patch mark-read đồng bộ dropdown, page list, unread-only list và unread badge. | Review: test sát helper cache quan trọng; giữ vì bảo vệ optimistic update/invalidation behavior.
-- /Frontend/src/features/notifications/application/notificationCache.ts | 91 dòng | Helper cập nhật TanStack Query cache khi notification được mark read và giảm unread count nếu cần. | Review: đúng application cache helper; dùng JSON.stringify để unique query keys đủ nhỏ, nhưng cần cẩn thận nếu key shape phức tạp.
-- /Frontend/src/features/notifications/application/useNotificationDropdown.test.tsx | 186 dòng | Tests dropdown hook rollback optimistic mark-read, invalidate mark-all và query/mutation contracts. | Review: test sát application hook; mock TanStack khá nhiều nhưng bảo vệ behavior cache quan trọng.
-- /Frontend/src/features/notifications/application/useNotificationDropdown.ts | 154 dòng | Client hook dropdown notifications fetch list/count, optimistic mark-read, mark-all và cache invalidation. | Review: application hook hơi lớn và tự gọi BFF routes; nếu mở rộng nên tách API client/query key logic rõ hơn.
-- /Frontend/src/features/notifications/application/useNotificationMarkRead.ts | 32 dòng | Hook presentation-facing bọc markAsRead với toast localized success/failure. | Review: nằm application nhưng phụ thuộc `useTranslations`/toast UI; nên chuyển sang presentation hook hoặc VM nếu siết layer.
-- /Frontend/src/features/notifications/application/useNotificationsPage.test.tsx | 172 dòng | Tests notifications page hook mark-read cache patch, failure no-op và query/mutation contracts. | Review: test sát hook state/query; giữ khi đổi pagination/filter behavior.
-- /Frontend/src/features/notifications/application/useNotificationsPage.ts | 68 dòng | Hook page notifications quản lý page/filter, query list, mark-read mutation và total pages. | Review: đúng application/page state hook; filter unread hiện truyền `false` cho isRead khi filterUnread true, cần xác minh semantic backend.
-- /Frontend/src/features/notifications/presentation/NotificationsPage.tsx | 59 dòng | Notifications page compose filters, content, relative time, localization và mark-read handler. | Review: đúng presentation container; route nên import qua public entry, mark-read toast hook currently leaks i18n/toast into application.
-- /Frontend/src/features/notifications/presentation/components/notifications/NotificationFilters.tsx | 49 dòng | Filter buttons all/unread cho notifications page. | Review: presentation component hợp lý; hai button nên cân nhắc aria-pressed nếu filter state cần accessibility rõ.
-- /Frontend/src/features/notifications/presentation/components/notifications/NotificationListItem.tsx | 61 dòng | Notification list item render icon theo type, title/body/time và button mark read. | Review: presentation item hợp lý; button có text label nên ổn, icon map fallback system rõ.
-- /Frontend/src/features/notifications/presentation/components/notifications/NotificationLoadingState.tsx | 18 dòng | Loading card notifications với Bell pulse và label. | Review: component rất nhỏ; có thể gộp vào `NotificationsContent` nếu muốn giảm phân mảnh.
-- /Frontend/src/features/notifications/presentation/components/notifications/NotificationsContent.tsx | 67 dòng | Content renderer cho loading, empty, list notification items và pagination. | Review: đúng presentation component; giữ tách khỏi page để page tập trung wiring hooks/i18n.
-- /Frontend/src/features/notifications/presentation/components/notifications/index.ts | 7 dòng | Barrel export filters/content và helper format/localize notifications. | Review: barrel nội bộ presentation hợp lý nếu page import nhiều symbols cùng thư mục.
-- /Frontend/src/features/notifications/presentation/components/notifications/utils.ts | 58 dòng | Icon map, relative time formatter và helper chọn title/body theo locale VI/EN. | Review: presentation helper hợp lý nhưng chỉ hỗ trợ vi/en, cần mở rộng nếu notification contract có zh.
-- /Frontend/src/features/notifications/public.ts | 1 dòng | Public API notifications re-export NotificationsPage. | Review: public boundary mỏng hợp lý để route import qua feature.
-- /Frontend/src/features/profile/application/actions/get-profile.ts | 86 dòng | Server actions lấy profile và payout bank options, kèm ProfileDto/PayoutBankOption contracts. | Review: đúng application action; DTO đang extend auth UserProfile nên phụ thuộc cross-feature auth domain cần giữ ổn định.
-- /Frontend/src/features/profile/application/actions/index.ts | 2 dòng | Barrel export profile get/update actions. | Review: file mỏng nhưng hợp lý nếu callers import từ application actions entry.
-- /Frontend/src/features/profile/application/actions/update-profile.ts | 45 dòng | Server action cập nhật profile displayName, dateOfBirth và payout bank fields qua PATCH `/profile`. | Review: đúng application action; payload inline có thể tách type nếu dùng lại ở form/test.
-- /Frontend/src/features/profile/application/profileDetailQuery.ts | 14 dòng | Query key và fetcher profile detail chuyển ActionResult thành `{profile,error}` cho TanStack Query. | Review: application helper nhỏ hợp lý; giữ để page hook không tự unwrap action result.
-- /Frontend/src/features/profile/application/uploadProfileAvatar.ts | 102 dòng | Orchestration upload avatar: nén ảnh, presign, direct upload R2, confirm và invalidate profile query. | Review: application upload use-case hợp lý nhưng phụ thuộc shared media-upload/invalidation; cần test kỹ rollback/progress khi refactor.
-- /Frontend/src/features/profile/application/useProfilePage.avatar.ts | 82 dòng | Handler chọn avatar với optimistic object URL preview, upload, toast, auth store update và cleanup. | Review: application helper đang phụ thuộc DOM event/toast/store; cân nhắc chuyển thành presentation handler hoặc tách upload use-case thuần.
-- /Frontend/src/features/profile/application/useProfilePage.helpers.ts | 60 dòng | Helpers normalize optional payout, resolve bank name, convert date input và revoke object URL. | Review: helper application/presentation lẫn DOM `URL.revokeObjectURL`; có thể tách pure form helper và browser cleanup nếu siết layer.
-- /Frontend/src/features/profile/application/useProfilePage.submit.ts | 67 dòng | Submit handler profile update validate payout bank, call updateProfileAction, update auth store và invalidate queries. | Review: application orchestration rõ; phụ thuộc auth store/toast messages qua state setters, chấp nhận nhưng nên giữ gần page hook.
-- /Frontend/src/features/profile/application/useProfilePage.test.tsx | 337 dòng | Tests profile page hook hydrate form, submit, avatar upload success/failure và payout validation. | Review: test khá lớn nhưng bao phủ behavior quan trọng; có thể tách theo avatar/submit nếu khó bảo trì.
-- /Frontend/src/features/profile/application/useProfilePage.ts | 146 dòng | Main profile page hook quản lý profile query, payout banks, reader request, RHF form và avatar/submit handlers. | Review: application/page hook lớn nhưng đang là VM chính; cân nhắc tách reader-upgrade/payout/avatar concerns nếu tiếp tục tăng.
-- /Frontend/src/features/profile/application/useProfilePage.types.ts | 9 dòng | Form values type cho profile settings gồm date/displayName và payout bank fields. | Review: type nhỏ hợp lý vì dùng xuyên nhiều helper; giữ cùng hook profile.
-- /Frontend/src/features/profile/application/useProfilePage.validation.test.ts | 46 dòng | Tests schema profile cho non-reader và tarot reader payout validation. | Review: test sát schema; giữ để bảo vệ rule account holder uppercase/no-accent.
-- /Frontend/src/features/profile/application/useProfilePage.validation.ts | 90 dòng | Zod schema profile với display/date validation và payout bank conditional validation cho tarot reader. | Review: đúng application validation; helper uppercase/no-accent phục vụ payout holder nên giữ gần schema.
-- /Frontend/src/features/profile/mfa/application/actions/challenge.ts | 32 dòng | Server action verify MFA code qua `/mfa/verify` với localized API errors. | Review: đúng MFA application action; tên `challenge.ts` hơi lệch vì file thực hiện verify, nên cân nhắc rename nếu refactor.
-- /Frontend/src/features/profile/mfa/application/actions/index.ts | 4 dòng | Barrel export MFA challenge/setup/status/types actions. | Review: file mỏng nhưng hợp lý để gom MFA actions.
-- /Frontend/src/features/profile/mfa/application/actions/setup.ts | 31 dòng | Server action setup MFA lấy QR URI, secret display và backup codes từ `/mfa/setup`. | Review: đúng application action; trả ActionResult rõ, giữ server-only.
-- /Frontend/src/features/profile/mfa/application/actions/status.ts | 28 dòng | Server action lấy trạng thái MFA enabled từ `/mfa/status`. | Review: đúng application action; import quote style lẫn double/single nên chuẩn hóa khi chạm.
-- /Frontend/src/features/profile/mfa/application/actions/types.ts | 5 dòng | Type kết quả setup MFA gồm QR code URI, secret display và backup codes. | Review: contract nhỏ hợp lý trong MFA actions.
-- /Frontend/src/features/profile/mfa/application/useProfileMfaPage.ts | 101 dòng | Hook MFA page quản lý status query, setup data/loading/error, verify code, QR colors và clipboard. | Review: application hook lẫn DOM `getComputedStyle`/clipboard; nên chuyển browser/UI concerns sang presentation hook nếu siết layer.
-- /Frontend/src/features/profile/mfa/presentation/ProfileMfaPage.tsx | 68 dòng | MFA setup page compose checking/enabled/start/setup-flow states với labels từ Profile namespace. | Review: đúng presentation container; nhiều props inline dài, có thể format/tách state sections nếu chỉnh UI.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaBackupCodesCard.tsx | 36 dòng | Card hiển thị backup codes sau setup MFA. | Review: presentation component hợp lý; key dùng index chấp nhận vì backup codes static trong render.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaCheckingState.tsx | 18 dòng | Loading/checking state khi đang xác định MFA enabled. | Review: component rất nhỏ; có thể gộp vào page nếu muốn giảm phân mảnh.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaEnabledCard.tsx | 29 dòng | Card trạng thái MFA enabled với CTA tới wallet withdraw. | Review: presentation component hợp lý; Link bọc Button cần kiểm focus/semantic giống các CTA khác.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaQrCodeCard.tsx | 50 dòng | Card QR setup MFA dùng next-qrcode, manual secret và copy button. | Review: đúng presentation component; copy button có aria-label, QR options được truyền từ hook.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaSetupFlow.tsx | 39 dòng | Compose flow setup MFA gồm QR card, backup codes và verify code card. | Review: presentation composition rất mỏng nhưng giúp page gọn; props inline dài có thể format nếu chạm.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaSetupStartCard.tsx | 49 dòng | Card bắt đầu setup MFA với error message và loading action. | Review: presentation component hợp lý; button dùng shared Button nên giữ.
-- /Frontend/src/features/profile/mfa/presentation/components/MfaVerifyCodeCard.tsx | 78 dòng | Form verify MFA code 6 chữ số bằng RHF/Zod, sanitize input và submit typed handler. | Review: presentation form hợp lý; input cần accessible label rõ hơn nếu placeholder chưa đủ.
-- /Frontend/src/features/profile/presentation/ProfilePage.tsx | 70 dòng | Profile page compose summary, reader upgrade card, settings form và embedded reader settings cho tarot reader. | Review: đúng presentation container; imports `ProfileReaderSettingsPage` path sâu trong cùng feature profile, chấp nhận nhưng hơi ghép nhiều concerns.
-- /Frontend/src/features/profile/presentation/ReaderBusyToggle.tsx | 63 dòng | Toggle trạng thái busy/online của tarot reader với switch UI và hook reader status. | Review: presentation component nhưng hard-coded Vietnamese/status labels; nên i18n nếu hiển thị đa locale.
-- /Frontend/src/features/profile/presentation/components/ProfileLoadingState.tsx | 36 dòng | Loading state profile với spinner và label. | Review: presentation component nhỏ hợp lý; có thể tái dùng pattern với MFA/reader loading nếu muốn giảm lặp.
-- /Frontend/src/features/profile/presentation/components/ProfileReaderUpgradeCard.tsx | 70 dòng | Card upgrade reader hiển thị apply/pending/rejected states dựa trên reader request. | Review: đúng presentation component; dùng optimized navigation trực tiếp, chấp nhận trong UI action.
-- /Frontend/src/features/profile/presentation/components/ProfileSettingsFormCard.tsx | 55 dòng | Card form settings profile compose status messages, fields grid, payout fields và submit button. | Review: presentation form card hợp lý; error message gộp payoutBanksError trước errorMsg có chủ ý.
-- /Frontend/src/features/profile/presentation/components/ProfileSummaryCard.tsx | 74 dòng | Summary card profile compose avatar uploader, details panel và admin/reader actions. | Review: presentation card hợp lý; đang dùng optimized navigation trực tiếp cho admin portal action.
-- /Frontend/src/features/profile/presentation/components/profile-settings/ProfileFormStatusMessages.tsx | 37 dòng | Status messages success/error cho profile settings form. | Review: presentation component; error dùng ShieldCheck icon giống success gây lệch ngữ nghĩa, nên đổi icon nếu chạm UI.
-- /Frontend/src/features/profile/presentation/components/profile-settings/ProfilePayoutFields.tsx | 51 dòng | Payout bank fields cho tarot reader gồm bank select, account number và account holder. | Review: presentation fields hợp lý; memo có thể không cần nếu props luôn đổi nhưng không gây sai.
-- /Frontend/src/features/profile/presentation/components/profile-settings/ProfileSettingsFieldsGrid.tsx | 46 dòng | Grid display name/date of birth và payout fields conditional theo role tarot reader. | Review: presentation field group hợp lý; labels bọc input trực tiếp nên accessible ổn.
-- /Frontend/src/features/profile/presentation/components/profile-settings/ProfileSettingsSubmitButton.tsx | 36 dòng | Submit button profile settings với loading spinner và save/saving labels. | Review: presentation button nhỏ; có thể giữ vì dùng bởi form card.
-- /Frontend/src/features/profile/presentation/components/profile-settings/types.ts | 25 dòng | Props types cho profile settings form card và fields grid dựa trên useProfilePage state. | Review: type file nhỏ nhưng giúp tránh import cycle/prop duplication; giữ cùng profile-settings.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileActionsRow.tsx | 35 dòng | Actions row profile cho admin portal button và reader busy toggle. | Review: presentation component hợp lý; imports ReaderBusyToggle sibling, giữ trong profile summary group.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileAvatarSpinner.tsx | 12 dòng | SVG spinner riêng cho avatar upload overlay. | Review: file rất nhỏ; có thể gộp vào ProfileAvatarUploader nếu muốn giảm phân mảnh.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileAvatarUploader.tsx | 60 dòng | Avatar uploader render file input overlay, Next Image avatar/fallback, upload progress và trophy badge. | Review: presentation component; invisible file input có title nhưng nên kiểm accessible name/focus khi chạm UI.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileBadgesRow.tsx | 30 dòng | Row badges level, zodiac và numerology qua ProfileInfoBadge. | Review: presentation component nhỏ hợp lý vì gom ba badge variants.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileDetailsPanel.tsx | 31 dòng | Details panel compose identity, badges và actions row. | Review: presentation composition rất mỏng; giữ nếu giảm độ dài ProfileSummaryCard.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileIdentity.tsx | 24 dòng | Profile identity hiển thị display name và username. | Review: component nhỏ; có thể gộp vào ProfileDetailsPanel nếu giảm phân mảnh.
-- /Frontend/src/features/profile/presentation/components/profile-summary/ProfileInfoBadge.tsx | 23 dòng | Badge thông tin profile với dot, label và value. | Review: component nhỏ nhưng được reuse bởi badges row nên giữ hợp lý.
-- /Frontend/src/features/profile/presentation/components/profile-upgrade/ProfileUpgradeApplyState.tsx | 36 dòng | Apply state cho reader upgrade card với description và CTA apply. | Review: presentation subcomponent hợp lý; chỉ dùng trong upgrade card.
-- /Frontend/src/features/profile/presentation/components/profile-upgrade/ProfileUpgradeHeader.tsx | 40 dòng | Header reader upgrade card với icon, title và subtitle. | Review: presentation subcomponent nhỏ; giữ cùng upgrade card.
-- /Frontend/src/features/profile/presentation/components/profile-upgrade/ProfileUpgradePendingState.tsx | 34 dòng | Pending state cho reader upgrade request. | Review: presentation subcomponent nhỏ; giữ cùng upgrade card.
-- /Frontend/src/features/profile/presentation/components/profile-upgrade/ProfileUpgradeRejectedState.tsx | 60 dòng | Rejected state reader upgrade với reason và reapply button. | Review: presentation subcomponent hợp lý; button có text label nên accessible cơ bản ổn.
-- /Frontend/src/features/profile/presentation/components/profile-upgrade/types.ts | 12 dòng | Props type cho ProfileReaderUpgradeCard dựa trên useProfilePage state. | Review: file nhỏ; có thể gộp vào card nếu không còn reuse nhưng hiện giúp subcomponent imports rõ.
-- /Frontend/src/features/profile/presentation/useReaderBusyToggleState.ts | 56 dòng | Hook trạng thái busy toggle lấy reader profile, mutation update status, invalidate query và toast lỗi. | Review: presentation hook nhưng gọi reader public/domain trực tiếp và hard-coded VI; cân nhắc chuyển application hoặc i18n hóa.
-- /Frontend/src/features/profile/public.ts | 4 dòng | Public API profile re-export getProfileAction, ProfilePage, ProfileMfaPage và ProfileReaderSettingsPage. | Review: public boundary hữu ích cho routes; export action từ feature public cần kiểm caller có thực sự cần.
-- /Frontend/src/features/profile/reader/application/useProfileReaderSettings.handlers.ts | 87 dòng | Handlers save reader settings/status với validation specialties/social links, mutations, toast và invalidate query. | Review: application handler phụ thuộc toast và reader domain/public; chấp nhận tạm nhưng nên tách UI toast khỏi use-case nếu siết layer.
-- /Frontend/src/features/profile/reader/application/useProfileReaderSettings.types.ts | 25 dòng | Types draft/submit payload cho reader profile settings gồm bio, price, specialties, social links và status. | Review: contract nhỏ hợp lý giữa hook application và form presentation.
-- /Frontend/src/features/profile/reader/application/useProfileReaderSettingsPage.ts | 89 dòng | Hook reader settings page lấy runtime policy, reader profile, chuẩn hóa draft và expose save/status handlers. | Review: application/page hook hợp lý; phụ thuộc reader feature public/domain nhiều, nên giữ qua public API nếu reader boundary được siết.
-- /Frontend/src/features/profile/reader/presentation/ProfileReaderSettingsPage.tsx | 90 dòng | Reader settings page/embedded section compose localized form with runtime policy-derived values. | Review: đúng presentation container; currently embedded in ProfilePage and also public-exported for route use.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsBioField.tsx | 34 dòng | Bio textarea field cho reader settings với error state. | Review: presentation field hợp lý; label không dùng htmlFor vì textarea không có id, nên cải thiện nếu chạm accessibility.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsExperienceField.tsx | 38 dòng | Years of experience numeric field với min value và error state. | Review: presentation field hợp lý; label chưa liên kết input bằng htmlFor/id.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsFormCard.tsx | 83 dòng | Reader settings form card compose bio, specialties, experience, social links, price và submit. | Review: presentation form card hợp lý; props nhiều nhưng phản ánh form phức tạp, tránh tách cơ học thêm.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsHeader.tsx | 26 dòng | Header reader settings dùng shared SectionHeader với Sparkles icon. | Review: component nhỏ; có thể gộp vào page nếu giảm phân mảnh.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsLoadingState.tsx | 22 dòng | Loading state reader settings với spinner và label. | Review: component nhỏ; có thể gộp hoặc dùng shared loading state nếu chuẩn hóa.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsPriceField.tsx | 37 dòng | Diamond price numeric field với icon, helper text và error state. | Review: presentation field hợp lý; label chưa liên kết input bằng htmlFor/id.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsSocialLinksFields.tsx | 71 dòng | Social links fields Facebook/Instagram/TikTok với per-field và social-required errors. | Review: presentation field group hợp lý; icon-only labels rely on placeholders, nên kiểm accessibility nếu chạm UI.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsSpecialtiesField.tsx | 54 dòng | Specialty checkbox grid dựa trên reader domain specialty values. | Review: presentation field hợp lý; imports reader domain trực tiếp, nên cân nhắc public/shared boundary nếu siết cross-feature dependency.
-- /Frontend/src/features/profile/reader/presentation/components/ReaderSettingsSubmitButton.tsx | 33 dòng | Submit button reader settings với save/loading labels. | Review: presentation button nhỏ; giữ cùng form card.
-- /Frontend/src/features/profile/reader/presentation/components/useReaderSettingsFormCard.ts | 164 dòng | Form hook reader settings dùng RHF/Zod, validation social URLs/specialties/price và dirty-safe reset. | Review: presentation form VM lớn nhưng có trách nhiệm rõ; tốt hơn giữ một hook thay vì tách wrapper cơ học.
-- /Frontend/src/features/reader/application/actions/application.ts | 98 dòng | Server actions submit reader application và get current user's reader request. | Review: đúng application actions; có localized errors cho submit nhưng getMyReaderRequest dùng literal EN, nên cân nhắc nhất quán i18n/error policy.
-- /Frontend/src/features/reader/application/actions/directory.ts | 200 dòng | Reader directory/profile actions với mapping API casing variants, status normalization, list/featured/get profile. | Review: file dài do mapper defensive cho backend shape; tách mapper riêng nếu tiếp tục tăng hoặc dùng ở home snapshot để giảm lặp.
-- /Frontend/src/features/reader/application/actions/index.ts | 3 dòng | Barrel export reader application, directory và profile actions. | Review: file mỏng nhưng hữu ích cho feature public/actions imports.
-- /Frontend/src/features/reader/application/actions/profile.ts | 74 dòng | Server actions update reader profile và status qua `/reader/profile` và `/reader/status`. | Review: đúng application action; status payload nhận string, nên dùng ReaderStatus type nếu boundary cho phép.
-- /Frontend/src/features/reader/application/homeSnapshotMapper.ts | 55 dòng | Mapper home snapshot featured readers từ API casing variants sang ReaderProfile array và total count. | Review: application mapper lặp với directory mapper; nên hợp nhất mapper ReaderProfile nếu refactor.
-- /Frontend/src/features/reader/application/useReaderApplyPage.ts | 44 dòng | Hook reader apply lấy existing request, submit application mutation và invalidate request query. | Review: application hook gọn; `t` chỉ dùng defaultErrorMessage, có thể để presentation quyết định message.
-- /Frontend/src/features/reader/application/useReaderConversationModal.ts | 63 dòng | Hook modal chọn reader, tạo conversation qua chat public và điều hướng sang chat. | Review: application/presentation hook phụ thuộc chat public, navigation và toast; nên coi là presentation VM hơn là use-case thuần.
-- /Frontend/src/features/reader/application/useReaderPublicProfilePage.ts | 56 dòng | Hook public reader profile lấy profile theo route param và start chat mutation. | Review: application/page hook phụ thuộc `next/navigation` và toast; nếu siết layer nên chuyển route-param/navigation concerns lên presentation.
-- /Frontend/src/features/reader/application/useReadersDirectoryPage.ts | 92 dòng | Hook readers directory quản lý runtime policies, search debounce, filters, pagination và BFF fetch. | Review: application/page hook hợp lý nhưng tự build URL query string; cân nhắc helper nếu filters mở rộng.
-- /Frontend/src/features/reader/domain/readerSocialLinks.ts | 68 dòng | Domain helpers normalize/check social links và validate Facebook/Instagram/TikTok URL hosts. | Review: domain thuần, đúng layer; hardcoded host allowlist rõ và test nên bổ sung nếu chưa có.
-- /Frontend/src/features/reader/domain/readerSpecialties.ts | 7 dòng | Reader specialty constants/type guard cho love/career/general/health/finance. | Review: domain constant nhỏ hợp lý; cần đồng bộ backend/runtime policy nếu specialties trở nên configurable.
-- /Frontend/src/features/reader/domain/readerStatus.ts | 28 dòng | Reader status type và normalizer từ nhiều alias backend/UI về online/busy/offline. | Review: domain helper thuần; mapping `ready/available` sang busy có thể gây bất ngờ, cần xác minh semantics trước khi đổi.
-- /Frontend/src/features/reader/presentation/ReaderApplyPage.tsx | 41 dòng | Reader application page compose status gates, application form fields, feedback và submit. | Review: đúng presentation page; nhiều component nhỏ nhưng page wiring rõ, route nên import qua public.
-- /Frontend/src/features/reader/presentation/ReaderPublicProfilePage.tsx | 50 dòng | Public reader profile page load profile, not-found/loading, card/footer và start-chat CTA. | Review: đúng presentation page; date formatting dùng `toLocaleDateString(locale)` trực tiếp, chấp nhận nhưng có thể dùng formatter shared.
-- /Frontend/src/features/reader/presentation/ReadersDirectoryPage.tsx | 28 dòng | Readers directory page compose modal, header, filters và results sections từ view model. | Review: đúng presentation shell; phụ thuộc `useReadersDirectoryViewModel` cần đọc riêng trong phần còn lại.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyExperiencePriceRow.tsx | 63 dòng | Reader apply fields years of experience và diamond per question với min/error states. | Review: presentation component hợp lý; labels chưa liên kết input bằng htmlFor/id.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyFeedbackMessage.tsx | 21 dòng | Feedback message success/error cho reader apply form. | Review: component rất nhỏ; có thể gộp vào apply page nếu muốn giảm phân mảnh.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyHeader.tsx | 22 dòng | Header reader apply với tag, title và subtitle từ ReaderApply namespace. | Review: component nhỏ; giữ nếu muốn page ngắn, nhưng gộp cũng được.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyIntroField.tsx | 36 dòng | Bio/intro textarea field reader apply với min chars, markdown hint và error. | Review: presentation field tốt hơn nhiều field khác vì có htmlFor/id; giữ pattern này khi chỉnh accessibility.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyLoadingState.tsx | 15 dòng | Loading state reader apply với spinner và label truyền từ page. | Review: component rất nhỏ; có thể gộp vào ReaderApplyPage hoặc chuẩn hóa loading state nếu giảm phân mảnh.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyPendingPanel.tsx | 47 dòng | Pending panel reader apply format specialties/social links và render ReaderApplyStatusPanel. | Review: presentation component hợp lý; dùng `toLocaleString(locale)` trực tiếp, cần cẩn thận invalid createdAt.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyRejectedNotice.tsx | 22 dòng | Rejected notice reader apply hiển thị admin note và thông báo có thể gửi lại. | Review: component nhỏ hợp lý; nội dung dùng ReaderApply namespace nên giữ trong feature.
-- /Frontend/src/features/reader/presentation/components/ReaderApplySocialLinksFields.tsx | 69 dòng | Social links inputs Facebook/Instagram/TikTok cho reader apply với per-field/social-required errors. | Review: presentation field group hợp lý; group label chưa liên kết input cụ thể, nên kiểm accessibility khi chạm UI.
-- /Frontend/src/features/reader/presentation/components/ReaderApplySpecialtiesField.tsx | 58 dòng | Specialty checkbox grid reader apply dựa trên reader domain specialty values. | Review: presentation field hợp lý; imports reader domain trực tiếp, chấp nhận trong cùng feature nhưng nên giữ domain thuần.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyStatusPanel.tsx | 70 dòng | Shared status panel cho reader apply approved/pending states với accent classes, intro, details và footer. | Review: presentation component hợp lý; `key` ghép label/value đủ ổn cho details tĩnh.
-- /Frontend/src/features/reader/presentation/components/ReaderApplyStepsGrid.tsx | 40 dòng | Grid ba bước reader apply dùng ReaderApply namespace và icon màu theo trạng thái. | Review: component nhỏ hợp lý; steps tạo trong render để lấy translation, không cần tách thêm.
-- /Frontend/src/features/reader/presentation/components/ReaderApplySubmitButton.tsx | 33 dòng | Submit button reader apply với loading spinner và labels localized. | Review: presentation button nhỏ; có id cố định `reader-submit-btn`, cần xác minh có usage anchor/test trước khi đổi.
-- /Frontend/src/features/reader/presentation/components/ReaderProfileLoadingState.tsx | 18 dòng | Loading state reader profile với glow background, spinner và label. | Review: component rất nhỏ; có thể gộp với ReaderPublicProfilePage hoặc chuẩn hóa loading states nếu giảm phân mảnh.
-- /Frontend/src/features/reader/presentation/components/ReaderProfileNotFoundState.tsx | 28 dòng | Not-found state reader profile với icon, mô tả và back button. | Review: presentation state nhỏ hợp lý; dùng shared Button nên giữ accessibility cơ bản.
-- /Frontend/src/features/reader/presentation/components/ReaderSocialLinksInline.tsx | 48 dòng | Inline social links Facebook/Instagram/TikTok cho reader với icon links và size variants. | Review: presentation helper có thể reuse trong profile/directory; aria-label đang là key tiếng Anh, nên localize nếu cần user-facing rõ hơn.
-- /Frontend/src/features/reader/presentation/components/ReaderStatusBadge.tsx | 33 dòng | Badge trạng thái reader normalize online/busy/offline và render label localized. | Review: presentation component hợp lý; phụ thuộc domain normalizer đúng hướng trong feature.
-- /Frontend/src/features/reader/presentation/components/reader-profile/ReaderProfileBackButton.tsx | 21 dòng | Back button reader profile với icon ArrowLeft và label truyền vào. | Review: component rất nhỏ; có thể gộp vào ReaderPublicProfilePage nếu không reuse.
-- /Frontend/src/features/reader/presentation/components/reader-profile/ReaderProfileBioPanel.tsx | 42 dòng | Bio panel reader profile hiển thị quote bio và specialty chips. | Review: presentation component hợp lý; specialties render raw values, cần localize/label map nếu user-facing chưa ổn.
-- /Frontend/src/features/reader/presentation/components/reader-profile/ReaderProfileCard.tsx | 44 dòng | Card wrapper reader profile compose hero, stats grid và bio panel trong GlassCard. | Review: presentation composition hợp lý; props nhiều nhưng chỉ chuyển xuống các section rõ trách nhiệm.
-- /Frontend/src/features/reader/presentation/components/reader-profile/ReaderProfileFooter.tsx | 32 dòng | Footer reader profile với start-chat CTA/loading và member-since pill. | Review: presentation footer hợp lý; action button có text label nên accessible cơ bản ổn.
-- /Frontend/src/features/reader/presentation/components/reader-profile/ReaderProfileHero.tsx | 53 dòng | Hero reader profile hiển thị avatar chữ cái, status, price, experience và social links. | Review: presentation hero hợp lý; không dùng avatarUrl dù ReaderProfile có field này, cần xác minh thiết kế trước khi đổi.
-- /Frontend/src/features/reader/presentation/components/reader-profile/ReaderProfileStatsGrid.tsx | 32 dòng | Stats grid reader profile hiển thị rating và total reviews. | Review: presentation component nhỏ hợp lý; rating fallback `--` rõ khi chưa có đánh giá.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDetailActions.tsx | 24 dòng | Action row reader detail modal với start-conversation button/loading. | Review: component nhỏ; có thể gộp vào modal nếu giảm phân mảnh, nhưng giữ được CTA riêng rõ.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDetailHeader.tsx | 47 dòng | Header reader detail modal render avatar Next Image/fallback và status indicator. | Review: presentation component hợp lý; dùng shared assetUrl allowlist/unoptimized path đúng chỗ.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDetailModal.tsx | 45 dòng | Modal chi tiết reader compose header, bio, stats, specialties, social links và start chat action. | Review: presentation modal hợp lý; specialties vẫn render raw values, cần label map nếu hiển thị cho user.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDetailStats.tsx | 46 dòng | Stats row reader detail hiển thị rating/reviews, diamond price và years experience. | Review: presentation component hợp lý; rating fallback `--` nhất quán với profile stats.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDirectoryCard.tsx | 53 dòng | Reader directory card button compose profile, bio preview, stats, social links và specialties. | Review: presentation card hợp lý; toàn card là button nên cần chú ý nested interactive elements ở social links section.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDirectoryFilters.tsx | 44 dòng | Filter card readers directory compose search, specialty select và status select. | Review: presentation component hợp lý; field details tách sang filters subcomponents rõ trách nhiệm.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDirectoryHeader.tsx | 38 dòng | Header readers directory dùng SectionHeader và total count panel. | Review: presentation header hợp lý; giữ vì page shell cần header riêng.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderDirectoryListSection.tsx | 50 dòng | List section readers directory điều phối loading, empty, grid và pagination. | Review: presentation section hợp lý; props nhiều nhưng phản ánh state từ view model.
-- /Frontend/src/features/reader/presentation/components/readers-directory/ReaderStatusIndicator.tsx | 42 dòng | Inline status indicator normalize reader status và render online/busy/offline labels. | Review: presentation helper hợp lý; trùng ý tưởng với ReaderStatusBadge nhưng khác UI context.
-- /Frontend/src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardAvatar.tsx | 44 dòng | Avatar block reader directory card dùng Next Image hoặc chữ cái fallback. | Review: presentation component hợp lý; dùng shared asset URL/unoptimized helper đúng chỗ.
-- /Frontend/src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardProfile.tsx | 36 dòng | Profile header trong reader directory card với avatar, name fallback và status indicator. | Review: presentation subcomponent hợp lý; tách khỏi card chính giúp card ngắn hơn.
-- /Frontend/src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardSocialLinks.tsx | 45 dòng | Social links row trong reader directory card với icon links và label. | Review: presentation subcomponent nhưng nằm trong card button cha có thể tạo nested interactive issue; cần kiểm hành vi click/accessibility.
-- /Frontend/src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardSpecialties.tsx | 37 dòng | Specialty chips trong reader directory card, giới hạn 3 items và hiển thị +N. | Review: presentation subcomponent hợp lý; specialties render raw values nên cần label map nếu user-facing chưa đúng.
-- /Frontend/src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardStats.tsx | 42 dòng | Stats trong reader directory card cho rating, diamond price và years experience. | Review: presentation subcomponent hợp lý; layout 3 cột có thể chật trên card nhỏ nhưng đúng vai trò.
-- /Frontend/src/features/reader/presentation/components/readers-directory/filters/ReaderDirectorySearchInput.tsx | 34 dòng | Search input reader directory với icon và placeholder truyền từ view model. | Review: presentation input nhỏ; có id nhưng chưa có label, nên thêm accessible label nếu không có label ngoài.
-- /Frontend/src/features/reader/presentation/components/readers-directory/filters/ReaderDirectorySelectField.tsx | 44 dòng | Select field reader directory dùng icon, options và controlled value. | Review: presentation select nhỏ; chưa có label/aria-label nên cần cải thiện accessibility khi chạm UI.
-- /Frontend/src/features/reader/presentation/components/readers-directory/index.ts | 5 dòng | Barrel export readers-directory modal, filters, header, list section và bio localizer. | Review: barrel nội bộ presentation hợp lý vì page/view model import nhiều symbols cùng nhóm.
-- /Frontend/src/features/reader/presentation/components/readers-directory/list/ReaderDirectoryEmptyState.tsx | 26 dòng | Empty state readers directory với Users icon và label. | Review: presentation state nhỏ; có thể chuẩn hóa với empty states khác nếu giảm lặp.
-- /Frontend/src/features/reader/presentation/components/readers-directory/list/ReaderDirectoryGrid.tsx | 39 dòng | Grid readers directory map reader profiles thành ReaderDirectoryCard. | Review: presentation list component hợp lý; key theo reader.id đúng.
-- /Frontend/src/features/reader/presentation/components/readers-directory/list/ReaderDirectoryLoadingState.tsx | 38 dòng | Loading state readers directory với glow, spinner và label. | Review: component nhỏ; trùng pattern với reader profile/apply loading nên có thể chuẩn hóa nếu giảm phân mảnh.
-- /Frontend/src/features/reader/presentation/components/readers-directory/page/ReadersDirectoryFiltersSection.tsx | 24 dòng | Section wrapper map readers directory view model sang ReaderDirectoryFilters props. | Review: component rất mỏng; có thể gộp vào ReadersDirectoryPage nếu không cần giữ page shell cực ngắn.
-- /Frontend/src/features/reader/presentation/components/readers-directory/page/ReadersDirectoryModalSection.tsx | 23 dòng | Section wrapper map selected reader modal state sang ReaderDetailModal. | Review: component rất mỏng; giữ nếu muốn tách view-model wiring khỏi page, nhưng là ứng viên gộp.
-- /Frontend/src/features/reader/presentation/components/readers-directory/page/ReadersDirectoryResultsSection.tsx | 23 dòng | Section wrapper map page state/list labels sang ReaderDirectoryListSection. | Review: component rất mỏng; có thể gộp vào page khi giảm phân mảnh.
-- /Frontend/src/features/reader/presentation/components/readers-directory/types.ts | 26 dòng | Types labels/filter options và bio resolver cho readers-directory presentation. | Review: type file nhỏ hợp lý vì nhiều component/view model dùng chung.
-- /Frontend/src/features/reader/presentation/components/readers-directory/utils.ts | 21 dòng | Helper chọn bio reader theo locale vi/en/zh với fallback. | Review: presentation i18n helper hợp lý; behavior locale khác fallback về bioVi rõ.
-- /Frontend/src/features/reader/presentation/readerApplyFormSchema.ts | 94 dòng | Zod schema và mapper form reader apply với policy min values, specialty/social link validation. | Review: presentation form schema hợp lý; domain validators được dùng đúng, lỗi social_required đặt vào facebookUrl hơi workaround.
-- /Frontend/src/features/reader/presentation/readerApplyHydration.ts | 11 dòng | Helper tạo identity hydrate form reader apply từ request status/createdAt. | Review: helper rất nhỏ nhưng bảo vệ dirty-safe hydration; giữ nếu useHydrateFormOnce cần identity ổn định.
-- /Frontend/src/features/reader/presentation/useReaderApplyPageForm.ts | 113 dòng | Form VM reader apply kết hợp runtime policy, RHF/Zod, hydration, watched fields và submit feedback. | Review: presentation hook đúng vai trò; khá lớn nhưng có trách nhiệm rõ, không nên tách cơ học thêm.
-- /Frontend/src/features/reader/presentation/useReadersDirectoryViewModel.ts | 113 dòng | View model readers directory gom translations, page state, modal state, filter options, labels và handlers reset page. | Review: presentation VM hợp lý; specialties/status values hard-coded cần đồng bộ domain/runtime nếu thay đổi.
-- /Frontend/src/features/reader/public.ts | 15 dòng | Public API reader re-export actions, pages và Reader/MyRequest types. | Review: public boundary hữu ích cho routes/cross-feature profile; export actions nhiều nên cần kiểm callers để không mở rộng boundary quá mức.
-- /Frontend/src/features/reading/application/actions/cards-catalog.ts | 47 dòng | Server action lấy catalog tarot cards từ `/reading/cards-catalog` với DTO tên/keyword/description đa ngôn ngữ. | Review: đúng application action; indentation hơi lệch ở `try`, nên chuẩn hóa khi chạm.
-- /Frontend/src/features/reading/application/actions/history/admin-sessions.ts | 67 dòng | Admin server action lấy lịch sử reading sessions với filters username/spread/date và normalize casing response. | Review: đúng application action; endpoint `/History/admin/all-sessions` casing khác nhóm `/history`, cần nhất quán backend contract.
-- /Frontend/src/features/reading/application/actions/history/index.ts | 3 dòng | Barrel export history admin sessions, user session types và user sessions actions. | Review: file mỏng nhưng hợp lý nếu history hooks import từ một entry.
-- /Frontend/src/features/reading/application/actions/history/types.ts | 17 dòng | Types admin history session item và paginated response. | Review: contract nhỏ hợp lý; giữ sát admin history action nếu chỉ dùng ở đó.
-- /Frontend/src/features/reading/application/actions/history/user-sessions.ts | 135 dòng | User history actions lấy session list/detail với pagination, spread/date filters và localized errors. | Review: đúng application action; query string build thủ công, cân nhắc URLSearchParams nếu thêm filters.
-- /Frontend/src/features/reading/application/actions/index.ts | 4 dòng | Barrel export reading init, reveal, cards catalog và shared action types. | Review: file mỏng hợp lý làm action entry cho feature reading.
-- /Frontend/src/features/reading/application/actions/init-session.ts | 40 dòng | Server action khởi tạo reading session qua domain command `reading.session.init`. | Review: đúng application action; dùng invokeDomainCommand để gắn event contract, giữ cho event-evidence guard.
-- /Frontend/src/features/reading/application/actions/readingActions.test.ts | 135 dòng | Tests reading init/reveal actions unauthorized, success, event contract metadata và network error logging. | Review: test quan trọng cho event-evidence contract; hiện mock serverHttpRequest trong khi action gọi domain command, cần xác minh mock chain vẫn đúng.
-- /Frontend/src/features/reading/application/actions/reveal-session.ts | 40 dòng | Server action reveal reading session qua domain command `reading.session.reveal`. | Review: đúng application action; language optional nằm trong request type nhưng action chỉ forward payload.
-- /Frontend/src/features/reading/application/actions/types.ts | 26 dòng | Request/response types cho init/reveal reading session và revealed card orientation. | Review: contract nhỏ hợp lý; language union vi/en/zh khớp locale hiện tại.
-- /Frontend/src/features/reading/application/useReadingSetupPage.ts | 209 dòng | Hook setup reading quản lý snapshot query, pricing/free draw, RHF question form, init request, sessionStorage và navigation. | Review: application/page hook lớn và chứa BFF fetch + browser storage/navigation; cân nhắc tách submit/init orchestration nếu tiếp tục tăng.
-- /Frontend/src/features/reading/history/application/useHistoryDetailPage.ts | 78 dòng | Hook history detail lấy session detail, xử lý unauthorized, error state và parse cardsDrawn JSON. | Review: application hook hợp lý; parseCardsDrawn defensive đúng nhưng nếu shape ổn định có thể đưa về mapper/test riêng.
-- /Frontend/src/features/reading/history/application/useHistorySessionsPage.ts | 97 dòng | Hook history sessions quản lý pagination, spread/date filters, TanStack Query và unauthorized redirect callback. | Review: application hook hợp lý; filter setters reset page rõ, dùng keepPreviousData đúng cho pagination.
-- /Frontend/src/features/reading/history/domain/historyQueryKeys.ts | 13 dòng | Query key helpers và page size cho reading history list/detail. | Review: nằm domain nhưng chứa TanStack Query key concern; nên cân nhắc chuyển sang application nếu siết domain purity.
-- /Frontend/src/features/reading/history/presentation/HistoryDetailPage.tsx | 47 dòng | History detail page lấy route param, auth state, hook detail và compose header/states/cards/AI summary. | Review: đúng presentation container; route param/navigation concerns nằm ở page hợp lý.
-- /Frontend/src/features/reading/history/presentation/HistoryPage.tsx | 59 dòng | History list page compose filters, error/loading/empty states, sessions grid và pagination dock. | Review: đúng presentation container; auth/navigation wiring ở page hợp lý, imports qua local components barrel.
-- /Frontend/src/features/reading/history/presentation/components/HistoryEmptyState.tsx | 25 dòng | Empty state history với CTA điều hướng sang `/reading`. | Review: presentation state hợp lý; dùng navigation trực tiếp trong component nhỏ, chấp nhận nhưng có thể truyền callback nếu muốn thuần hơn.
-- /Frontend/src/features/reading/history/presentation/components/HistoryErrorBanner.tsx | 15 dòng | Error banner history hiển thị message với Clock icon. | Review: component rất nhỏ; có thể gộp vào HistoryPage nếu giảm phân mảnh.
-- /Frontend/src/features/reading/history/presentation/components/HistoryFilters.tsx | 51 dòng | Filters history gồm spread type select và date input. | Review: presentation filters hợp lý; select/date chưa có label rõ, nên cải thiện accessibility khi chạm UI.
-- /Frontend/src/features/reading/history/presentation/components/HistoryLoadingGrid.tsx | 11 dòng | Skeleton loading grid history list với 4 placeholder cards. | Review: component rất nhỏ; có thể gộp vào HistoryPage hoặc chuẩn hóa skeleton nếu giảm phân mảnh.
-- /Frontend/src/features/reading/history/presentation/components/HistoryPageHeader.tsx | 51 dòng | Header history page dùng SectionHeader và nhúng HistoryFilters làm action. | Review: presentation header hợp lý; props labels nhiều nhưng giữ i18n ở page.
-- /Frontend/src/features/reading/history/presentation/components/HistoryPaginationDock.tsx | 34 dòng | Pagination dock history với prev/next icon buttons và page info. | Review: presentation component hợp lý; icon-only buttons có title nhưng nên thêm aria-label nếu chạm accessibility.
-- /Frontend/src/features/reading/history/presentation/components/HistorySessionCard.tsx | 51 dòng | Card history session hiển thị spread, date/time, completed/interrupted status và open action. | Review: presentation card hợp lý; dùng Date trực tiếp theo locale, cần cẩn thận invalid createdAt.
-- /Frontend/src/features/reading/history/presentation/components/HistorySessionsGrid.tsx | 38 dòng | Grid history sessions map items thành cards và điều hướng tới detail. | Review: presentation list hợp lý; navigation trong grid callback chấp nhận, có thể truyền onOpen nếu muốn thuần hơn.
-- /Frontend/src/features/reading/history/presentation/components/detail/HistoryDetailAiSummary.tsx | 67 dòng | AI summary section history detail render markdown summary và followup Q/A bubbles. | Review: presentation component hợp lý; key followup ghép question/answer slice đủ tạm nhưng không bền nếu trùng nội dung.
-- /Frontend/src/features/reading/history/presentation/components/detail/HistoryDetailCardItem.tsx | 49 dòng | Card item history detail render tarot image/fallback, card name, essence label và meaning. | Review: presentation component hợp lý; uses unoptimized helper cho image, key ở grid theo cardId có thể trùng nếu cùng lá xuất hiện nhiều lần.
-- /Frontend/src/features/reading/history/presentation/components/detail/HistoryDetailCardsGrid.tsx | 32 dòng | Grid history detail map parsed card ids sang catalog names/meanings/images. | Review: presentation component dùng shared cards catalog hook; fallback name đang nhận `cardId + 1` thay vì index nên cần xác minh intent.
-- /Frontend/src/features/reading/history/presentation/components/detail/HistoryDetailHeader.tsx | 60 dòng | Header history detail với back button, spread name, date/time, status và session fragment. | Review: presentation header hợp lý; dùng Date trực tiếp và navigation trong component, chấp nhận nhưng có thể truyền callback nếu muốn thuần hơn.
-- /Frontend/src/features/reading/history/presentation/components/detail/HistoryDetailStates.tsx | 42 dòng | Loading skeleton và error state cho history detail, kèm back-to-history action. | Review: presentation state hợp lý; navigation nằm trong state component, có thể truyền onBack nếu tái dùng.
-- /Frontend/src/features/reading/history/presentation/components/detail/index.ts | 4 dòng | Barrel export history detail AI summary, cards grid, header và states. | Review: barrel nội bộ hợp lý vì HistoryDetailPage import nhiều symbols cùng nhóm.
-- /Frontend/src/features/reading/history/presentation/components/index.ts | 6 dòng | Barrel export history list components: empty/error/loading/pagination/header/grid. | Review: barrel nội bộ hợp lý vì HistoryPage import nhiều component cùng nhóm.
-- /Frontend/src/features/reading/history/presentation/spreadLabels.ts | 13 dòng | Helper map spread type backend/UI aliases sang translation label key. | Review: presentation helper nhỏ hợp lý; cần cập nhật nếu backend thêm spread aliases.
-- /Frontend/src/features/reading/presentation/ReadingSetupPage.tsx | 89 dòng | Reading setup page compose currency selector, spread grid, optional question input và submit auto-scroll. | Review: presentation page đúng vai trò nhưng có nhiều comment tiếng Việt mô tả code; nên dọn khi chạm vì phần lớn comment không cần thiết.
-- /Frontend/src/features/reading/presentation/components/AiInterpretationStream.tsx | 78 dòng | AI interpretation stream container kết nối stream session, runtime followup policy, messages và followup composer. | Review: presentation/container hợp lý; freeSlotsTotal hard-coded 0 cần xác minh policy trước khi đổi.
-- /Frontend/src/features/reading/presentation/components/AiStreamNotReadyState.tsx | 17 dòng | Waiting state AI stream trước khi cards sẵn sàng hiển thị. | Review: component rất nhỏ; có thể gộp vào AiInterpretationStream nếu giảm phân mảnh.
-- /Frontend/src/features/reading/presentation/components/ReadingMarkdownRenderer.tsx | 67 dòng | Markdown renderer cho AI reading summary dùng react-markdown/remark-gfm và custom typography. | Review: presentation renderer hợp lý; có nhiều comment mô tả code và import icon không dùng, nên dọn khi chạm.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamErrorBanner.tsx | 25 dòng | Error banner AI stream với retry button và error detail. | Review: presentation component hợp lý; retry button có text label nên accessible cơ bản ổn.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamFollowupBadge.tsx | 25 dòng | Badge followup hiển thị free remaining hoặc paid diamond fee. | Review: presentation component nhỏ hợp lý; paid/free logic phụ thuộc freeSlotsRemaining từ container.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamFollowupComposer.tsx | 44 dòng | Composer wrapper chỉ render followup form khi stream complete hoặc hard-cap state khi vượt giới hạn. | Review: presentation gate component hợp lý; props nhiều nhưng chỉ pass-through state rõ.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamFollowupForm.tsx | 82 dòng | Followup form AI stream dùng RHF/Zod, controlled sync, badge, input và submit button. | Review: presentation form hợp lý; submit button icon-only cần aria-label khi chạm accessibility.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamHardCapState.tsx | 15 dòng | Hard-cap state AI followup hiển thị title/description khi đạt giới hạn. | Review: component rất nhỏ; có thể gộp vào composer nếu giảm phân mảnh.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamLoadingPlaceholder.tsx | 17 dòng | Loading placeholder AI stream với Sparkles icon và message. | Review: component rất nhỏ; có thể gộp vào AiStreamMessages nếu không reuse.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamMessageItem.tsx | 29 dòng | Message bubble AI stream render user text hoặc AI markdown kèm streaming dots. | Review: presentation component hợp lý; user content plain text, AI content qua markdown renderer.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamMessages.tsx | 41 dòng | Messages pane AI stream render error banner, loading placeholder, message items và bottom ref. | Review: presentation component hợp lý; bottomRef passthrough cho scroll orchestration từ hook.
-- /Frontend/src/features/reading/presentation/components/ai-stream/AiStreamStreamingDots.tsx | 11 dòng | Three-dot streaming indicator cho AI response. | Review: component rất nhỏ; có thể gộp vào AiStreamMessageItem nếu giảm phân mảnh.
-- /Frontend/src/features/reading/presentation/components/ai-stream/types.ts | 6 dòng | StreamMessage type cho AI/user messages và streaming flag. | Review: type file nhỏ; hợp lý vì hook và components cùng dùng.
-- /Frontend/src/features/reading/presentation/components/ai-stream/useAiStreamSession.ts | 213 dòng | Hook quản lý EventSource AI stream, followup ticket, chunk batching, errors, cleanup và checkin invalidation. | Review: presentation hook lớn và nhiều trách nhiệm thật; nên tách stream transport/followup state nếu cần bảo trì, không tách wrapper cơ học.
-- /Frontend/src/features/reading/presentation/components/reading-setup/ReadingCurrencySelector.tsx | 44 dòng | Currency selector gold/diamond cho reading setup với two-button toggle. | Review: presentation component hợp lý; label không liên kết control và buttons thiếu aria-pressed, nên cải thiện accessibility khi chạm.
-- /Frontend/src/features/reading/presentation/components/reading-setup/ReadingFreeDrawQuotaSummary.tsx | 41 dòng | Summary free draw quota cho spread 3/5/10 bằng badge values. | Review: presentation component hợp lý; section có aria-label từ title.
-- /Frontend/src/features/reading/presentation/components/reading-setup/ReadingSetupSubmitAction.tsx | 30 dòng | Submit action reading setup với brand Button, loading label và Zap icon. | Review: presentation button wrapper nhỏ; hợp lý nếu giữ submit styling riêng cho setup flow.
-- /Frontend/src/features/reading/presentation/components/reading-setup/ReadingSpreadCard.tsx | 56 dòng | Spread option card hiển thị icon, cost/free ticket, EXP bonus, name/description và selected overlay. | Review: presentation card hợp lý; GlassCard onClick không phải button semantic, nên kiểm keyboard accessibility khi chạm UI.
-- /Frontend/src/features/reading/presentation/components/reading-setup/ReadingSpreadsGrid.tsx | 34 dòng | Grid reading spreads map options thành ReadingSpreadCard. | Review: presentation list component nhỏ hợp lý; key theo spread id đúng.
-- /Frontend/src/features/reading/presentation/components/reading-setup/index.ts | 4 dòng | Barrel export reading setup selector, quota summary, submit action và spreads grid. | Review: barrel nội bộ hợp lý cho ReadingSetupPage imports.
-- /Frontend/src/features/reading/public.ts | 5 dòng | Public API reading re-export admin history action và setup/history/session pages. | Review: public boundary hữu ích cho routes/admin; export admin action qua public cần kiểm caller có thực sự cần.
-- /Frontend/src/features/reading/session/presentation/ReadingSessionPage.tsx | 30 dòng | Reading session page lấy sessionId từ route, dynamic import AI stream/AstralBackground và render ReadingSessionContent. | Review: đúng presentation route container; dynamic imports hợp lý để giảm SSR/client cost, route nên tiếp tục import qua reading public.
-- /Frontend/src/features/reading/session/presentation/session-page/AiInterpretationPanel.tsx | 60 dòng | Sticky AI interpretation panel render header/live badge, Suspense-wrapped stream và footer note khi có revealed cards. | Review: presentation panel hợp lý; nhận component AI stream qua prop để tách dynamic import khỏi panel.
-- /Frontend/src/features/reading/session/presentation/session-page/DrawPhaseContent.tsx | 37 dòng | Draw phase content compose pick progress, picked stack, flying cards, tarot deck grid và reveal confirm modal. | Review: presentation composition hợp lý nhưng props rất dài; type file giúp gom contract, cân nhắc VM object nếu tiếp tục tăng.
-- /Frontend/src/features/reading/session/presentation/session-page/DrawPhaseSection.tsx | 13 dòng | Draw phase section hiển thị error, shuffle intro hoặc draw content tùy state. | Review: wrapper rất mỏng nhưng tách phase switch rõ; có thể gộp nếu giảm phân mảnh.
-- /Frontend/src/features/reading/session/presentation/session-page/DrawPhaseSection.types.ts | 37 dòng | Props contract cho draw phase section/content gồm deck rows, picked cards, flying cards, modal labels và handlers. | Review: type file hợp lý vì props lớn; giúp tránh import cycle giữa section/content.
-- /Frontend/src/features/reading/session/presentation/session-page/FlyingCardsLayer.tsx | 42 dòng | Fixed overlay layer render flying tarot card clones bằng animation hook và DOM refs theo card key. | Review: presentation animation layer hợp lý; dùng hook riêng cho animation nên component vẫn mỏng.
-- /Frontend/src/features/reading/session/presentation/session-page/PickProgress.tsx | 49 dòng | Pick progress header hiển thị prompt/done text, picked count và nút random select. | Review: presentation component hợp lý; button có text label và type rõ, phù hợp accessibility cơ bản.
-- /Frontend/src/features/reading/session/presentation/session-page/PickedCardsStack.tsx | 56 dòng | Picked cards stack render placeholder anchor và các card button có thể remove trước khi reveal. | Review: presentation stack hợp lý; card buttons chỉ là visual card back nên cần aria-label nếu muốn screen reader rõ hơn.
-- /Frontend/src/features/reading/session/presentation/session-page/ReadingSessionContent.tsx | 22 dòng | Session content compose header, question, draw/revealed phase và AI interpretation panel. | Review: presentation composition đúng vai trò nhưng dòng JSX rất dài; nên format lại khi chạm để dễ review hơn.
-- /Frontend/src/features/reading/session/presentation/session-page/ReadingSessionContent.types.ts | 65 dòng | Props/text bundle contract cho ReadingSessionContent gồm cards, deck state, handlers, catalog getters và AI stream component. | Review: type contract lớn nhưng hợp lý do container nhận nhiều VM props; cân nhắc gom theo nhóm props nếu tiếp tục tăng.
-- /Frontend/src/features/reading/session/presentation/session-page/ReadingSessionHeader.tsx | 44 dòng | Header reading session với back button, title và session label. | Review: presentation header hợp lý; back button có text label và type rõ.
-- /Frontend/src/features/reading/session/presentation/session-page/RevealConfirmActions.tsx | 58 dòng | Action buttons trong reveal modal gồm reveal/revealing primary button và change-card secondary button. | Review: presentation actions hợp lý; button text đầy đủ, icon chỉ trang trí nên accessibility cơ bản ổn.
-- /Frontend/src/features/reading/session/presentation/session-page/RevealConfirmModal.tsx | 59 dòng | Overlay modal xác nhận reveal với icon, title, description và RevealConfirmActions. | Review: presentation modal hợp lý; cần kiểm focus trap/role dialog nếu chạm accessibility.
-- /Frontend/src/features/reading/session/presentation/session-page/RevealedCardItem.tsx | 30 dòng | Revealed card item hiển thị flip card face, Next Image lá bài, orientation label và meaning preview. | Review: presentation item hợp lý; JSX đang nén một dòng dài, nên format lại khi chạm.
-- /Frontend/src/features/reading/session/presentation/session-page/RevealedCardsGrid.tsx | 51 dòng | Revealed cards grid map revealed cards sang item với catalog image/name/meaning và flip state. | Review: presentation grid hợp lý; fallback card name dùng `cardId + 1`, cần xác minh card id có zero-based ổn định.
-- /Frontend/src/features/reading/session/presentation/session-page/SessionQuestionCard.tsx | 30 dòng | Question card hiển thị label và câu hỏi của reading session. | Review: presentation component nhỏ hợp lý; text quote user input được render escaped trong JSX.
-- /Frontend/src/features/reading/session/presentation/session-page/ShuffleCard.tsx | 45 dòng | Animated shuffle card visual theo ShufflePath và class index đã clamp. | Review: presentation animation item hợp lý; helper resolve class giữ trong file vì chỉ dùng tại đây.
-- /Frontend/src/features/reading/session/presentation/session-page/ShuffleIntro.tsx | 50 dòng | Shuffle intro render chồng ShuffleCard, title gradient và subtitle spinner. | Review: presentation intro hợp lý; key theo `path.z` ổn nếu z unique từ setup hook.
-- /Frontend/src/features/reading/session/presentation/session-page/TarotDeckGrid.tsx | 65 dòng | Tarot deck grid render active rows, fan transforms, picked state và keyboard/click card selection. | Review: presentation deck hợp lý; dùng div role button có keyboard handler, có thể cân nhắc button semantic nếu chạm accessibility.
-- /Frontend/src/features/reading/session/presentation/session-page/constants.ts | 28 dòng | Constants timing, deck layout, picked stack geometry và DECK_INDEXES theo TAROT_CARD_COUNT. | Review: presentation constants hợp lý; phụ thuộc shared tarot domain count đúng hướng.
-- /Frontend/src/features/reading/session/presentation/session-page/types.ts | 21 dòng | Types FlyingCard và ShufflePath cho animation/deck session page. | Review: type file nhỏ nhưng dùng bởi nhiều hook/component trong session-page nên giữ riêng hợp lý.
-- /Frontend/src/features/reading/session/presentation/session-page/useDeckFlight.ts | 149 dòng | Hook quản lý picked cards, flying card animations, deck refs, stack target và random selection timers. | Review: presentation hook khá lớn nhưng gom đúng interaction state; đã tách layout/animation, chỉ tách thêm nếu logic flight tiếp tục tăng.
-- /Frontend/src/features/reading/session/presentation/session-page/useDeckLayout.ts | 50 dòng | Hook tính deck rows/layout responsive qua matchMedia và deck constants. | Review: presentation layout hook hợp lý; phụ thuộc browser viewport nên không đặt domain/shared thuần.
-- /Frontend/src/features/reading/session/presentation/session-page/useDeckSelection.ts | 30 dòng | Hook façade kết hợp deck layout, deck flight và shuffle timeout state. | Review: wrapper nhỏ nhưng có vai trò composition rõ cho page state; có thể giữ để giảm wiring ở container.
-- /Frontend/src/features/reading/session/presentation/session-page/useFlyingCardAnimations.ts | 123 dòng | Hook Web Animations API cho flying cards với sorted cards, node refs, cancel cleanup và reduced-motion guard. | Review: presentation animation hook hợp lý; duration constant trùng FLIGHT_DURATION_MS trong constants, nên cân nhắc dùng chung để tránh lệch.
-- /Frontend/src/features/reading/session/presentation/session-page/useRevealReading.ts | 72 dòng | Hook reveal reading gọi server action, set cards/error/revealing và schedule flip timers rồi refresh profile. | Review: presentation orchestration hợp lý; side effect profile refresh được inject, giữ hook testable hơn.
-- /Frontend/src/features/reading/session/presentation/session-page/useSessionSetup.ts | 15 dòng | Hook đọc question/cardsToDraw từ sessionStorage theo sessionId. | Review: wrapper rất nhỏ nhưng cô lập browser storage key usage; có thể giữ nếu các key này còn dùng nhiều nơi.
-- /Frontend/src/features/reading/session/presentation/session-page/utils.ts | 63 dòng | Utils chia deck rows, generate shuffle paths, random pick indexes và stack placement/class. | Review: presentation utils đúng scope; random shuffle dùng Math.random ở UI-only nên chấp nhận.
-- /Frontend/src/features/reading/session/presentation/useReadingSessionPageState.ts | 125 dòng | View model reading session gom translations, catalog getters, deck selection, reveal flow, profile refresh và content props. | Review: presentation VM khá lớn nhưng là orchestration chính của page; nên giữ business/API mutation ngoài component, cân nhắc tách refresh/profile invalidation nếu tăng thêm.
-- /Frontend/src/features/wallet/application/actions/balance.ts | 29 dòng | Server action lấy wallet balance qua `/Wallet/balance` với auth token và logging lỗi. | Review: đúng application action; endpoint casing `/Wallet` khác nhóm `/deposits`, cần giữ theo backend contract hoặc chuẩn hóa nếu backend đổi.
-- /Frontend/src/features/wallet/application/actions/deposit/index.ts | 2 dòng | Barrel export deposit action types và user order actions. | Review: re-export nhỏ hợp lý cho deposit submodule; không cần tách thêm.
-- /Frontend/src/features/wallet/application/actions/deposit/types.ts | 65 dòng | DTO types cho deposit packages, order creation/detail/history và status. | Review: đúng application contract với backend; có cả `paymentUrl` và `checkoutUrl`, cần xác minh field nào còn dùng khi cleanup.
-- /Frontend/src/features/wallet/application/actions/deposit/user-orders.test.ts | 269 dòng | Tests deposit package/order/reconcile actions với auth, paging normalize, event contracts và error logging. | Review: test quan trọng cho wallet deposit event contract; đang mock serverHttpRequest trong khi implementation dùng invokeDomainCommand cho create/reconcile, cần xác minh mock chain còn đúng.
-- /Frontend/src/features/wallet/application/actions/deposit/user-orders.ts | 161 dòng | Server actions deposit list/create/get/list/reconcile orders với auth, URLSearchParams, domain commands và logging. | Review: đúng application action; file hơi dài nhưng các action cùng bounded context rõ, không nên tách cơ học.
-- /Frontend/src/features/wallet/application/actions/index.ts | 2 dòng | Barrel export wallet balance và ledger actions. | Review: re-export nhỏ hợp lý cho wallet application actions; giữ nếu callers import từ actions root.
-- /Frontend/src/features/wallet/application/actions/ledger.ts | 35 dòng | Server action lấy wallet ledger phân trang qua `/Wallet/ledger`. | Review: đúng application action; page/limit chưa normalize như deposit orders, cân nhắc đồng bộ nếu input đến từ UI tự do.
-- /Frontend/src/features/wallet/application/actions/walletActions.test.ts | 122 dòng | Tests wallet balance và createDepositOrder success/failure với event contract expectation. | Review: test có dấu hiệu lệch implementation vì createDepositOrder dùng invokeDomainCommand nhưng test mock serverHttpRequest; cần chạy/xác minh trước khi tin coverage.
-- /Frontend/src/features/wallet/application/actions/withdrawal/admin.ts | 116 dòng | Admin withdrawal actions list queue, process approve/reject qua domain command và get detail. | Review: đúng application action; processWithdrawal có indent dấu `}` hơi lệch ở catch, nên format khi chạm.
-- /Frontend/src/features/wallet/application/actions/withdrawal/index.ts | 3 dòng | Barrel export withdrawal admin, reader và types actions. | Review: re-export nhỏ hợp lý cho withdrawal submodule; không cần tách thêm.
-- /Frontend/src/features/wallet/application/actions/withdrawal/reader.ts | 84 dòng | Reader withdrawal actions create withdrawal qua domain command và list my withdrawals. | Review: đúng application action; create tự sinh idempotencyKey bằng randomUUID nếu thiếu, caller nên truyền key ổn định khi retry UI.
-- /Frontend/src/features/wallet/application/actions/withdrawal/types.ts | 22 dòng | DTO types cho withdrawal result/detail gồm bank info, status, notes và VietQR fields. | Review: đúng application/backend contract; status là string raw nên presentation cần normalize qua domain helper.
-- /Frontend/src/features/wallet/application/getWalletBalanceClient.ts | 23 dòng | Client helper gọi `/api/wallet/balance` qua fetchJsonOrThrow và bọc ActionResult. | Review: đúng application/client gateway wrapper; fallback error hard-coded tiếng Anh không qua i18n vì ở query layer.
-- /Frontend/src/features/wallet/application/useDepositHistoryPage.ts | 80 dòng | Deposit history VM quản lý page/status filter, query order history và reconcile pending order invalidations. | Review: application hook hợp lý; reconcile bỏ qua result/error nên UI không báo lỗi riêng khi refresh pending fail.
-- /Frontend/src/features/wallet/application/useDepositPage.ts | 205 dòng | Deposit page VM quản lý packages, balance, create order idempotency, order polling/reconcile và active order view. | Review: hook lớn nhưng gom toàn bộ top-up flow; có thể tách idempotency/order polling nếu tiếp tục tăng, không tách cơ học.
-- /Frontend/src/features/wallet/application/useWalletBalanceQuery.ts | 17 dòng | TanStack Query hook cho wallet balance dùng userState query key và queryFnOrThrow. | Review: application query hook nhỏ hợp lý; tránh duplicate balance fetch policy ở pages.
-- /Frontend/src/features/wallet/application/useWalletOverviewPage.ts | 49 dòng | Wallet overview VM lấy balance, ledger API route, role withdraw permission và format transaction type. | Review: application hook hợp lý; formatType raw enum spacing nên cần i18n/label mapper nếu user-facing yêu cầu chính xác.
-- /Frontend/src/features/wallet/application/useWithdrawPage.ts | 172 dòng | Withdraw page VM quản lý balance/runtime policy/profile payout/history, fee estimate, validation và create withdrawal. | Review: hook lớn nhưng đúng orchestration flow; có indent lệch trong min amount guard và crypto.randomUUID fallback cần cân nhắc nếu môi trường cũ.
-- /Frontend/src/features/wallet/domain/types.ts | 20 dòng | Domain-facing wallet balance/transaction types và paginated list alias. | Review: domain types tương đối thuần nhưng import shared pagination type; chấp nhận nếu shared domain thuần.
-- /Frontend/src/features/wallet/domain/withdrawalStatus.ts | 44 dòng | Helper map withdrawal status raw string sang localized text và token className badge. | Review: nằm domain nhưng trả className UI token, nên cân nhắc chuyển sang presentation/application để giữ domain purity.
-- /Frontend/src/features/wallet/presentation/DepositHistoryPage.tsx | 79 dòng | Deposit history page compose header, status filters, table và pagination với localized labels. | Review: presentation container hợp lý; route nên import qua wallet public entry thay vì path sâu.
-- /Frontend/src/features/wallet/presentation/DepositPage.tsx | 65 dòng | Deposit page compose hero, history link, package picker, create-order button và payment panel. | Review: presentation container hợp lý; đã tách VM riêng, route nên import qua public entry.
-- /Frontend/src/features/wallet/presentation/WalletOverviewPage.tsx | 63 dòng | Wallet overview page compose header CTA, balance cards, ledger toolbar và ledger table. | Review: presentation container hợp lý; formatType vẫn từ VM raw, cần label mapper nếu giao dịch hiển thị cho user.
-- /Frontend/src/features/wallet/presentation/WithdrawPage.tsx | 51 dòng | Withdraw page compose header, withdraw form card và withdraw history section từ VM labels/state. | Review: presentation container hợp lý; route nên import qua wallet public entry.
-- /Frontend/src/features/wallet/presentation/components/WalletStoreBridge.tsx | 9 dòng | Client bridge gọi useWalletStoreBridge và render null. | Review: component rất nhỏ nhưng cần nếu dùng trong tree để sync store side effect; cần xác minh usage trước khi gộp/xóa.
-- /Frontend/src/features/wallet/presentation/components/deposit/DepositPackagePicker.tsx | 51 dòng | Package picker render các gói nạp, amount, diamond và bonus gold bằng selectable buttons. | Review: presentation component hợp lý; selected state chỉ qua class, nên thêm aria-pressed nếu chạm accessibility.
-- /Frontend/src/features/wallet/presentation/components/deposit/DepositPaymentPanel.tsx | 86 dòng | Deposit payment panel hiển thị status, checkout link, QR code và order/payment details. | Review: presentation panel hợp lý; next-qrcode Canvas render client-only đúng, indentation JSX hơi lệch nên format khi chạm.
-- /Frontend/src/features/wallet/presentation/components/deposit-history/DepositHistoryFilters.tsx | 72 dòng | Deposit history status filter buttons all/pending/success/failed. | Review: presentation filters hợp lý; active filter nên có aria-pressed nếu cải thiện accessibility.
-- /Frontend/src/features/wallet/presentation/components/deposit-history/DepositHistoryHeader.tsx | 42 dòng | Deposit history header với back link, receipt icon, tag/title/subtitle. | Review: presentation header hợp lý; dùng OptimizedLink locale-aware đúng.
-- /Frontend/src/features/wallet/presentation/components/deposit-history/DepositHistoryPagination.tsx | 60 dòng | Pagination controls deposit history với prev/next buttons và page label. | Review: presentation pagination hợp lý; buttons có text label và disabled state rõ.
-- /Frontend/src/features/wallet/presentation/components/deposit-history/DepositHistoryRow.tsx | 87 dòng | Deposit history row format createdAt, status badge, amounts, transaction/failure và reconcile pending button. | Review: presentation row hợp lý; status badge mapping nằm tại row nên cân nhắc helper nếu reuse.
-- /Frontend/src/features/wallet/presentation/components/deposit-history/DepositHistoryTable.tsx | 84 dòng | Deposit history table state component render loading/error/empty hoặc list rows. | Review: presentation state wrapper hợp lý; giữ cùng deposit-history components.
-- /Frontend/src/features/wallet/presentation/components/deposit-history/index.ts | 4 dòng | Barrel export deposit history filters/header/pagination/table. | Review: barrel nội bộ hợp lý cho page import gọn; không cần public boundary riêng.
-- /Frontend/src/features/wallet/presentation/components/overview/OverviewHeader.tsx | 49 dòng | Wallet overview header dùng SectionHeader, deposit CTA và withdraw CTA theo role. | Review: presentation header hợp lý; navigation nằm trong component, có thể inject handler nếu cần test dễ hơn.
-- /Frontend/src/features/wallet/presentation/components/overview/WalletAssetCard.tsx | 57 dòng | Reusable asset balance card với icon, glow/watermark styling, value và footer. | Review: presentation card hợp lý cho gold/diamond; nhiều class props nhưng phục vụ variant rõ.
-- /Frontend/src/features/wallet/presentation/components/overview/WalletBalanceCards.tsx | 47 dòng | Wallet balance cards compose diamond và gold WalletAssetCard với localized labels. | Review: presentation composition hợp lý; frozen diamond label format ở đây đúng vì phụ thuộc locale.
-- /Frontend/src/features/wallet/presentation/components/overview/WalletLedgerRow.tsx | 46 dòng | Ledger row format ngày/giờ, currency icon, transaction type/description và amount/balance after. | Review: presentation row hợp lý; currency/type raw values cần label mapper nếu backend enum không user-friendly.
-- /Frontend/src/features/wallet/presentation/components/overview/WalletLedgerTable.tsx | 67 dòng | Ledger table render headers, table body và shared Pagination theo paginated wallet ledger. | Review: presentation table hợp lý; phụ thuộc IndexPaginatedList shape qua domain alias.
-- /Frontend/src/features/wallet/presentation/components/overview/WalletLedgerTableBody.tsx | 50 dòng | Ledger table body dùng TableStates cho loading/empty và map transactions sang WalletLedgerRow. | Review: presentation body hợp lý; TableStates trong tbody cần đảm bảo render row/cell hợp lệ.
-- /Frontend/src/features/wallet/presentation/components/overview/WalletLedgerToolbar.tsx | 26 dòng | Ledger toolbar với title icon và search input placeholder. | Review: search input hiện chưa nối state/filter; cần xác minh usage hoặc disable/remove trước bàn giao nếu chỉ trang trí.
-- /Frontend/src/features/wallet/presentation/components/overview/index.ts | 4 dòng | Barrel export overview header, balance cards, ledger table và toolbar. | Review: barrel nội bộ hợp lý cho overview page imports.
-- /Frontend/src/features/wallet/presentation/components/useWalletStoreBridge.ts | 19 dòng | Hook bridge đăng ký wallet fetcher/query bridge vào Zustand walletStore và cleanup khi unmount. | Review: presentation/integration hook nhỏ nhưng có side effect global store; cần giữ mount point rõ để tránh bridge bị thiếu.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawAlertMessage.tsx | 21 dòng | Alert message generic cho withdraw error/success với injected icon và className. | Review: component rất nhỏ nhưng reuse trong submit section; có thể inline nếu giảm phân mảnh.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawAmountField.tsx | 35 dòng | Withdraw amount number input với Diamond icon, label và placeholder. | Review: presentation field hợp lý; label chưa dùng htmlFor/id nên cải thiện accessibility khi chạm.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawAmountSection.tsx | 54 dòng | Amount section compose amount field và estimate card khi amount đạt ngưỡng hiển thị. | Review: presentation composition hợp lý; threshold `50` hard-coded trong field/section nên nên dùng minWithdrawDiamond nếu policy đổi.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawBankFields.tsx | 85 dòng | Withdraw bank info panel hiển thị payout profile hoặc update link, kèm user note textarea. | Review: presentation form group hợp lý; BankInfoRow JSX một dòng dài và link thiếu locale prop dù dùng OptimizedLink.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawEstimateCard.tsx | 38 dòng | Estimate card hiển thị gross, fee và net VND theo locale. | Review: presentation card hợp lý; formatting VND thủ công bằng `₫`, có thể dùng shared currency formatter cho nhất quán.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawFormCard.tsx | 68 dòng | Withdraw form card compose amount section, bank fields và submit section qua RHF form hook. | Review: presentation form composition hợp lý; form validation tách hook riêng giúp component mỏng.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawFormCard.types.ts | 46 dòng | Props/labels contract cho WithdrawFormCard gồm amount, payout info, submit state và callbacks. | Review: type file hợp lý vì form props/labels dài; có thể group labels theo section nếu tăng thêm.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawHistoryAmountRow.tsx | 27 dòng | Withdraw history amount row hiển thị diamond amount chuyển sang net VND. | Review: presentation row nhỏ hợp lý; VND format thủ công nên cân nhắc shared formatter.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawHistoryItem.tsx | 58 dòng | Withdraw history item compose amount row, status badge, bank meta và user/admin notes. | Review: presentation item hợp lý; notes render raw text an toàn qua JSX escaping.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawHistoryMetaRow.tsx | 29 dòng | Withdraw history meta row hiển thị bank/account và created date. | Review: presentation meta row hợp lý; dùng toLocaleDateString trực tiếp, cần cẩn thận invalid date.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawHistorySection.tsx | 60 dòng | Withdraw history section render title, loading/empty states và list history items. | Review: presentation section hợp lý; khi loading vẫn map history nếu có dữ liệu cũ, cần xác minh UX mong muốn.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawPageHeader.tsx | 40 dòng | Withdraw page header với back button về wallet và SectionHeader title/subtitle. | Review: presentation header hợp lý; navigation trong component ổn, back button có text label.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawSubmitButton.tsx | 33 dòng | Submit button withdraw hiển thị loading spinner hoặc arrow icon và label. | Review: presentation button nhỏ hợp lý; dùng shared Button type submit đúng.
-- /Frontend/src/features/wallet/presentation/components/withdraw/WithdrawSubmitSection.tsx | 53 dòng | Submit section render error/success alerts và withdraw submit button với disabled rules. | Review: presentation submit section hợp lý; indentation error alert hơi lệch, nên format khi chạm.
-- /Frontend/src/features/wallet/presentation/components/withdraw/index.ts | 3 dòng | Barrel export withdraw form card, history section và page header. | Review: barrel nội bộ hợp lý cho WithdrawPage imports.
-- /Frontend/src/features/wallet/presentation/components/withdraw/useWithdrawFormCard.ts | 77 dòng | RHF/Zod hook sync amount/userNote props, watches fields và submit validation cho withdraw form. | Review: presentation form hook hợp lý; schema recreated mỗi render nhưng nhỏ, chỉ tối ưu nếu measured issue.
-- /Frontend/src/features/wallet/presentation/useDepositPageViewModel.ts | 45 dòng | Deposit presentation VM chuyển application state thành labels, statusLabel và formatVnd helper. | Review: presentation VM hợp lý; useMemo phụ thuộc toàn bộ state object có thể recompute nhiều, không nghiêm trọng.
-- /Frontend/src/features/wallet/presentation/useWithdrawPageViewModel.ts | 47 dòng | Withdraw presentation VM gom form/header/history labels và submit disabled flag từ application state. | Review: presentation VM hợp lý; giữ mapping labels ngoài page giúp page mỏng.
-- /Frontend/src/features/wallet/public.ts | 12 dòng | Public API wallet export admin withdrawal actions, store bridge, overview/deposit/history/withdraw pages và withdrawal types. | Review: public boundary hữu ích cho routes/admin; export admin actions qua wallet public cần kiểm caller để không mở rộng boundary quá mức.
+- /Frontend/src/i18n/clientMessages.test.ts | 30 dòng | Hạ tầng i18n dùng chung cho frontend.
+- /Frontend/src/i18n/clientMessages.ts | 66 dòng | Hạ tầng i18n dùng chung cho frontend.
+- /Frontend/src/i18n/messages.test.ts | 76 dòng | Hạ tầng i18n dùng chung cho frontend.
+- /Frontend/src/i18n/messages.ts | 112 dòng | Hạ tầng i18n dùng chung cho frontend.
+- /Frontend/src/i18n/request.ts | 39 dòng | Hạ tầng i18n dùng chung cho frontend.
+- /Frontend/src/i18n/routing.tsx | 25 dòng | Hạ tầng i18n dùng chung cho frontend.
+
+## src/lib
+
+- /Frontend/src/lib/utils.ts | 20 dòng | Tiện ích lib dùng chung ở frontend.
 
 ## src/shared
 
-- /Frontend/src/shared/application/actions/home-snapshot.ts | 26 dòng | Server action lấy `/home/snapshot` và map reader data bằng homeSnapshotMapper. | Review: shared action phục vụ home aggregate; đang import mapper từ feature reader, dependency shared → feature ngược chiều nên cân nhắc chuyển action về home/reader boundary.
-- /Frontend/src/shared/application/actions/metadata.ts | 42 dòng | Server action lấy aggregate user metadata gồm wallet, streak, notifications và chat conversations. | Review: shared action cross-feature hợp lý về mặt aggregate, nhưng type imports nhiều feature khiến shared phụ thuộc feature; cần cân nhắc DTO shared hoặc feature-owned composition.
-- /Frontend/src/shared/application/actions/reading-setup-snapshot.ts | 54 dòng | Server action lấy reading setup snapshot gồm wallet, cards catalog, free quotas và pricing. | Review: shared action nghiêng về feature reading hơn shared; import reading/wallet types, nên cân nhắc chuyển vào `features/reading` application.
-- /Frontend/src/shared/application/actions/runtime-policies.ts | 154 dòng | Server actions lấy runtime policies authenticated và public với DTO policy cho nhiều domain. | Review: shared application hợp lý vì policy cross-feature; DTO rất rộng, nên tách type theo domain nếu tiếp tục phình.
-- /Frontend/src/shared/application/gateways/authConstants.ts | 1 dòng | Application-facing re-export auth constants từ shared infrastructure auth. | Review: file façade rất mỏng nhưng giữ dependency direction application → gateway alias; nếu guard cho phép import infrastructure trực tiếp thì có thể bỏ.
-- /Frontend/src/shared/application/gateways/browserStorage.ts | 1 dòng | Application-facing re-export browserStorage từ shared infrastructure storage. | Review: façade một dòng giúp feature không import infrastructure sâu; chấp nhận nếu pattern gateway đang được dùng nhất quán.
-- /Frontend/src/shared/application/gateways/clientFetch.ts | 1 dòng | Application-facing re-export clientFetch từ shared infrastructure http. | Review: façade một dòng hợp lý cho boundary; nhiều file tương tự cho thấy rule cũ tạo phân mảnh nhưng có chủ đích kiến trúc.
-- /Frontend/src/shared/application/gateways/clientLogoutCleanup.ts | 1 dòng | Application-facing re-export clientLogoutCleanup từ shared infrastructure auth. | Review: façade một dòng hợp lý nếu application/presentation cần logout cleanup mà không import infrastructure sâu.
-- /Frontend/src/shared/application/gateways/clientSessionSnapshot.ts | 1 dòng | Application-facing re-export clientSessionSnapshot từ shared infrastructure auth. | Review: façade một dòng hợp lý; giữ nếu clean-architecture guard yêu cầu gateway alias.
-- /Frontend/src/shared/application/gateways/deviceId.ts | 1 dòng | Application-facing re-export deviceId từ shared infrastructure auth. | Review: façade một dòng hợp lý; tránh import infrastructure trực tiếp từ feature code.
-- /Frontend/src/shared/application/gateways/domainCommandRegistry.test.ts | 124 dòng | Tests domain command registry inject event contracts và fail fast khi path/method mismatch. | Review: test quan trọng cho event-evidence guard; một test nằm ngoài describe block chính, nên format/structure lại khi chạm.
-- /Frontend/src/shared/application/gateways/domainCommandRegistry.ts | 193 dòng | Registry domain commands map key sang method/pathPattern/expectedEvents và invoke serverHttpRequest đã validate. | Review: shared application gateway quan trọng cho event contract; registry dài nhưng tập trung, có thể tách registry data nếu tiếp tục tăng.
-- /Frontend/src/shared/application/gateways/gachaRealtimeDedup.ts | 1 dòng | Application-facing re-export gacha realtime dedup từ shared infrastructure gacha. | Review: façade một dòng hợp lý nếu nhiều application hooks dùng dedup mà không import infrastructure sâu.
-- /Frontend/src/shared/application/gateways/idempotentDomainCommandInvoker.ts | 61 dòng | Helper server tạo/idempotency header và gọi invokeDomainCommand với payload có idempotencyKey. | Review: shared gateway hợp lý cho finance/AI commands; tự sinh randomUUID chỉ ổn khi caller không cần retry-stable key.
-- /Frontend/src/shared/application/gateways/invalidateUserStateQueries.ts | 1 dòng | Application-facing re-export invalidateUserStateQueries từ shared infrastructure query. | Review: façade một dòng hợp lý; dùng nhiều feature để tránh import infrastructure sâu.
-- /Frontend/src/shared/application/gateways/inventoryRealtimeDedup.ts | 1 dòng | Application-facing re-export inventory realtime dedup từ shared infrastructure inventory. | Review: façade một dòng hợp lý nhưng domain-specific inventory trong shared gateway cần xác minh có cross-feature usage.
-- /Frontend/src/shared/application/gateways/logger.ts | 1 dòng | Application-facing re-export logger từ shared infrastructure logging. | Review: façade một dòng hợp lý cho action/hook logging boundary.
-- /Frontend/src/shared/application/gateways/parseApiError.ts | 1 dòng | Application-facing re-export parseApiError từ shared infrastructure error. | Review: façade một dòng hợp lý nếu application layer cần parse lỗi HTTP mà không import infrastructure sâu.
-- /Frontend/src/shared/application/gateways/realtimeSessionGuard.ts | 1 dòng | Application-facing re-export realtimeSessionGuard từ shared infrastructure realtime. | Review: façade một dòng hợp lý; realtime guard là cross-cutting concern.
-- /Frontend/src/shared/application/gateways/serverAuth.ts | 1 dòng | Application-facing re-export serverAuth từ shared infrastructure auth. | Review: façade một dòng hợp lý cho server actions; giữ boundary rõ.
-- /Frontend/src/shared/application/gateways/serverHttpClient.ts | 1 dòng | Application-facing re-export serverHttpClient từ shared infrastructure http. | Review: façade một dòng hợp lý; rất nhiều actions dựa vào alias này.
-- /Frontend/src/shared/application/gateways/signalRUrl.ts | 1 dòng | Application-facing re-export signalRUrl từ shared infrastructure realtime. | Review: façade một dòng hợp lý cho realtime hooks.
-- /Frontend/src/shared/application/gateways/useOptimizedNavigation.ts | 1 dòng | Application-facing re-export optimized navigation hook từ shared infrastructure navigation. | Review: hook navigation là UI/infrastructure concern; alias trong application gateway hơi lẫn layer, cần kiểm guard hiện tại.
-- /Frontend/src/shared/application/gateways/userStateQueryKeys.ts | 1 dòng | Application-facing re-export userState query keys từ shared infrastructure query. | Review: façade một dòng hợp lý nếu query keys là app-level contract; cân nhắc chuyển source về application nếu không cần infrastructure.
-- /Frontend/src/shared/application/hooks/signalRConnectionUtils.ts | 71 dòng | SignalR helpers kiểm state stop, unauthorized negotiation, start timeout, safe stop và so sánh reconnect schedule arrays. | Review: shared realtime utility hợp lý; phụ thuộc SignalR type nên đúng application/realtime shared scope.
-- /Frontend/src/shared/application/hooks/useCardsCatalog.ts | 87 dòng | Hook query cards catalog qua `/api/reading/cards-catalog`, cache lâu và expose map/getters image/name/meaning. | Review: đang đặt shared nhưng import DTO từ feature reading và query key reading; nghiêng về reading hơn generic shared, cần cân nhắc chuyển về feature reading hoặc shared tarot catalog rõ hơn.
-- /Frontend/src/shared/application/hooks/useChatRealtimeSync.ts | 451 dòng | Hook SignalR chat realtime quản lý session guard, reconnect policy, inbox/unread cache patching, invalidation debounce và unauthorized cooldown. | Review: shared hook rất lớn và chat-specific; nên chuyển về feature chat application hoặc tách realtime transport/cache patch handlers nếu tiếp tục bảo trì.
-- /Frontend/src/shared/application/hooks/useChatUnreadNotifications.test.tsx | 143 dòng | Tests unread notification hook query key/enabled state, không gọi browser Notification API và unread-count API fallback. | Review: test đúng phạm vi hook; đặt cạnh hook hợp lý, nhưng tên shared hook chat-specific nên cân nhắc feature chat ownership.
-- /Frontend/src/shared/application/hooks/useChatUnreadNotifications.ts | 50 dòng | Hook query unread chat count qua `/api/chat/unread-count` với auth store gate và chat unread query key. | Review: chat-specific nhưng phục vụ app shell badge; nếu gom ownership nên chuyển cùng chat realtime/dropdown về feature chat hoặc app-shell composition.
-- /Frontend/src/shared/application/hooks/useDebouncedValue.ts | 19 dòng | Hook debounce generic trả về giá trị sau delay bằng window timeout cleanup. | Review: generic shared hook hợp lý; không phụ thuộc feature.
-- /Frontend/src/shared/application/hooks/useErrorBoundaryLogger.ts | 9 dòng | Hook log error boundary theo scope ra console khi error thay đổi. | Review: shared nhỏ và generic; console.error trực tiếp ổn cho boundary dev/debug nhưng cần cân nhắc logger chuẩn nếu yêu cầu telemetry.
-- /Frontend/src/shared/application/hooks/useHydrateFormOnce.test.tsx | 77 dòng | Tests hydrate form once theo identity, keepDirtyValues và skip khi disabled/missing identity. | Review: test đúng phạm vi hook form shared; giữ cạnh hook.
-- /Frontend/src/shared/application/hooks/useHydrateFormOnce.ts | 33 dòng | Hook reset React Hook Form một lần theo identity và giữ dirty values. | Review: generic shared form helper hợp lý; không phụ thuộc feature.
-- /Frontend/src/shared/application/hooks/useMessageDropdown.ts | 77 dòng | Hook dropdown tin nhắn query inbox preview, lấy cache inbox active làm initial data và expose refresh/error state. | Review: chat-specific trong shared app shell; nên cân nhắc chuyển về feature chat public/app-shell bridge nếu tiếp tục gom chat ownership.
-- /Frontend/src/shared/application/hooks/useNavbarMenuState.ts | 63 dòng | Hook quản lý mobile/avatar menu navbar, click outside và tự đóng khi pathname đổi. | Review: app-shell shared hook hợp lý; đang dùng double quotes khác style chung, nên chuẩn hóa khi chạm.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.chatInvalidation.ts | 46 dòng | Factory scheduler debounce invalidate inbox và unread badge query cho presence/chat events. | Review: shared realtime helper nhưng chat-specific; hợp lý nếu presence là app-level aggregator, nếu không nên chuyển về chat realtime module.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.domainEvents.ts | 234 dòng | Đăng ký handler SignalR presence cho reader status, notifications, wallet, chat, gamification, gacha, inventory, reading quota và profile events. | Review: app-level realtime aggregator nên shared có căn cứ; file lớn và có indent lệch ở `conversation.updated`, chỉ tách theo domain handler nếu tiếp tục bảo trì.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.heartbeat.ts | 14 dòng | Tạo heartbeat interval gọi SignalR `Heartbeat` khi connection đang Connected và log lỗi. | Review: shared realtime helper nhỏ, đặt đúng cạnh presence registration.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.invalidationScheduler.ts | 91 dòng | Scheduler batch/cooldown invalidation theo domain user-state để tránh query storm. | Review: shared app-state utility hợp lý; domain cooldown map tập trung rõ nhưng cần cập nhật khi thêm domain invalidation mới.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.roleLogout.ts | 66 dòng | Điều phối force logout khi notification role change, clear session local và redirect về login theo locale. | Review: shared auth/presence concern hợp lý; comment no-op trong catch giải thích constraint, không cần refactor cơ học.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.statusObservers.ts | 207 dòng | Đồng bộ nhóm observer user-status từ active reader directory/profile queries, subscribe/unsubscribe theo batch và reconcile định kỳ. | Review: shared presence-reader bridge khá lớn; đúng app-level realtime nhưng phụ thuộc query key reader, nên cân nhắc tách reader status observer module nếu mở rộng.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.test.ts | 358 dòng | Tests presence registration cho invalidation cooldown, wallet fallback, role logout, heartbeat, observer sync/chunking và stale status events. | Review: test quan trọng cho realtime guard; file lớn và có indent lệch trong describe/expect, nên format/tách theo module khi chạm.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.ts | 42 dòng | Coordinator ghép các scheduler/handler presence registration và expose startHeartbeat/syncStatusObservers/dispose. | Review: barrel/coordinator shared hợp lý; nội dung chủ yếu wiring nên không tách thêm nếu các module con đã tách.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.registration.wallet.ts | 87 dòng | Helper apply realtime wallet delta vào wallet store và schedule fetchBalance fallback với min interval. | Review: wallet-specific nằm trong shared presence aggregator; hợp lý nếu realtime hub gom user-state, nhưng có thể chuyển về wallet realtime module nếu tách ownership.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.test.tsx | 347 dòng | Tests hook presence connection cho cooldown retry, timeout negotiation, disable/unmount cleanup, session guard và dispose registration. | Review: test quan trọng cho realtime stability; file lớn nhưng cùng hook chính, có vài indent lệch trong expect nên format khi chạm.
-- /Frontend/src/shared/application/hooks/usePresenceConnection.ts | 158 dòng | Hook thiết lập SignalR presence connection với runtime policy refs, session guard, reconnect cooldown, heartbeat và registration cleanup. | Review: app-level realtime hook hợp lý trong shared; đã tách registration helpers, chỉ tách thêm nếu thêm domain handler mới.
-- /Frontend/src/shared/application/hooks/usePublicRuntimePolicies.ts | 30 dòng | Hook query public runtime policies qua `/api/legal/runtime-policies` với force-cache và stale 5 phút. | Review: shared system policy hook hợp lý; path legal hơi đặc thù nhưng DTO public dùng cross-feature.
-- /Frontend/src/shared/application/hooks/useReconnectWakeup.test.tsx | 80 dòng | Tests useReconnectWakeup bump wakeupVersion khi timer fire và cancel timer trước khi chạy. | Review: test nhỏ đúng phạm vi hook reconnect shared.
-- /Frontend/src/shared/application/hooks/useReconnectWakeup.ts | 35 dòng | Hook quản lý timeout wakeupVersion để trigger retry reconnect và cancel cleanup. | Review: generic realtime helper hợp lý trong shared; không phụ thuộc feature.
-- /Frontend/src/shared/application/hooks/useRelativeTimeNow.ts | 23 dòng | Hook useSyncExternalStore trả Date.now theo interval cho relative-time UI, SSR snapshot NaN. | Review: shared time utility hợp lý; create subscription mỗi render theo tickMs nhỏ, chấp nhận nếu caller không đổi tick liên tục.
-- /Frontend/src/shared/application/hooks/useRuntimePolicies.ts | 36 dòng | Hook query authenticated runtime policies, dùng cached timeout/stale và cập nhật runtimePolicyStore. | Review: shared system policy hook hợp lý; side-effect update store nằm trong hook cần giữ nhất quán với server action DTO.
-- /Frontend/src/shared/application/inventory/cardOption.ts | 14 dòng | Type CardOption/CardOptionStats cho card inventory option gồm level, exp, atk/def và image. | Review: type inventory-specific đang ở shared application; nên chuyển về feature inventory hoặc shared tarot-card type nếu nhiều feature thật sự dùng.
-- /Frontend/src/shared/application/utils/queryPolicy.test.ts | 37 dòng | Tests query policy helpers cho throw fallback, debounce delegation và cancellable load token invalidation. | Review: test đúng phạm vi utility shared; giữ cạnh helper.
-- /Frontend/src/shared/application/utils/queryPolicy.ts | 43 dòng | Helper queryFnOrThrow cho ActionResult, wrapper debounce query input và cancellable load token. | Review: shared query utility hợp lý; useDebouncedQueryInput chỉ là alias rất mỏng nhưng có test bảo vệ caller hiện tại.
-- /Frontend/src/shared/application/utils/resolveErrorMessage.test.ts | 12 dòng | Tests resolveErrorMessage trả Error.message hoặc fallback cho non-Error. | Review: test nhỏ đúng phạm vi utility shared.
-- /Frontend/src/shared/application/utils/resolveErrorMessage.ts | 7 dòng | Helper lấy message từ Error nếu có, ngược lại trả fallback. | Review: generic shared utility hợp lý; không phụ thuộc feature.
-- /Frontend/src/shared/application/utils/typedSubmit.ts | 7 dòng | Type/helper identity để tạo typed submit handler trả void hoặc Promise. | Review: helper rất mỏng; cần xác minh usage, có thể bỏ nếu TypeScript inference hiện đủ.
-- /Frontend/src/shared/components/auth/AuthBootstrap.tsx | 25 dòng | Client bootstrap đồng bộ initialUser từ server vào auth store hoặc clear auth khi null. | Review: shared auth shell component hợp lý; import UserProfile từ feature auth làm shared phụ thuộc feature, nên cân nhắc đưa type auth ra shared/domain nếu guard yêu cầu.
-- /Frontend/src/shared/components/auth/AuthGuard.tsx | 53 dòng | Guard client redirect unauthenticated khỏi route protected về login locale-aware, render fallback khi loading. | Review: shared auth component hợp lý cho app routes; navigation logic nằm presentation/shared chấp nhận được.
-- /Frontend/src/shared/components/auth/AuthSessionManager.ts | 265 dòng | Manager refresh access token, bootstrap client session snapshot, logout cleanup, retry backoff và focus/visibility refresh. | Review: shared auth orchestration quan trọng nhưng lớn; nên tách scheduler/bootstrap effects nếu bảo trì tiếp, và phụ thuộc UserProfile feature auth cần cân nhắc boundary.
-- /Frontend/src/shared/components/auth/ProtectedRoute.tsx | 18 dòng | Wrapper mỏng quanh AuthGuard truyền fallback/loginPath cho protected children. | Review: façade rất mỏng; giữ nếu routes đang dùng tên ProtectedRoute, có thể thay trực tiếp AuthGuard nếu muốn giảm phân mảnh.
-- /Frontend/src/shared/components/common/AppQueryProvider.tsx | 23 dòng | Root client provider compose QueryClientProvider, AuthProvider và PresenceProvider. | Review: app-shell provider hợp lý trong shared common; đúng nơi gom providers global.
-- /Frontend/src/shared/components/common/LanguageSwitcher.tsx | 34 dòng | Dropdown đổi locale bằng next-intl router, state hook và menu option component. | Review: shared app-shell component hợp lý; JSX dòng 26/30 khá dài, nên format/split khi chạm.
-- /Frontend/src/shared/components/common/MessageDropdown.tsx | 76 dòng | Navbar message dropdown ghép unread badge, inbox preview, invalidate unread khi mở và navigation tới chat. | Review: chat-specific trong shared common; nên cân nhắc chuyển UI dropdown vào feature chat hoặc app-shell bridge để giảm shared phụ thuộc chat.
-- /Frontend/src/shared/components/common/Navbar.tsx | 81 dòng | Navbar app-shell điều phối auth user, menus, global chat realtime/unread sync, links và right/mobile sections. | Review: shared shell component hợp lý nhưng có chat realtime orchestration; nên tách app-shell realtime bridge nếu navbar tiếp tục phình.
-- /Frontend/src/shared/components/common/NotificationDropdown.tsx | 77 dòng | Navbar notification dropdown dùng feature notification hook, mark all ref, refresh khi mở và navigate tới notifications. | Review: notification-specific trong shared common; hợp lý cho app shell nhưng phụ thuộc feature notifications, nên cân nhắc feature public component/bridge.
-- /Frontend/src/shared/components/common/ThemeStylesheetManager.tsx | 14 dòng | Component null gọi hook apply theme stylesheet từ initialTheme. | Review: shared shell utility hợp lý; wrapper mỏng nhưng rõ vai trò provider-side effect.
-- /Frontend/src/shared/components/common/ThemeSwitcher.tsx | 30 dòng | Theme switcher compose button/dropdown và state hook để chọn theme. | Review: shared common hợp lý; đang dùng double quotes khác style chung, nên chuẩn hóa khi chạm.
-- /Frontend/src/shared/components/common/WalletWidget.tsx | 22 dòng | Wallet widget app-shell render loading/null/content từ useWalletWidgetState. | Review: wallet-specific trong shared common; nên cân nhắc chuyển sang feature wallet public widget nếu muốn giảm shared phụ thuộc wallet.
-- /Frontend/src/shared/components/common/hooks/useAppQueryClient.ts | 10 dòng | Hook tạo một QueryClient ổn định bằng createAppQueryClient trong state initializer. | Review: shared provider hook hợp lý; không phụ thuộc feature.
-- /Frontend/src/shared/components/common/hooks/useThemeStylesheetManager.ts | 17 dòng | Hook resolve initial theme/fallback và apply theme client-side. | Review: shared theme side-effect hợp lý; đặt cạnh ThemeStylesheetManager đúng.
-- /Frontend/src/shared/components/common/language-switcher/LanguageSwitcherMenu.tsx | 25 dòng | Menu listbox locale render tiêu đề và LanguageSwitcherOption cho từng LOCALE_OPTIONS. | Review: shared i18n UI hợp lý; dòng props option khá dài, nên format khi chạm.
-- /Frontend/src/shared/components/common/language-switcher/LanguageSwitcherOption.tsx | 25 dòng | Button option chọn locale với flag, label và check icon khi active. | Review: shared i18n UI hợp lý; button có type nhưng thiếu aria-selected dù menu role listbox, nên cân nhắc bổ sung a11y khi chạm.
-- /Frontend/src/shared/components/common/language-switcher/localeConfig.ts | 13 dòng | Cấu hình locale options VI/EN/ZH, LocaleId type và guard isValidLocale. | Review: shared i18n config hợp lý; emoji flag là UI concern nhưng đang chỉ dùng trong switcher.
-- /Frontend/src/shared/components/common/language-switcher/useLanguageSwitcherState.ts | 37 dòng | Hook state language switcher quản lý open, outside click, Escape và active locale fallback. | Review: shared i18n UI hook hợp lý; không chứa business logic.
-- /Frontend/src/shared/components/common/message-dropdown/MessageBellButton.tsx | 32 dòng | Icon button tin nhắn với unread badge capped 99+ và open styling. | Review: chat-specific UI trong shared common; có accessible aria-label và button type, hợp lý nếu navbar giữ ownership.
-- /Frontend/src/shared/components/common/message-dropdown/MessageDropdownContent.tsx | 67 dòng | Nội dung dropdown tin nhắn hiển thị loading/error/empty và list conversation với relative time. | Review: chat-specific UI phụ thuộc ConversationDto feature chat; nên cân nhắc chuyển vào feature chat public component nếu giảm shared coupling.
-- /Frontend/src/shared/components/common/message-dropdown/MessageDropdownItem.tsx | 99 dòng | Item inbox preview chọn peer/avatar/unread theo role, resolve preview/status và render avatar Next Image. | Review: chat-specific và gần ngưỡng lớn; phụ thuộc chat domain participantId, nên chuyển về feature chat khi gom dropdown.
-- /Frontend/src/shared/components/common/message-dropdown/MessageDropdownPanel.tsx | 58 dòng | Panel dropdown tin nhắn compose header, content và nút xem tất cả. | Review: chat-specific shell UI; đặt shared chỉ hợp lý vì navbar dùng trực tiếp.
-- /Frontend/src/shared/components/common/message-dropdown/messageTime.ts | 21 dòng | Helper format relative time tin nhắn theo minutes/hours/days với fallback just_now. | Review: helper chat UI nhỏ; nếu chỉ dùng dropdown thì giữ cạnh message-dropdown, không cần shared rộng.
-- /Frontend/src/shared/components/common/message-dropdown/useMessageDropdownState.ts | 34 dòng | Hook quản lý open/close và outside click cho message dropdown. | Review: UI state generic nhưng đặt cạnh dropdown hợp lý; không cần tách shared hook rộng hơn.
-- /Frontend/src/shared/components/common/navbar/NavbarAvatarMenu.tsx | 26 dòng | Wrapper avatar menu ghép trigger và dropdown theo trạng thái open. | Review: shared navbar component hợp lý; phụ thuộc UserProfile feature auth qua props nên boundary auth type cần cân nhắc nếu guard chặt hơn.
-- /Frontend/src/shared/components/common/navbar/NavbarBrandSection.tsx | 20 dòng | Brand link TarotNow AI và desktop nav links theo NAV_LINKS. | Review: shared navbar component hợp lý; tên brand hard-coded chấp nhận nếu product name cố định.
-- /Frontend/src/shared/components/common/navbar/NavbarDesktopLinks.tsx | 35 dòng | Desktop nav links render NAV_LINKS với active style theo pathname. | Review: shared navbar UI hợp lý; dùng double quotes/arbitrary Tailwind values lẫn style chung, nên chuẩn hóa token/style khi chạm.
-- /Frontend/src/shared/components/common/navbar/NavbarMobileMenu.tsx | 41 dòng | Mobile nav menu render links, StreakBadge và WalletWidget khi menu mở. | Review: shared navbar UI nhưng phụ thuộc checkin/wallet feature widgets; hợp lý cho app shell, cần cân nhắc bridge nếu tách feature ownership.
-- /Frontend/src/shared/components/common/navbar/NavbarRightSection.tsx | 51 dòng | Right section navbar render auth links hoặc streak/wallet/message/notification/avatar/mobile menu controls. | Review: app-shell composition hợp lý nhưng phụ thuộc nhiều feature widgets; file có props một dòng dài, nên format khi chạm.
-- /Frontend/src/shared/components/common/navbar/avatar-menu/NavbarAvatarDropdown.tsx | 31 dòng | Avatar dropdown render header, menu links và logout button. | Review: shared navbar UI hợp lý; JSX menu/logout đang một dòng dài, nên format khi chạm.
-- /Frontend/src/shared/components/common/navbar/avatar-menu/NavbarAvatarDropdownHeader.tsx | 27 dòng | Header avatar dropdown hiển thị displayName/email/level/EXP progress. | Review: shared navbar auth UI; hard-coded `Current EXP` chưa localization, nên sửa trước bàn giao.
-- /Frontend/src/shared/components/common/navbar/avatar-menu/NavbarAvatarTrigger.tsx | 30 dòng | Avatar trigger render avatar image/fallback, displayName, level/EXP và chevron. | Review: shared navbar auth UI; alt="avatar" chưa mô tả theo user và JSX rất dài, nên cải thiện a11y/format khi chạm.
-- /Frontend/src/shared/components/common/navbar/config.ts | 38 dòng | Cấu hình nav links, authless paths, avatar menu items và shouldHideNavbar. | Review: shared navbar config hợp lý; shouldHideNavbar dùng includes nên `/admin` cũng ẩn các path chứa chuỗi này, cần xác minh đúng ý.
-- /Frontend/src/shared/components/common/navbar/useNavbarLogout.ts | 20 dòng | Hook logout navbar đóng avatar menu, gọi onLogout, cleanup query/auth và navigate login. | Review: shared navbar hook hợp lý; cleanup sau onLogout rõ, không cần tách.
-- /Frontend/src/shared/components/common/notification-dropdown/NotificationBellButton.tsx | 25 dòng | Icon button notification với unread badge capped 99+ và open styling. | Review: notification-specific UI trong shared common; có aria-label/button type nhưng JSX badge một dòng dài, nên format khi chạm.
-- /Frontend/src/shared/components/common/notification-dropdown/NotificationDropdownContent.tsx | 41 dòng | Nội dung dropdown notification hiển thị loading/error/empty và list item với relative time. | Review: phụ thuộc NotificationItem feature notifications; hợp lý cho app shell nhưng nên chuyển feature-owned nếu giảm shared coupling.
-- /Frontend/src/shared/components/common/notification-dropdown/NotificationDropdownFooter.tsx | 16 dòng | Footer dropdown notification với nút xem tất cả. | Review: shared shell subcomponent nhỏ, không có logic feature ngoài label/action props.
-- /Frontend/src/shared/components/common/notification-dropdown/NotificationDropdownHeader.tsx | 24 dòng | Header dropdown notification với title và nút mark all read. | Review: hard-coded text `Đọc tất cả` chưa localization dù cha có translations; nên sửa trước bàn giao.
-- /Frontend/src/shared/components/common/notification-dropdown/NotificationDropdownItem.tsx | 46 dòng | Memo item notification render icon theo type config, title/time và click mark read. | Review: feature notification UI đặt shared vì navbar; div clickable thiếu button/keyboard semantics, nên cải thiện a11y khi chạm.
-- /Frontend/src/shared/components/common/notification-dropdown/NotificationDropdownPanel.tsx | 35 dòng | Panel notification compose header/content/footer và truyền handlers mark read/view all. | Review: notification-specific shell UI; props một dòng dài, nên format khi chạm.
-- /Frontend/src/shared/components/common/notification-dropdown/notificationTime.ts | 25 dòng | Helper format relative time notification theo phút/giờ/ngày với fallback just now. | Review: helper UI nhỏ; giữ cạnh notification dropdown, không cần shared rộng hơn.
-- /Frontend/src/shared/components/common/notification-dropdown/useNotificationDropdownItem.ts | 35 dòng | Hook item notification map type sang icon/color và chống double mark-read. | Review: notification-specific hook; hợp lý cạnh item, nhưng setIsMarking false sau await không catch riêng nếu onMarkRead throw.
-- /Frontend/src/shared/components/common/notification-dropdown/useNotificationDropdownState.ts | 54 dòng | Hook state dropdown notification quản lý open/outside click, mark-all loading và title theo locale. | Review: notification-specific UI state; fallback chỉ VI/EN, chưa xét ZH nên cần kiểm localization trước bàn giao.
-- /Frontend/src/shared/components/common/theme-switcher/ThemeSwitcherButton.tsx | 23 dòng | Button theme switcher với Palette, label Theme và chevron open state. | Review: shared theme UI hợp lý; text `Theme`/aria label dropdown chưa localized và dùng double quotes, nên chuẩn hóa khi chạm.
-- /Frontend/src/shared/components/common/theme-switcher/ThemeSwitcherDropdown.tsx | 30 dòng | Dropdown theme listbox render THEME_OPTIONS và check icon theme active. | Review: shared theme UI hợp lý; aria-label `Theme options` hard-coded EN và thiếu aria-selected trên option buttons.
-- /Frontend/src/shared/components/common/theme-switcher/useThemeSwitcherState.ts | 46 dòng | Hook theme switcher quản lý selected theme, applyTheme, outside click/Escape và active label. | Review: shared theme hook hợp lý; activeLabel lấy từ config label tĩnh chưa localization.
-- /Frontend/src/shared/components/common/wallet-widget/WalletWidgetContent.tsx | 48 dòng | Wallet widget content link tới wallet, hiển thị diamond/gold/frozen balance theo locale. | Review: wallet-specific UI trong shared common; phụ thuộc WalletBalance feature wallet, nên cân nhắc feature wallet public widget.
-- /Frontend/src/shared/components/common/wallet-widget/WalletWidgetLoading.tsx | 9 dòng | Skeleton loading nhỏ cho wallet widget. | Review: wallet-specific presentational nhỏ; giữ cạnh widget.
-- /Frontend/src/shared/components/common/wallet-widget/useWalletWidgetState.ts | 54 dòng | Hook wallet widget lấy locale/translations/auth/balance, fetch/reset balance theo user và route realtime-enabled. | Review: wallet-specific orchestration trong shared app shell; nên chuyển về feature wallet public hook nếu giảm shared coupling.
-- /Frontend/src/shared/components/layout/AstralBackground.tsx | 25 dòng | Background astral fixed compose glow, nebula, optional grid và particles theo variant/count. | Review: shared visual layout hợp lý; client component dùng aria-hidden đúng vì decorative.
-- /Frontend/src/shared/components/layout/AuthLayout.tsx | 50 dòng | Layout auth page với background blobs, brand link, title/subtitle và children card. | Review: shared auth layout hợp lý; có blank lines trong interface và hard-coded brand, nên format khi chạm.
-- /Frontend/src/shared/components/layout/BottomTabBar.tsx | 24 dòng | Mobile bottom tab bar dùng Navigation translations, unread chat badge và state hook/menu panel/main tabs. | Review: app-shell mobile nav hợp lý; phụ thuộc chat unread global nên tương tự navbar cần cân nhắc bridge nếu tách chat.
-- /Frontend/src/shared/components/layout/Footer.tsx | 37 dòng | Server footer lấy translations, dựng nav/legal/social links và compose brand/links/social rows. | Review: shared layout hợp lý; social href đang external placeholder public URLs, cần xác minh trước bàn giao production.
-- /Frontend/src/shared/components/layout/UserLayout.tsx | 32 dòng | User layout compose AstralBackground, UserSidebar, scrollable main và BottomTabBar. | Review: shared layout hợp lý; có `{}` placeholder trong JSX và blank đầu file, nên cleanup khi chạm.
-- /Frontend/src/shared/components/layout/UserSidebar.tsx | 27 dòng | Floating user sidebar toggle chọn active href theo pathname và render UserSidebarPanel. | Review: shared user layout hợp lý; aria-label hard-coded EN `Toggle Sidebar Menu`, nên localization/a11y polish.
-- /Frontend/src/shared/components/layout/astral-background/AstralNebula.tsx | 45 dòng | Render decorative nebula blobs theo variant/tone class mappings. | Review: shared visual component hợp lý; còn nhiều arbitrary Tailwind values trong class strings, nên đưa token nếu guard yêu cầu.
-- /Frontend/src/shared/components/layout/astral-background/AstralParticles.tsx | 19 dòng | Render decorative astral particles theo particleCount và resolved particle class. | Review: shared visual component hợp lý; motion-reduce hidden đã có.
-- /Frontend/src/shared/components/layout/astral-background/config.ts | 57 dòng | Config astral variant, nebula tone, deterministic particle style và particle class resolver. | Review: shared visual config hợp lý; getParticleStyle hiện cần xác minh usage vì particle component dùng class resolver thay vì inline style.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/BottomTabBarMainTabs.tsx | 57 dòng | Render main bottom tabs/link buttons với active/open state và unread social badge. | Review: shared mobile nav UI; có indent lệch trong map và Link/button JSX một dòng dài, nên format khi chạm.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/BottomTabBarMenuItem.tsx | 31 dòng | Link item submenu bottom tab với active/inactive styles và icon/label. | Review: shared mobile nav UI hợp lý; dùng arbitrary CSS vars trực tiếp trong class, nên token hóa nếu guard yêu cầu.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/BottomTabBarMenuPanel.tsx | 49 dòng | Floating submenu panel bottom tab chọn active sub href và render BottomTabBarMenuItem. | Review: shared mobile nav UI; nhiều arbitrary positioning theo tab id, cần test responsive khi đổi nav.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/config.ts | 174 dòng | Cấu hình bottom tabs/subitems, Lucide icons, href/matchPrefixes và matchesPath. | Review: app navigation config tập trung hợp lý; file lớn do dữ liệu nav, không tách cơ học nhưng cần giữ đồng bộ route tồn tại.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/getActiveBottomTabSubHref.test.ts | 15 dòng | Test chọn sub href active sâu nhất với tie-breaker href dài hơn. | Review: test nhỏ đúng phạm vi helper bottom tab.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/getActiveBottomTabSubHref.ts | 36 dòng | Helper chọn active bottom tab sub href theo prefix match sâu nhất và tie-breaker độ dài href. | Review: shared nav helper hợp lý; thuật toán rõ và có test.
-- /Frontend/src/shared/components/layout/bottom-tab-bar/useBottomTabBarState.ts | 53 dòng | Hook bottom tab state quản lý pathname, active menu/tab/subitems và outside click. | Review: shared mobile nav hook hợp lý; dùng double quotes khác style chung, nên format khi chạm.
-- /Frontend/src/shared/components/layout/footer/FooterBrandSection.tsx | 32 dòng | Footer brand section hiển thị TarotNow AI/tagline và theme/language switchers responsive. | Review: shared footer UI hợp lý; brand hard-coded và double quotes, nên chuẩn hóa nếu chỉnh.
-- /Frontend/src/shared/components/layout/footer/FooterLinksRow.tsx | 25 dòng | Row footer links render OptimizedLink theo items/className props. | Review: shared footer helper nhỏ, đúng phạm vi.
-- /Frontend/src/shared/components/layout/footer/FooterSocialRow.tsx | 28 dòng | Footer social links row render external social anchors và copyright. | Review: shared footer UI hợp lý; social href do cha truyền nhưng hiện là placeholder, và indentation trong map hơi lệch.
-- /Frontend/src/shared/components/layout/user-sidebar/UserSidebarMenuGroup.tsx | 24 dòng | User sidebar group render label và danh sách UserSidebarMenuItem. | Review: shared user nav UI hợp lý; phụ thuộc NavbarNavItem type từ navbar config, nên cân nhắc type nav chung để tránh coupling ngang.
-- /Frontend/src/shared/components/layout/user-sidebar/UserSidebarMenuItem.tsx | 25 dòng | User sidebar link item với active style, icon, badge capped 99+ và active indicator. | Review: shared user nav UI hợp lý; JSX một dòng dài, nên format khi chạm.
-- /Frontend/src/shared/components/layout/user-sidebar/UserSidebarPanel.tsx | 23 dòng | Floating sidebar panel render grouped userSidebarMenuGroups và close on item click. | Review: shared layout UI hợp lý; no business logic.
-- /Frontend/src/shared/components/layout/user-sidebar/config.ts | 94 dòng | Cấu hình user sidebar menu groups/items và helper chọn active href cụ thể nhất. | Review: shared nav config hợp lý; trùng nhiều link với bottom-tab config, nên cân nhắc nguồn nav chung nếu drift.
-- /Frontend/src/shared/components/layout/user-sidebar/useUserSidebarState.ts | 19 dòng | Hook state user sidebar quản lý open và outside click cleanup. | Review: shared UI hook nhỏ, hợp lý cạnh sidebar.
-- /Frontend/src/shared/components/loading/AdminRouteLoadingFallback.tsx | 9 dòng | Loading fallback admin route hiển thị text Loading trong vùng min-height. | Review: shared loading nhỏ; text hard-coded EN nhưng là fallback kỹ thuật, cân nhắc localization nếu user-visible lâu.
-- /Frontend/src/shared/components/loading/segment-skeletons.tsx | 80 dòng | Skeleton components cho user, wallet, chat và reading segments bằng PulseBlock. | Review: shared loading skeleton hợp lý; các skeleton domain-specific nhưng dùng cho route loading, giữ nếu được import bởi app layouts/routes.
-- /Frontend/src/shared/components/loading/site-hero-skeleton.tsx | 28 dòng | Skeleton hero site với các pulse block tiêu đề, mô tả, CTA và icon tròn. | Review: shared loading skeleton hợp lý; class list thiếu dấu phẩy trailing ở dòng 11 theo style chung, nên format khi chạm.
-- /Frontend/src/shared/components/ui/ActionConfirmModal.tsx | 50 dòng | Modal xác nhận action generic với icon, title/description, cancel/confirm buttons và loading/disabled state. | Review: shared UI component hợp lý; dùng Button/Modal nên tốt, nhưng className double quotes lẫn style.
-- /Frontend/src/shared/components/ui/Badge.tsx | 66 dòng | Badge memoized với variant default/purple/amber/success/error/warning/info và size sm/md. | Review: shared UI primitive hợp lý; có blank/indent lỗi và trailing spaces trong union, nên format khi chạm.
-- /Frontend/src/shared/components/ui/Button.tsx | 33 dòng | Button forwardRef dùng style maps, loading state, icons và default type button. | Review: shared UI primitive hợp lý; props destructuring một dòng dài nhưng kiến trúc đúng.
-- /Frontend/src/shared/components/ui/EmptyState.tsx | 65 dòng | Empty state memoized với icon/title/message/action và Ghost fallback. | Review: shared UI primitive hợp lý; có `{}` placeholder và blank lines trong props, nên cleanup khi chạm.
-- /Frontend/src/shared/components/ui/FilterTabs.tsx | 43 dòng | Generic filter tabs render option buttons với icon/active class override. | Review: shared UI primitive hợp lý; thiếu aria-current/selected cho active tab và indentation map lệch.
-- /Frontend/src/shared/components/ui/GlassCard.tsx | 58 dòng | Glass card memoized với variant default/elevated/interactive và padding sizes. | Review: shared UI primitive hợp lý; dùng arbitrary CSS vars trong styles, chấp nhận nếu theme token guard cho phép.
-- /Frontend/src/shared/components/ui/InlineErrorAlert.tsx | 22 dòng | Alert lỗi inline render optional title và message, ẩn khi không có message. | Review: shared UI primitive hợp lý; role="alert" chưa có, nên bổ sung nếu dùng cho lỗi form/user-facing.
-- /Frontend/src/shared/components/ui/Input.tsx | 76 dòng | Input/Textarea forwardRef với label/hint/error meta, icons, right element và logic ẩn error khi rỗng. | Review: shared form primitive nhưng có nhiều comment/logic UX đặc thù; cần xem lại a11y id/aria-describedby nếu dùng rộng.
-- /Frontend/src/shared/components/ui/LoadingSpinner.tsx | 60 dòng | Loading spinner memoized với size sm/md/lg, optional message và fullPage spacing. | Review: shared UI primitive hợp lý; có `{}` placeholder/blank props và thiếu role/status cho loading nếu cần a11y.
-- /Frontend/src/shared/components/ui/Modal.tsx | 56 dòng | Portal modal với lifecycle hook, backdrop close, aria dialog/header và size styles. | Review: shared UI primitive quan trọng; comment task-style về className nên cleanup, aria-label hard-coded EN và formatting chưa chuẩn.
-- /Frontend/src/shared/components/ui/Pagination.tsx | 59 dòng | Pagination client component dùng translations và prev/next PaginationButton theo current/total/loading. | Review: shared pagination primitive hợp lý; chỉ hỗ trợ prev/next, không page numbers.
-- /Frontend/src/shared/components/ui/SectionHeader.tsx | 55 dòng | Section header compose text block theo size và optional action vùng phải. | Review: shared UI primitive hợp lý; no feature dependency.
-- /Frontend/src/shared/components/ui/StepPagination.tsx | 51 dòng | Step pagination với summary, prev/next icon buttons và optional current label. | Review: shared UI primitive hợp lý; icon-only buttons thiếu aria-label, cần sửa nếu dùng interactive user-facing.
-- /Frontend/src/shared/components/ui/TableStates.tsx | 76 dòng | Table row states cho loading/error/empty với colSpan, labels và optional icons. | Review: shared table utility hợp lý; errorLabel optional nhưng render có thể undefined, nên caller phải truyền hoặc thêm fallback.
-- /Frontend/src/shared/components/ui/button/ButtonContent.tsx | 20 dòng | Nội dung button render loader khi loading, left/right icons và children. | Review: shared subcomponent hợp lý; giữ cạnh Button.
-- /Frontend/src/shared/components/ui/button/buttonStyles.ts | 38 dòng | Style maps cho Button variants primary/brand/secondary/ghost/danger, sizes sm/md/lg và base styles. | Review: shared UI style config hợp lý; dùng nhiều CSS vars/arbitrary values, cần giữ đồng bộ với theme tokens.
-- /Frontend/src/shared/components/ui/index.ts | 13 dòng | Barrel export các shared UI primitives như Button, Input, GlassCard, Badge, EmptyState, Pagination và modal helpers. | Review: public UI barrel hữu ích; đang dùng double quotes/blank đầu file, nên format khi chạm.
-- /Frontend/src/shared/components/ui/input/InputFieldMeta.tsx | 45 dòng | Subcomponent render label, error hoặc hint cho Input, ẩn error khi value đang rỗng. | Review: shared form UI helper hợp lý nhưng label chưa nối htmlFor/id và logic ẩn error khá đặc thù UX, cần kiểm a11y nếu dùng rộng.
-- /Frontend/src/shared/components/ui/input/getTextareaDomProps.ts | 8 dòng | Helper loại bỏ discriminant `isTextarea` trước khi spread textarea DOM props. | Review: utility nhỏ hợp lý cạnh Input; có thể giữ để tránh prop lạ rơi xuống DOM.
-- /Frontend/src/shared/components/ui/input/input.types.ts | 22 dòng | Khai báo InputProps/TextareaProps/CombinedProps cho Input shared, gồm error/hint/label/icons/rightElement. | Review: type shared form primitive hợp lý; discriminated union `isTextarea` giúp tách input/textarea nhưng cần giữ đồng bộ với DOM prop stripping.
-- /Frontend/src/shared/components/ui/input/inputStyles.ts | 6 dòng | Base class styles cho Input/Textarea dùng tn-field, accent, radius, spacing và disabled state. | Review: shared UI style helper rất nhỏ; giữ cạnh Input thay vì tách rộng hơn.
-- /Frontend/src/shared/components/ui/modal/ModalHeader.tsx | 31 dòng | Header modal render title/description và nút close localized bằng Common.close_modal. | Review: shared modal subcomponent hợp lý; đã có aria-label cho close, nhưng JSX một dòng dài nên format khi chạm.
-- /Frontend/src/shared/components/ui/modal/useModalLifecycle.ts | 87 dòng | Hook lifecycle modal khóa scroll, Escape close, trap Tab focus và restore focus khi đóng. | Review: shared modal a11y/lifecycle hook quan trọng; đúng phạm vi UI infrastructure, cần test kỹ khi sửa vì ảnh hưởng mọi modal.
-- /Frontend/src/shared/components/ui/pagination/PaginationButton.tsx | 32 dòng | Icon button prev/next cho Pagination với ariaLabel, disabled state và Chevron icon theo direction. | Review: shared pagination subcomponent hợp lý; có aria-label/button type, nhưng dùng double quotes/arbitrary values nên format/token hóa khi chạm.
-- /Frontend/src/shared/components/ui/section-header/SectionHeaderTextBlock.tsx | 58 dòng | Text block SectionHeader render optional tag/icon, title/titleMuted và subtitle theo sizeClassName. | Review: shared section header subcomponent hợp lý; dùng double quotes/arbitrary tracking và nhiều JSX ngắt dòng, nên chuẩn hóa style khi chạm.
-- /Frontend/src/shared/config/authRoutes.ts | 24 dòng | Khai báo protected route prefixes và auth entry paths dùng chung cho guard/navigation. | Review: shared auth routing config hợp lý; cần giữ đồng bộ với routes thực tế khi thêm khu vực protected.
-- /Frontend/src/shared/config/runtimePolicyFallbacks.ts | 72 dòng | Fallback runtime policies cho auth/admin/chat/realtime/http/ui/media khi backend policy chưa tải được. | Review: shared config cross-feature hợp lý; nhiều domain trong một object nhưng đóng vai trò fallback tập trung, không nên tách cơ học.
-- /Frontend/src/shared/config/runtimePolicyStore.ts | 110 dòng | Store module-level giữ snapshot runtime policies hiện tại và update deep-copy từ DTO/fallback. | Review: shared runtime config hợp lý; phụ thuộc RuntimePoliciesDto từ shared action, cần tránh mutate snapshot trực tiếp vì trả currentState theo reference.
-- /Frontend/src/shared/domain/actionResult.test.ts | 25 dòng | Tests actionOk/actionFail tạo success/failure result và dùng AUTH_ERROR.UNAUTHORIZED. | Review: test nhỏ đúng phạm vi shared domain; import AUTH_ERROR dùng double quotes khác style chung, nên format khi chạm.
-- /Frontend/src/shared/domain/actionResult.ts | 66 dòng | Định nghĩa ActionResult success/failure, actionOk/actionFail và normalize/resolve failure status. | Review: shared domain/action contract hợp lý cho server actions; normalizeStatus bảo vệ boundary status trước khi trả HTTP.
-- /Frontend/src/shared/domain/authErrors.ts | 19 dòng | Hằng AUTH_ERROR, AuthErrorCode và helper nhận diện unauthorized/terminal auth errors. | Review: shared auth domain hợp lý; fail-closed auth flows nên dùng hằng này thay vì string rải rác.
-- /Frontend/src/shared/domain/eventContracts.ts | 22 dòng | Khai báo header domain-event expected và map command keys sang event contracts bắt buộc. | Review: shared event contract domain quan trọng cho event-evidence guard; cần đồng bộ với backend domain event names.
-- /Frontend/src/shared/domain/pagination.ts | 8 dòng | Interface IndexPaginatedList generic cho paginated API responses theo pageIndex/totalPages/count. | Review: shared DTO type hợp lý; không phụ thuộc framework/feature.
-- /Frontend/src/shared/domain/tarotData.ts | 21 dòng | Khai báo tarot suit/card metadata và sinh TAROT_DECK 78 lá theo id ranges. | Review: shared tarot domain data hợp lý nếu nhiều feature dùng deck; cần xác minh id mapping thống nhất với backend/catalog.
-- /Frontend/src/shared/domain/theme.test.ts | 29 dòng | Tests theme helpers accept/reject theme id, resolve fallback và tạo stylesheet href. | Review: test đúng phạm vi shared theme domain; giữ cạnh theme.ts.
-- /Frontend/src/shared/domain/theme.ts | 41 dòng | Theme constants/options, ThemeId guard, resolveTheme và stylesheet href builder cho `/themes/{id}.css`. | Review: shared theme domain hợp lý; label theme đang EN tĩnh nên cần localization nếu hiển thị trực tiếp.
-- /Frontend/src/shared/hooks/useAuth.ts | 127 dòng | Client hook auth query session snapshot, sync auth store, login/refresh/logout và force sync session. | Review: shared auth hook phục vụ toàn app nhưng import feature auth actions/types; nên cân nhắc chuyển public hook về feature auth hoặc tách contract shared nếu guard chặt.
-- /Frontend/src/shared/infrastructure/auth/authConstants.ts | 17 dòng | Hằng cookie/header/session TTL cho access/refresh/device id và auth headers. | Review: shared auth constants hợp lý; cần giữ đồng bộ với backend cookie/header contract.
-- /Frontend/src/shared/infrastructure/auth/clientLogoutCleanup.ts | 11 dòng | Cleanup logout client clear session snapshot, TanStack Query cache, wallet store và auth store. | Review: shared auth infrastructure hợp lý; tác động global state nên chỉ dùng ở logout/session terminal paths.
-- /Frontend/src/shared/infrastructure/auth/clientSessionSnapshot.ts | 158 dòng | Client session snapshot fetch `/api/auth/session`, cache TTL ngắn theo full/lite mode và dedupe in-flight. | Review: shared auth infrastructure quan trọng; import UserProfile từ feature auth tạo coupling type shared → feature cần cân nhắc nếu guard chặt.
-- /Frontend/src/shared/infrastructure/auth/deviceId.test.ts | 26 dòng | Tests device id lấy localStorage cached hoặc generate/store randomUUID mới. | Review: test nhỏ đúng phạm vi auth device helper; giữ cạnh deviceId.ts.
-- /Frontend/src/shared/infrastructure/auth/deviceId.ts | 26 dòng | Helper lấy/tạo device id bằng crypto.randomUUID fallback và lưu localStorage trên client. | Review: shared auth infrastructure hợp lý; fallback Math.random chỉ dùng khi crypto unavailable, đủ cho device tracking không phải secret.
-- /Frontend/src/shared/infrastructure/auth/refreshClient.test.ts | 64 dòng | Tests client refresh ok path, in-flight dedupe và fetch failure fallback false. | Review: test đúng phạm vi refresh client; kiểm header device id nhưng chưa assert idempotency key tồn tại.
-- /Frontend/src/shared/infrastructure/auth/refreshClient.ts | 48 dòng | Client refresh access token qua `/api/auth/refresh`, thêm idempotency/device headers và dedupe in-flight request. | Review: shared auth infrastructure hợp lý; random idempotency key mỗi refresh phù hợp một lần gọi, không dùng cho retry-stable command.
-- /Frontend/src/shared/infrastructure/auth/serverAuth.test.ts | 251 dòng | Tests server auth token verification, không hidden refresh, reject forged/alg none/missing config, session/profile normalize. | Review: test bảo mật quan trọng cho auth boundary; file lớn nhưng bao phủ nhiều invariant fail-closed nên chỉ tách nếu vẫn giữ coverage.
-- /Frontend/src/shared/infrastructure/auth/serverAuth.ts | 248 dòng | Server auth đọc access cookie, verify JWT, fail-open theo policy khi thiếu verifier config, lấy `/profile` và normalize UserProfile. | Review: shared auth boundary rất quan trọng; file lớn và có fallback decode nhạy cảm, chỉ sửa kèm test bảo mật tương ứng.
-- /Frontend/src/shared/infrastructure/dom/scrollLock.ts | 37 dòng | Scroll lock reference-counted thêm/xóa class tn-scroll-lock trên body/html và trả release idempotent. | Review: shared DOM utility hợp lý cho modal/overlay; counter module-level cần giữ idempotent release để tránh unlock sớm.
-- /Frontend/src/shared/infrastructure/error/parseApiError.test.ts | 29 dòng | Tests parseApiError preserve auth errorCode, fallback 401 unauthorized và 429 rate limited. | Review: test đúng phạm vi error parser; giữ cạnh parseApiError.ts.
-- /Frontend/src/shared/infrastructure/error/parseApiError.ts | 50 dòng | Parser Response lỗi ưu tiên errorCode/message/error/detail/title/errors[0], rồi fallback auth/rate-limit/text/default. | Review: shared HTTP error infrastructure hợp lý; catch rỗng và style indent khác chuẩn nên format khi chạm.
-- /Frontend/src/shared/infrastructure/gacha/gachaConstants.ts | 20 dòng | Hằng gacha idempotency header, API routes, query keys và reward kind constants. | Review: gacha-specific rõ ràng; nên chuyển về `features/gacha/infrastructure` hoặc public infra khi gom ownership.
-- /Frontend/src/shared/infrastructure/gacha/gachaRealtimeDedup.ts | 53 dòng | Dedup realtime invalidation cho gacha bằng correlation key TTL 2 phút và consume-once map. | Review: gacha-specific cache sync helper; đúng cạnh gacha mutation nhưng không nên nằm shared rộng nếu feature gacha đã có infrastructure.
-- /Frontend/src/shared/infrastructure/gacha/gachaServerActions.ts | 96 dòng | Server helpers lấy gacha pools/odds/history và pull gacha với token/idempotency header. | Review: gacha-specific server infrastructure; nên chuyển về feature gacha, đồng thời kiểm retry/idempotency khi chỉnh finance-like pull.
-- /Frontend/src/shared/infrastructure/gacha/gachaTypes.ts | 100 dòng | DTO types cho gacha pool, odds, history, rewards, pull result và pull payload. | Review: gacha domain/API types không generic shared; nên đặt trong feature gacha để giảm coupling shared.
-- /Frontend/src/shared/infrastructure/gacha/useGacha.ts | 71 dòng | Hook TanStack Query lấy pools, odds pool được chọn và history preview cho màn gacha. | Review: gacha-specific hook; nên thuộc feature gacha application/infrastructure hơn là shared.
-- /Frontend/src/shared/infrastructure/gacha/useGachaHistory.ts | 36 dòng | Hook query history gacha theo page/pageSize với normalize giới hạn pageSize 50. | Review: gacha-specific query hook; chuyển cùng gacha feature khi gom ownership.
-- /Frontend/src/shared/infrastructure/gacha/usePullGacha.test.tsx | 89 dòng | Test usePullGacha không mutate payload và gửi idempotency key trong request header. | Review: test đúng phạm vi mutation gacha; giữ đi cùng hook khi chuyển về feature gacha.
-- /Frontend/src/shared/infrastructure/gacha/usePullGacha.ts | 209 dòng | Mutation pull gacha tạo idempotency key, patch pools/history/inventory cache và dedup realtime correlation. | Review: gacha-specific và lớn; còn cross-feature inventory cache patch nên cần tách rõ gacha mutation với inventory sync khi refactor.
-- /Frontend/src/shared/infrastructure/gacha/useRareDropLottie.ts | 94 dòng | Hook chọn rarity cao nhất từ rewards và fetch Lottie animation tương ứng cho rare drop. | Review: gacha presentation/infrastructure-specific; nhiều comment/format lệch và hard-coded Lottie paths, nên chuyển về feature gacha UI hook khi chỉnh.
-- /Frontend/src/shared/infrastructure/http/apiUrl.test.ts | 41 dòng | Tests apiUrl helpers normalize public/internal base URL, rewrite origin và browser API path. | Review: test đúng phạm vi URL boundary; jsdom behavior được ghi chú vì window tồn tại trong test.
-- /Frontend/src/shared/infrastructure/http/apiUrl.ts | 110 dòng | Helpers normalize API v1 base URL, public/internal API URL, rewrite backend origin và browserApiPath. | Review: shared HTTP boundary quan trọng; nhiều comment VI mô tả workaround deploy, cần giữ đồng bộ NEXT_PUBLIC_API_URL/INTERNAL_API_URL.
-- /Frontend/src/shared/infrastructure/http/assetUrl.test.ts | 69 dòng | Tests avatar URL normalization và Next Image unoptimized decision cho uploads/proxy/remote hosts. | Review: test đúng phạm vi asset URL guard; giữ khi chỉnh image allowlist/proxy path.
-- /Frontend/src/shared/infrastructure/http/assetUrl.ts | 86 dòng | Helpers normalize avatar/uploads URL và quyết định dùng Next Image unoptimized theo blob/data/gif/proxy/host allowlist. | Review: shared asset boundary hợp lý; allowlist host và collection proxy path cần đồng bộ với next.config image policy.
-- /Frontend/src/shared/infrastructure/http/clientFetch.test.ts | 133 dòng | Tests client fetch timeout, caller abort preservation, AbortSignal.any fallback cleanup, error parse và JSON success. | Review: test quan trọng cho client HTTP boundary; giữ khi đổi timeout/runtime policy.
-- /Frontend/src/shared/infrastructure/http/clientFetch.ts | 134 dòng | Client fetch wrapper với runtime timeout, merge abort signal, timeout error và fetchJsonOrThrow parse lỗi JSON. | Review: shared HTTP client hợp lý; preserve abort cho React Query cancellation là invariant cần giữ.
-- /Frontend/src/shared/infrastructure/http/clientJsonRequest.test.ts | 137 dòng | Tests postJsonToApiV1 happy path, 401 refresh retry, unauthorized fallback, parse error, network 503 và server fallback URL. | Review: test đúng phạm vi client JSON request; bảo vệ refresh-on-401 flow nên giữ cạnh helper.
-- /Frontend/src/shared/infrastructure/http/clientJsonRequest.ts | 95 dòng | Client JSON POST helper tới API v1, timeout, credentials include, refresh retry một lần khi 401 và normalized Action-like result. | Review: shared HTTP helper hợp lý nhưng timeout riêng khác clientFetch runtime policy; cân nhắc dùng chung timeout wrapper để giảm drift.
-- /Frontend/src/shared/infrastructure/http/serverHttpClient.test.ts | 60 dòng | Tests serverHttpRequest inject expected domain-events header và trả timeout 504 khi abort. | Review: test nhỏ nhưng quan trọng cho event-evidence/server boundary; giữ khi đổi command invocation.
-- /Frontend/src/shared/infrastructure/http/serverHttpClient.ts | 177 dòng | Server HTTP client build internal API URL, auth/domain-event headers, JSON/FormData body, timeout và parse response/error. | Review: shared server boundary quan trọng; helper hơi lớn nhưng tập trung, cần giữ domain-event header contract và cache/revalidate logic.
-- /Frontend/src/shared/infrastructure/inventory/inventoryConstants.ts | 16 dòng | Hằng inventory API route, idempotency header, query keys và item type constants. | Review: inventory-specific rõ ràng; nên chuyển về `features/inventory/infrastructure` hoặc public API của inventory feature.
-- /Frontend/src/shared/infrastructure/inventory/inventoryRealtimeDedup.ts | 53 dòng | Dedup realtime inventory invalidation theo correlation key TTL 2 phút và consume-once map. | Review: inventory-specific sync helper; đặt shared chỉ hợp lý nếu presence aggregator vẫn import trực tiếp.
-- /Frontend/src/shared/infrastructure/inventory/inventoryServerActions.ts | 25 dòng | Server helper fetch inventory bằng getServerAccessToken và serverHttpRequest `/inventory`. | Review: inventory-specific server action; nên chuyển về feature inventory khi gom ownership.
-- /Frontend/src/shared/infrastructure/inventory/inventoryTypes.ts | 66 dòng | DTO inventory item/response, use-item payload/response và card stat/effect summary types. | Review: inventory API types không generic shared; nên đặt trong feature inventory để giảm shared domain leakage.
-- /Frontend/src/shared/infrastructure/inventory/use-use-item/cache.ts | 150 dòng | Helpers patch cache reading setup, collection card stats và resolve invalidation domains sau use-item. | Review: inventory mutation side effects chạm collection/reading/profile/gamification/wallet; cần tách orchestration rõ nếu chuyển vào feature inventory.
-- /Frontend/src/shared/infrastructure/inventory/use-use-item/idempotency.ts | 16 dòng | Helper tạo idempotency key và normalize intent key từ itemCode/targetCardId/quantity. | Review: inventory-specific idempotency helper hợp lý cạnh useUseItem; cần ổn định cho retry cùng intent.
-- /Frontend/src/shared/infrastructure/inventory/use-use-item/normalizer.ts | 170 dòng | Normalizer use-item response hỗ trợ Pascal/camel payload, gửi POST inventory với idempotency header và timeout. | Review: inventory-specific boundary khá lớn; nên giữ test khi tách vì normalize backend shape dễ vỡ.
-- /Frontend/src/shared/infrastructure/inventory/use-use-item/optimistic.ts | 34 dòng | Helper optimistic giảm quantity item trong inventory cache theo itemCode và quantity tiêu thụ. | Review: inventory-specific optimistic helper nhỏ; đúng cạnh useUseItem.
-- /Frontend/src/shared/infrastructure/inventory/use-use-item/types.ts | 7 dòng | Type context mutation use-item gồm intentKey, idempotencyKey và previousInventory rollback. | Review: helper type rất nhỏ nhưng hợp lý nếu giữ thư mục use-use-item đã tách trách nhiệm.
-- /Frontend/src/shared/infrastructure/inventory/useInventory.ts | 31 dòng | Hook query inventory mine qua `/api/inventory` và filter items quantity > 0. | Review: inventory-specific hook; nên chuyển về feature inventory application/infrastructure.
-- /Frontend/src/shared/infrastructure/inventory/useOwnedInventoryCards.ts | 93 dòng | Hook ghép cards catalog và user collection thành card options localized cho item cần target card. | Review: inventory UI helper phụ thuộc collection/reading catalog; nên đặt trong feature inventory hoặc bridge rõ thay vì shared rộng.
-- /Frontend/src/shared/infrastructure/inventory/useUseItem.ts | 93 dòng | Mutation use inventory item với optimistic cache, idempotency, realtime dedup, patch related caches và invalidate domains. | Review: inventory-specific orchestration quan trọng; shared placement làm coupling nhiều domain, nên chuyển feature và tách side-effect adapters khi refactor.
-- /Frontend/src/shared/infrastructure/inventory/useUseItemModalState.ts | 63 dòng | Hook state modal use-item resolve localized text, selected target card và canSubmit theo item type. | Review: inventory presentation state hook; nên chuyển về feature inventory UI, không phải shared infrastructure.
-- /Frontend/src/shared/infrastructure/logging/logger.ts | 68 dòng | Logger wrapper console theo scope và level, tắt log trong test và debug trong production. | Review: shared logging utility hợp lý; vẫn log ra console trực tiếp, cần cân nhắc adapter telemetry nếu yêu cầu production logging.
-- /Frontend/src/shared/infrastructure/navigation/normalizePathname.ts | 67 dòng | Helpers normalize pathname bỏ locale/query/hash và xác định home/legal/authless/realtime-enabled routes. | Review: shared navigation runtime helper hợp lý; route rules cần đồng bộ với authRoutes/navbar config để tránh drift.
-- /Frontend/src/shared/infrastructure/navigation/optimizedLinkPrefetch.ts | 120 dòng | Hook tính điều kiện route/query prefetch cho OptimizedLink theo href/current route, network budget, cooldown và blocked path. | Review: shared navigation prefetch hook hợp lý; logic network/cooldown cross-cutting, không thuộc feature riêng.
-- /Frontend/src/shared/infrastructure/navigation/prefetchPolicy.ts | 247 dòng | Prefetch policy quản lý blocklist, locale normalization, route-change gate 500ms, pending/in-flight dedupe và telemetry. | Review: shared navigation infrastructure lớn nhưng tập trung; blocklist hard-coded nhiều feature route nên cần kiểm drift khi route thay đổi.
-- /Frontend/src/shared/infrastructure/navigation/routeQueryPrefetch.ts | 161 dòng | Map route sang query prefetch inventory/gacha/reading/wallet, normalize path và skip heavy mobile paths. | Review: shared navigation prefetch nhưng phụ thuộc query keys gacha/inventory/wallet/reading; cân nhắc chuyển mapping domain ra feature/app-shell registry nếu mở rộng.
-- /Frontend/src/shared/infrastructure/navigation/useOptimizedLink.tsx | 74 dòng | OptimizedLink wrapper next-intl Link, prefetch route/query khi focus/hover qua policy trung tâm. | Review: shared navigation component hợp lý; là app-wide infra, không thuộc feature riêng.
-- /Frontend/src/shared/infrastructure/navigation/useOptimizedNavigation.ts | 125 dòng | Hook navigation tối ưu prefetch route/query, mark route changed và push/replace với View Transition khi phù hợp. | Review: shared navigation infrastructure hợp lý; logic view transition/network budget cross-cutting nhưng cần a11y motion preference giữ nguyên.
-- /Frontend/src/shared/infrastructure/query/invalidateUserStateQueries.ts | 79 dòng | Central invalidation theo domain user-state cho wallet, inventory, collection, reading, profile, notifications, chat, gacha, gamification. | Review: shared query orchestration hữu ích nhưng import gamification/gacha keys tạo coupling feature; cân nhắc registry/adapters nếu domain tăng.
-- /Frontend/src/shared/infrastructure/query/userStateQueryKeys.test.ts | 35 dòng | Tests stable query keys cho auth/wallet/inventory/collection/reading/profile/reader/notifications/chat/system. | Review: test đúng phạm vi query key contract; giữ khi đổi key để tránh invalidation drift.
-- /Frontend/src/shared/infrastructure/query/userStateQueryKeys.ts | 65 dòng | Central query key factory cho các user-state surfaces auth, wallet, inventory, collection, reading, profile, reader, notifications, chat và system. | Review: shared cache contract hợp lý; nhiều feature keys tập trung giúp invalidation nhưng có thể thành coupling hotspot.
-- /Frontend/src/shared/infrastructure/realtime/realtimeSessionGuard.ts | 15 dòng | Guard SignalR startup bằng client session snapshot lite, không clear auth store khi endpoint lỗi tạm thời. | Review: shared realtime/auth boundary hợp lý; comment nêu invariant UX quan trọng, giữ khi sửa.
-- /Frontend/src/shared/infrastructure/realtime/signalRUrl.ts | 4 dòng | Helper chuẩn hóa hub path SignalR thành path bắt đầu bằng slash. | Review: file rất mỏng; chỉ giữ nếu muốn tập trung future hub URL logic, còn hiện tại có thể inline để giảm phân mảnh.
-- /Frontend/src/shared/infrastructure/storage/browserStorage.test.ts | 29 dòng | Tests browser storage helpers đọc/ghi/xóa localStorage an toàn và parse sessionStorage number fallback. | Review: test nhỏ đúng phạm vi storage utility; giữ cạnh helper.
-- /Frontend/src/shared/infrastructure/storage/browserStorage.ts | 54 dòng | Safe wrappers cho localStorage/sessionStorage get/set/remove và parse number, no-op khi không có window hoặc storage lỗi. | Review: shared browser storage utility hợp lý; catch rỗng chủ đích fail-soft cho private mode/quota.
-- /Frontend/src/shared/infrastructure/theme/clientTheme.ts | 73 dòng | Client theme applier đọc localStorage/DOM, set data-theme, sync stylesheet link và persist cookie/localStorage. | Review: shared theme infrastructure hợp lý; trực tiếp ghi cookie/localStorage nên cần giữ đồng bộ với server theme resolution.
-- /Frontend/src/shared/lib/appQueryClient.ts | 16 dòng | Factory tạo QueryClient với default stale/gc/refetch/retry options cho app providers. | Review: shared TanStack Query config hợp lý; không trùng vai trò với `src/lib/utils`.
-- /Frontend/src/shared/media-upload/constants.ts | 56 dòng | Runtime/fallback constants cho image/voice upload limit, compression steps, retry attempts/delay và WebP worker config. | Review: shared media config hợp lý; comment CSP worker self-host là constraint quan trọng cần giữ.
-- /Frontend/src/shared/media-upload/imageCompression.test.ts | 25 dòng | Tests validate image direct upload accept image <=10MB và reject non-image/oversize. | Review: test đúng phạm vi image validation; chưa cover GIF bypass/compression steps.
-- /Frontend/src/shared/media-upload/imageCompression.ts | 102 dòng | Validate/compress image upload sang WebP qua browser-image-compression, skip GIF và đọc dimensions bằng object URL. | Review: shared media helper hợp lý cho avatar/community; hard-coded VI error messages cần localization nếu surfaced trực tiếp.
-- /Frontend/src/shared/media-upload/index.test.ts | 11 dòng | Test barrel re-export core upload APIs như upload retry, XHR upload, presign/confirm avatar. | Review: test nhỏ đúng phạm vi public media-upload barrel.
-- /Frontend/src/shared/media-upload/index.ts | 37 dòng | Barrel export media upload constants, image compression, markdown placeholders, presigned APIs, XHR/retry upload và types. | Review: public shared upload API hợp lý; giữ nếu nhiều feature dùng avatar/community/chat media.
-- /Frontend/src/shared/media-upload/markdownPlaceholders.test.ts | 35 dòng | Tests append/replace/remove markdown image placeholder cho optimistic upload rollback. | Review: test đúng phạm vi placeholder markdown; giữ cạnh helper.
-- /Frontend/src/shared/media-upload/markdownPlaceholders.ts | 63 dòng | Helpers tạo tarotnow-upload placeholder URL và append/replace/remove markdown image syntax. | Review: shared community/media helper hợp lý; default alt `community-image` nghiêng community nhưng vẫn dùng được cross-feature.
-- /Frontend/src/shared/media-upload/presignedUploadApi.test.ts | 85 dòng | Tests presign/confirm endpoints cho avatar, community image và conversation media upload. | Review: test đúng phạm vi API wrapper; helper gom nhiều feature endpoints nên cần giữ contract khi backend đổi route.
-- /Frontend/src/shared/media-upload/presignedUploadApi.ts | 107 dòng | API wrappers presign/confirm avatar/community image và presign conversation media qua postJsonToApiV1. | Review: shared upload API cross-feature hợp lý, nhưng endpoint-specific text/paths thuộc profile/community/chat nên có thể tách adapters nếu phình.
-- /Frontend/src/shared/media-upload/retry.test.ts | 40 dòng | Tests runWithRetry retry until success và dừng khi shouldRetry false. | Review: test đúng phạm vi retry utility; giữ khi đổi backoff.
-- /Frontend/src/shared/media-upload/retry.ts | 33 dòng | Generic retry runner với linear delay theo attempt và optional shouldRetry. | Review: shared utility hợp lý; policy retry đơn giản, không nên dùng cho finance/idempotent command nếu chưa đánh giá.
-- /Frontend/src/shared/media-upload/types.ts | 24 dòng | Types cho community/conversation media kind, presigned upload response và avatar/community confirm responses. | Review: shared media DTO hợp lý nhưng chứa feature-specific confirm responses; cân nhắc tách nếu profile/community/chat upload diverge.
-- /Frontend/src/shared/media-upload/uploadViaXhr.test.ts | 142 dòng | Tests XHR upload success/progress, HTTP error, R2 CORS message, abort và timeout. | Review: test quan trọng cho direct-to-R2 upload; giữ khi chỉnh upload transport.
-- /Frontend/src/shared/media-upload/uploadViaXhr.ts | 79 dòng | XHR PUT upload tới presigned URL với Content-Type, progress callback, timeout/abort và R2 CORS-specific error. | Review: shared upload transport hợp lý; message VI trực tiếp và CORS detection theo host cần kiểm khi đổi storage provider.
-- /Frontend/src/shared/media-upload/uploadWithRetry.test.ts | 70 dòng | Tests uploadToR2WithRetry delegate XHR through retry and không retry abort/CORS errors. | Review: test đúng phạm vi retry wrapper; bảo vệ non-retry cases quan trọng.
-- /Frontend/src/shared/media-upload/uploadWithRetry.ts | 60 dòng | Wrapper uploadToR2WithRetry gọi XHR upload qua runWithRetry với attempts/delay runtime config và shouldRetry filter. | Review: shared R2 upload orchestration hợp lý; retry không áp dụng cho abort/CORS, đúng boundary người dùng.
-- /Frontend/src/shared/providers/AuthProvider.tsx | 22 dòng | Client provider đăng ký QueryClient bridge cho authStore và cleanup bridge khi unmount. | Review: shared runtime provider hợp lý vì wiring global auth/query; logic mỏng, đặt cạnh app providers đúng.
-- /Frontend/src/shared/providers/PresenceProvider.tsx | 18 dòng | Client provider bật usePresenceConnection theo pathname và shouldEnableRealtimeForPath. | Review: shared app runtime provider hợp lý; realtime orchestration vẫn nằm hook, provider chỉ gating theo route.
-- /Frontend/src/shared/seo/defaultMetadata.ts | 19 dòng | Helper generate localized Metadata từ namespace Common cho app title/template/description. | Review: shared SEO helper hợp lý cho localized layouts; phụ thuộc next-intl server nên chỉ dùng server route/layout.
-- /Frontend/src/shared/server/auth/accessTokenVerifier.ts | 81 dòng | Server JWT verifier dùng jose kiểm HS256, issuer/audience/clock skew và trả reason fail chi tiết. | Review: auth security boundary quan trọng; production behavior phụ thuộc env JWT_SECRETKEY/JWT_ISSUER/JWT_AUDIENCE nên cần fail-closed policy đi kèm.
-- /Frontend/src/shared/server/auth/authVerifierPolicy.test.ts | 42 dòng | Tests auth verifier policy production luôn fail-closed, non-production default fail-open và override fail-closed. | Review: test bảo mật nhỏ nhưng quan trọng; giữ khi chỉnh policy env.
-- /Frontend/src/shared/server/auth/authVerifierPolicy.ts | 41 dòng | Resolve fail-open/fail-closed verifier policy từ AUTH_VERIFIER_POLICY và NODE_ENV, production luôn fail-closed. | Review: shared server auth policy hợp lý; invariant production fail-closed không được nới lỏng.
-- /Frontend/src/shared/server/auth/cachedSessionSnapshot.ts | 10 dòng | Request-scoped React cache cho getServerSessionSnapshot để tránh gọi `/profile` lặp trong cùng render tree. | Review: shared server auth helper hợp lý; chỉ dùng server components/layouts, không import client.
-- /Frontend/src/shared/server/auth/navigationRequest.ts | 64 dòng | Helper nhận diện request document navigation thật bằng headers và loại trừ prefetch/RSC/data-flight. | Review: shared server navigation/auth helper hợp lý; header heuristic nhạy cảm với Next router behavior nên cần test nếu đổi.
-- /Frontend/src/shared/server/auth/protectedRouteAuthDecision.test.ts | 190 dòng | Tests protected route decision cho valid token, handshake refresh, fail-open dev, fail-closed prod và login fallback. | Review: test bảo mật quan trọng; file lớn nhưng nên giữ coverage đầy đủ khi refactor auth gates.
-- /Frontend/src/shared/server/auth/protectedRouteAuthDecision.ts | 110 dòng | Decision engine protected route trả ALLOW/REDIRECT_LOGIN/REDIRECT_HANDSHAKE theo access/refresh token và verifier policy. | Review: shared server auth boundary quan trọng; handshake/login path logic cần đồng bộ middleware/layout guards.
-- /Frontend/src/shared/server/auth/redirectAuthenticatedAuthEntry.test.ts | 144 dòng | Tests auth entry redirect giữ anonymous/refresh-only, redirect authenticated và không redirect khi session lookup unauthenticated. | Review: test đúng phạm vi auth entry guard; có indent lệch ở một `it`, nên format khi chạm.
-- /Frontend/src/shared/server/auth/redirectAuthenticatedAuthEntry.ts | 41 dòng | Guard auth entry server redirect authenticated users khỏi login/register về fallback path sau khi xác nhận session. | Review: shared server auth helper hợp lý; chỉ redirect khi access token hợp lệ và cached session authenticated, tránh handshake ẩn cho refresh-only.
-- /Frontend/src/shared/server/auth/sessionHandshake.ts | 61 dòng | Server guard require authenticated session, redirect login hoặc handshake theo access/refresh cookies và document navigation. | Review: shared server auth boundary quan trọng; import UserProfile từ feature auth tạo coupling type shared → feature cần cân nhắc nếu guard chặt.
-- /Frontend/src/shared/server/prefetch/appQueryDehydrate.tsx | 21 dòng | Helper server tạo QueryClient, chạy setup prefetch, dehydrate state và render HydrationBoundary. | Review: shared prefetch primitive hợp lý; chỉ dùng server/React Query hydration, không chứa domain logic.
-- /Frontend/src/shared/server/prefetch/runners/admin.ts | 143 dòng | Prefetch runners admin cho dashboard, users, deposits, reader requests, readings, withdrawals, disputes và gamification. | Review: app-level prefetch registry hợp lý nhưng phụ thuộc nhiều feature admin/cross-admin; có format/indent lệch trong disputes nên format khi chạm.
-- /Frontend/src/shared/server/prefetch/runners/user/chat.ts | 24 dòng | Prefetch chat inbox active shell bằng listConversations và fallback empty conversations. | Review: user prefetch runner chat-specific; shared placement hợp lý nếu route registry tập trung, nhưng import feature chat trực tiếp tạo coupling chủ đích.
-- /Frontend/src/shared/server/prefetch/runners/user/collection.ts | 48 dòng | Prefetch collection, inventory và reading setup snapshot, đồng thời hydrate cards catalog từ snapshot. | Review: runner gom collection/inventory/reading setup nên cross-feature; tốt cho route prefetch nhưng cần tách nếu ownership feature chặt hơn.
-- /Frontend/src/shared/server/prefetch/runners/user/community.ts | 30 dòng | Prefetch infinite public community feed và bỏ private feed cho client tab load. | Review: community-specific runner hợp lý trong prefetch registry; comment hard-coded strategy cần đồng bộ UX tab feed.
-- /Frontend/src/shared/server/prefetch/runners/user/gacha.ts | 51 dòng | Prefetch gacha pools, odds pool đầu tiên, history preview và history page. | Review: gacha-specific runner; nên đi cùng feature gacha nếu tách prefetch registry thành adapters theo feature.
-- /Frontend/src/shared/server/prefetch/runners/user/gamification.ts | 53 dòng | Prefetch gamification quests/achievements/titles và leaderboard theo runtime policy defaults. | Review: runner phụ thuộc runtime policies và feature gamification; hợp lý cho SSR prefetch nhưng cần giữ fallback khi policy thiếu.
-- /Frontend/src/shared/server/prefetch/runners/user/index.ts | 11 dòng | Barrel export các user prefetch runners theo domain chat, collection, community, gacha, gamification, profile, reading, shell và wallet. | Review: barrel hữu ích cho registry route; chấp nhận dù mỏng vì gom public prefetch runner API.
-- /Frontend/src/shared/server/prefetch/runners/user/notifications.ts | 13 dòng | Prefetch notifications page đầu với query key notifications list và fallback null khi action fail. | Review: notification-specific runner nhỏ; shared placement chỉ hợp lý khi prefetch routes tập trung.
-- /Frontend/src/shared/server/prefetch/runners/user/profile.ts | 31 dòng | Prefetch profile detail, reader request và MFA status cho các trang profile. | Review: profile runner phụ thuộc profile/reader/mfa features; cân nhắc feature-owned adapters nếu registry shared bị coupling quá rộng.
-- /Frontend/src/shared/server/prefetch/runners/user/readers.ts | 65 dòng | Prefetch readers directory, reader apply, public reader profile và reader settings theo role tarot_reader. | Review: reader/profile-specific runner hợp lý cho SSR prefetch; role check trước settings giúp tránh query sai user nhưng vẫn import nhiều feature actions.
-- /Frontend/src/shared/server/prefetch/runners/user/readingHistory.ts | 49 dòng | Prefetch reading history list/detail với unauthorized error mapping sang AUTH_ERROR.UNAUTHORIZED. | Review: reading-specific runner; có indent lệch ở throw unauthorized, nên format khi chạm và giữ auth error contract.
-- /Frontend/src/shared/server/prefetch/runners/user/shared.ts | 16 dòng | Constants và swallowPrefetch best-effort dùng chung cho user prefetch runners. | Review: shared prefetch helper hợp lý; catch rỗng chủ đích để SSR prefetch không phá navigation khi API/session lỗi.
-- /Frontend/src/shared/server/prefetch/runners/user/shell.ts | 29 dòng | Prefetch user segment shell bằng metadata aggregate và hydrate wallet, streak, notifications, chat inbox/unread caches. | Review: app-shell prefetch aggregator hợp lý nhưng cross-feature cache patch nhiều domain; cần giữ đồng bộ userStateQueryKeys/checkin keys.
-- /Frontend/src/shared/server/prefetch/runners/user/wallet.ts | 53 dòng | Prefetch wallet overview ledger, deposit packages/history và withdrawals mine với fallback empty/null. | Review: wallet-specific runner; shared placement hợp lý trong centralized prefetch, nhưng có thể chuyển adapter về feature wallet nếu tách registry.
-- /Frontend/src/shared/server/prefetch/runners/user.ts | 1 dòng | Barrel một dòng re-export user prefetch runners index. | Review: file rất mỏng; chỉ giữ nếu import path ổn định, nếu không có thể gộp để giảm phân mảnh.
-- /Frontend/src/shared/server/prefetch/runners.ts | 2 dòng | Barrel top-level export user và admin prefetch runners. | Review: file mỏng nhưng hợp lý làm public server prefetch entry; không chứa logic.
-- /Frontend/src/shared/utils/format/formatCurrency.ts | 12 dòng | Helper format number thành currency bằng Intl.NumberFormat theo locale/currency/fraction digits. | Review: shared format utility hợp lý; cần kiểm usage trước khi kết luận trùng với formatter feature khác.
-- /Frontend/src/shared/utils/format/formatDateTime.ts | 18 dòng | Helpers format date/time/dateTime bằng Date và locale browser Intl defaults. | Review: shared format utility hợp lý nhưng parse string trực tiếp bằng new Date; cần kiểm timezone/ISO expectation trước khi dùng cho giao dịch.
+Ghi chú: sau refactor, `src/shared` còn lại các primitive/hạ tầng cross-feature; các UI/domain feature cũ đã được chuyển sang `src/features/*`. Khi thêm mới, chỉ đưa vào shared nếu thật sự dùng chéo feature.
 
-## src other
+- /Frontend/src/shared/actions/home-snapshot.ts | 26 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/actions/runtime-policies.ts | 154 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/layout/AstralBackground.tsx | 25 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/layout/astral-background/AstralNebula.tsx | 45 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/layout/astral-background/AstralParticles.tsx | 19 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/layout/astral-background/config.ts | 57 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/navbar/config.ts | 38 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/user-sidebar/UserSidebar.tsx | 27 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/user-sidebar/UserSidebarMenuGroup.tsx | 24 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/user-sidebar/UserSidebarMenuItem.tsx | 25 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/user-sidebar/UserSidebarPanel.tsx | 23 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/user-sidebar/config.ts | 94 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/app-shell/navigation/user-sidebar/useUserSidebarState.ts | 19 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/authConstants.ts | 17 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/deviceId.test.ts | 26 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/deviceId.ts | 26 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/refreshClient.test.ts | 64 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/refreshClient.ts | 48 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/serverAuth.test.ts | 251 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/auth/serverAuth.ts | 248 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/config/authRoutes.ts | 24 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/config/runtimePolicyFallbacks.ts | 72 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/config/runtimePolicyStore.ts | 110 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/dom/scrollLock.ts | 37 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/error/parseApiError.test.ts | 29 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/error/parseApiError.ts | 50 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/authConstants.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/browserStorage.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/clientFetch.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/domainCommandRegistry.test.ts | 124 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/domainCommandRegistry.ts | 193 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/logger.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/serverAuth.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/serverHttpClient.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/useOptimizedNavigation.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/gateways/userStateQueryKeys.ts | 1 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/hooks/useDebouncedValue.ts | 19 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/hooks/useHydrateFormOnce.test.tsx | 77 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/hooks/useHydrateFormOnce.ts | 33 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/hooks/useRelativeTimeNow.ts | 23 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/hooks/useRuntimePolicies.ts | 36 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/apiUrl.test.ts | 41 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/apiUrl.ts | 110 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/assetUrl.test.ts | 69 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/assetUrl.ts | 86 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/clientFetch.test.ts | 133 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/clientFetch.ts | 134 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/clientJsonRequest.test.ts | 137 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/clientJsonRequest.ts | 95 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/serverHttpClient.test.ts | 60 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/http/serverHttpClient.ts | 177 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/logging/logger.ts | 68 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/constants.ts | 56 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/imageCompression.test.ts | 25 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/imageCompression.ts | 102 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/index.test.ts | 11 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/index.ts | 37 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/markdownPlaceholders.test.ts | 35 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/markdownPlaceholders.ts | 63 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/presignedUploadApi.test.ts | 85 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/presignedUploadApi.ts | 107 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/retry.test.ts | 40 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/retry.ts | 33 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/types.ts | 24 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/uploadViaXhr.test.ts | 142 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/uploadViaXhr.ts | 79 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/uploadWithRetry.test.ts | 70 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/media-upload/uploadWithRetry.ts | 60 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/models/actionResult.test.ts | 25 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/models/actionResult.ts | 66 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/models/authErrors.ts | 19 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/models/eventContracts.ts | 22 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/models/tarotData.ts | 21 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/navigation/normalizePathname.ts | 67 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/navigation/optimizedLinkPrefetch.ts | 120 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/navigation/prefetchPolicy.ts | 247 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/navigation/routeQueryPrefetch.ts | 161 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/navigation/useOptimizedLink.tsx | 74 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/navigation/useOptimizedNavigation.ts | 125 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/query/invalidateUserStateQueries.ts | 79 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/query/userStateQueryKeys.test.ts | 35 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/query/userStateQueryKeys.ts | 65 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/server/auth/accessTokenVerifier.ts | 81 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/server/auth/authVerifierPolicy.test.ts | 42 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/server/auth/authVerifierPolicy.ts | 41 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/server/auth/navigationRequest.ts | 64 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/server/auth/protectedRouteAuthDecision.test.ts | 190 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/server/auth/protectedRouteAuthDecision.ts | 110 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/storage/browserStorage.test.ts | 29 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/storage/browserStorage.ts | 54 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/Badge.tsx | 66 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/Button.tsx | 33 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/EmptyState.tsx | 65 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/FilterTabs.tsx | 43 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/GlassCard.tsx | 58 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/InlineErrorAlert.tsx | 22 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/Input.tsx | 76 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/Modal.tsx | 56 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/Pagination.tsx | 59 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/SectionHeader.tsx | 55 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/StepPagination.tsx | 51 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/TableStates.tsx | 76 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/button/ButtonContent.tsx | 20 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/button/buttonStyles.ts | 38 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/index.ts | 12 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/input/InputFieldMeta.tsx | 45 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/input/getTextareaDomProps.ts | 8 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/input/input.types.ts | 22 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/input/inputStyles.ts | 6 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/modal/ModalHeader.tsx | 31 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/modal/useModalLifecycle.ts | 87 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/pagination/PaginationButton.tsx | 32 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/ui/section-header/SectionHeaderTextBlock.tsx | 58 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/format/formatCurrency.ts | 12 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/format/formatDateTime.ts | 18 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/queryPolicy.test.ts | 37 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/queryPolicy.ts | 43 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/resolveErrorMessage.test.ts | 12 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/resolveErrorMessage.ts | 7 dòng | Module shared dùng chung sau refactor feature-first.
+- /Frontend/src/shared/utils/typedSubmit.ts | 7 dòng | Module shared dùng chung sau refactor feature-first.
 
-- /Frontend/src/README.md | 29 dòng | Tài liệu mô tả layout feature-first Clean Architecture, layer intent và import guidelines trong src. | Review: hữu ích làm rule tóm tắt FE; cần cập nhật nếu refactor public API từ `public.ts` sang thư mục `public` để tránh drift.
-- /Frontend/src/i18n/clientMessages.test.ts | 30 dòng | Tests namespace client messages gồm Chat/Notifications cho navbar và pickClientMessages chỉ chọn namespace yêu cầu. | Review: test đúng phạm vi i18n client bundle; giữ khi thay đổi danh sách namespace hydrate phía client.
-- /Frontend/src/i18n/clientMessages.ts | 66 dòng | Khai báo các namespace messages cần gửi xuống client cho root/auth/site/user/admin và helper pickClientMessages. | Review: cross-cutting i18n config hợp lý; danh sách namespace dễ drift với component client mới, cần cập nhật khi thêm UI text.
-- /Frontend/src/i18n/messages.test.ts | 76 dòng | Tests mergeMessages deep merge và loadLocaleMessages đủ top-level keys cho en/vi/zh. | Review: test quan trọng chống thiếu namespace localization; EXPECTED_TOP_LEVEL_KEYS cần cập nhật cùng messages mới.
-- /Frontend/src/i18n/messages.ts | 112 dòng | Loader đọc recursively JSON messages theo locale, deep merge dictionary và cache promise trong production. | Review: i18n infrastructure hợp lý; comment cache production là invariant hiệu năng, cần giữ behavior dev không cache để sửa messages nóng.
-- /Frontend/src/i18n/request.ts | 39 dòng | next-intl request config resolve locale, merge fallback vi với locale messages và cache merged messages production. | Review: i18n server config đúng phạm vi; có blank đầu file/indent lệch nhẹ và fallback vi là contract cần giữ đồng bộ yêu cầu localization.
-- /Frontend/src/i18n/routing.tsx | 25 dòng | next-intl routing cho vi/en/zh, localePrefix always và Link wrapper tắt prefetch mặc định. | Review: i18n routing cross-cutting hợp lý; Link prefetch default false liên quan chính sách prefetch, cần giữ đồng bộ prefetchPolicy.
-- /Frontend/src/lib/utils.ts | 20 dòng | Cung cấp `cn` clsx/tailwind-merge và formatCardStat loại bỏ phần thập phân dư cho UI lá bài. | Review: `cn` là canonical utility đang dùng rộng; formatCardStat card-specific nên cân nhắc chuyển gần feature/card nếu usage hẹp.
-- /Frontend/src/middleware.test.ts | 68 dòng | Tests proxy middleware redirect root locale, protected route login/handshake, auth entry redirect và skip API routes. | Review: test đúng phạm vi proxy edge guard; đặt ở src root vì import `../proxy`, nhưng có thể đặt cạnh proxy nếu đổi cấu trúc test.
-- /Frontend/src/proxy.ts | 251 dòng | Next proxy middleware i18n, canonical host redirect, optimistic auth cookie gate, CSP nonce/header và matcher config. | Review: security/runtime boundary lớn và đúng ở src root cho Next proxy; comment optimistic auth gate là invariant cần giữ, không phải re-export trùng vai trò.
-- /Frontend/src/store/authStore.selector.test.tsx | 70 dòng | React selector test cho authStore subscription cập nhật isAuthenticated khi setSession/clearAuth. | Review: test đúng phạm vi store hook; cần giữ khi chỉnh useSyncExternalStore selector bridge.
-- /Frontend/src/store/authStore.test.ts | 106 dòng | Tests authStore set/clear session, React Query bridge sync, updateUser cache persist và ignore invalid cache shape. | Review: test quan trọng cho auth/query bridge; store vẫn import UserProfile từ feature auth nên boundary src/store ↔ feature cần cân nhắc nếu guard chặt.
-- /Frontend/src/store/authStore.ts | 241 dòng | External-store auth state quản lý user/session expiry, React Query auth session bridge và selector hook. | Review: cross-cutting auth store hợp lý về runtime nhưng đặt `src/store` riêng tạo boundary song song shared/feature; cân nhắc chuyển về shared/application hoặc feature auth public store.
-- /Frontend/src/store/walletStore.test.ts | 79 dòng | Tests walletStore fetcher missing, fetch balance with/without Query bridge, keep previous balance on failure và sync cache. | Review: test đúng phạm vi wallet store bridge; giữ khi chuyển hoặc tách wallet store.
-- /Frontend/src/store/walletStore.ts | 237 dòng | External-store wallet state quản lý balance loading/error, fetcher injection, React Query wallet balance bridge và selector hook. | Review: wallet-specific store nằm src/store chung; nên cân nhắc chuyển vào feature wallet public/application để giảm store root coupling.
-- /Frontend/src/test/setup.ts | 1 dòng | Vitest setup import jest-dom matchers cho Testing Library. | Review: đặt đúng test setup cross-cutting; không ảnh hưởng runtime.
+## src/features/admin
+
+- /Frontend/src/features/admin/dashboard/AdminDashboardPage.tsx | 55 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/actions/dashboard.ts | 110 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardHeader.tsx | 33 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardInsights.tsx | 70 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardLoading.tsx | 21 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardMidSection.tsx | 19 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardNoticePanel.tsx | 60 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardShortcuts.tsx | 66 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/AdminDashboardStatsGrid.tsx | 49 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/adminDashboardShortcuts.items.ts | 46 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/index.ts | 6 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/dashboard/components/types.ts | 18 dòng | Model/type nội bộ của feature `admin`.
+- /Frontend/src/features/admin/dashboard/hooks/useAdminDashboard.ts | 36 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/deposits/AdminDepositsPage.tsx | 58 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/actions/deposits.test.ts | 94 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/deposits/actions/deposits.ts | 122 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositAmountCell.tsx | 17 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositAssetsCell.tsx | 18 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositRowActions.tsx | 22 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositStatusBadge.tsx | 42 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositTableRow.tsx | 31 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositTimeCell.tsx | 20 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositUserCell.tsx | 25 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositsHeader.tsx | 55 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositsSummary.tsx | 39 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositsTable.tsx | 19 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositsTableBody.tsx | 47 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/AdminDepositsTableHead.tsx | 27 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/deposits/components/index.ts | 3 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/deposits/components/types.ts | 39 dòng | Model/type nội bộ của feature `admin`.
+- /Frontend/src/features/admin/deposits/hooks/useAdminDeposits.ts | 93 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/deposits/useAdminDepositsPageLabels.ts | 62 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/disputes/AdminDisputesPage.tsx | 71 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputeActions.tsx | 43 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputeCard.tsx | 49 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputeMetaGrid.tsx | 41 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputeNoteInput.tsx | 25 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputeSplitInput.tsx | 33 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputesEmptyState.tsx | 18 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/components/AdminDisputesLoadingState.tsx | 13 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/disputes/hooks/useAdminDisputes.ts | 87 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/gamification/AdminGamificationClient.tsx | 69 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/actions/adminGamificationClient.test.ts | 60 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/gamification/actions/adminGamificationClient.ts | 124 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/gamification/actions/adminGamificationServer.ts | 40 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/gamification/adminGamificationKeys.ts | 6 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminAchievementForm.tsx | 63 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminAchievementTable.tsx | 55 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminGamificationFormModal.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminGamificationTabs.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminQuestForm.tsx | 73 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminQuestTable.tsx | 53 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminTitleForm.tsx | 56 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/components/AdminTitleTable.tsx | 59 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/hooks/useAdminGamification.test.tsx | 140 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/gamification/hooks/useAdminGamification.ts | 105 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/gamification/hooks/useAdminGamificationClientState.ts | 168 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/gamification/schemas/adminGamificationFormSchema.test.ts | 98 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/gamification/schemas/adminGamificationFormSchema.ts | 132 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/gamification/types/adminGamification.types.ts | 48 dòng | Model/type nội bộ của feature `admin`.
+- /Frontend/src/features/admin/promotions/AdminPromotionsClient.tsx | 59 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/AdminPromotionsPage.test.tsx | 31 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/AdminPromotionsPage.tsx | 17 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/actions/index.ts | 3 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/promotions/actions/list.ts | 34 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/promotions/actions/manage.ts | 94 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/promotions/actions/types.ts | 9 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionCreateFields.tsx | 65 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionCreateFooter.tsx | 30 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionCreateForm.tsx | 91 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionStatusButton.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsDesktopRow.tsx | 59 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsDesktopTable.tsx | 71 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsHeader.tsx | 39 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsList.tsx | 16 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsMobileCard.tsx | 58 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsMobileList.tsx | 44 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsStateBlock.test.tsx | 43 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/AdminPromotionsStateBlock.tsx | 62 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/components/index.ts | 3 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/promotions/components/types.ts | 22 dòng | Model/type nội bộ của feature `admin`.
+- /Frontend/src/features/admin/promotions/hooks/useAdminPromotions.test.tsx | 175 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/promotions/hooks/useAdminPromotions.ts | 153 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/public.ts | 14 dòng | Public boundary/export của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/AdminReaderRequestsPage.tsx | 9 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/actions/reader-requests.test.ts | 113 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/actions/reader-requests.ts | 242 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestActions.tsx | 65 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestAdminNote.tsx | 25 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestCard.tsx | 76 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestCard.types.ts | 37 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestIntro.tsx | 62 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestMeta.tsx | 35 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestReviewHistory.tsx | 50 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestStatusBadge.tsx | 45 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsContent.tsx | 39 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsFilterTabs.tsx | 36 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsHeader.tsx | 43 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsList.tsx | 50 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsMain.tsx | 43 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsPagination.tsx | 31 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/components/ReaderRequestsStates.tsx | 48 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/reader-requests/hooks/useAdminReaderRequests.ts | 111 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/readings/AdminReadingsPage.tsx | 45 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsFilterField.tsx | 22 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsFilters.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsHeader.tsx | 26 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsInsights.tsx | 63 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsPagination.tsx | 53 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsSpreadSelect.tsx | 25 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsStatusBadge.tsx | 21 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsTable.tsx | 50 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsTableContent.tsx | 77 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsTableHead.tsx | 30 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsTableRow.tsx | 28 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsTimelineCell.tsx | 19 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/AdminReadingsUserCell.tsx | 26 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/readings/components/index.ts | 4 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/readings/components/useAdminReadingsFiltersForm.ts | 66 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/readings/hooks/useAdminReadings.ts | 124 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/shared/adminQueryKeys.ts | 38 dòng | Module thuộc feature `admin`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/admin/shared/adminQueryPolicy.ts | 26 dòng | Module thuộc feature `admin`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/admin/shared/gateways/idempotentDomainCommandInvoker.ts | 61 dòng | Module thuộc feature `admin`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/admin/shared/ui/ActionConfirmModal.tsx | 50 dòng | UI/presentation của feature `admin`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/admin/shell/components/AdminLayout.types.ts | 31 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/shell/components/AdminLayoutDesktopMenu.tsx | 54 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/AdminLayoutMobileDrawer.tsx | 39 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/AdminLayoutMobileTopBar.tsx | 26 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/AdminLayoutShell.tsx | 56 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/AdminSidebarContent.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/admin-sidebar/AdminSidebarBrand.tsx | 33 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/admin-sidebar/AdminSidebarExitLink.tsx | 30 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/admin-sidebar/AdminSidebarMenu.tsx | 45 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/shell/components/admin-sidebar/isRouteActive.ts | 4 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/shell/components/useAdminLayoutShellState.ts | 66 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/system-configs/AdminSystemConfigsPage.tsx | 81 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/system-configs/SystemConfigsEditorPanel.tsx | 98 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/system-configs/SystemConfigsListPanel.test.tsx | 54 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/system-configs/SystemConfigsListPanel.tsx | 93 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/system-configs/SystemConfigsLoadErrorState.tsx | 27 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/system-configs/actions/system-configs.ts | 95 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/system-configs/hooks/useAdminSystemConfigs.test.tsx | 230 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/system-configs/hooks/useAdminSystemConfigs.ts | 237 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/system-configs/system-config.types.ts | 16 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/users/AdminUsersPage.tsx | 71 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/actions/users.test.ts | 203 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/users/actions/users.ts | 100 dòng | Application action/hook của feature `admin`.
+- /Frontend/src/features/admin/users/components/AdminUserTableRow.tsx | 21 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/AdminUsersAddModal.tsx | 32 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/AdminUsersEditModal.tsx | 32 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/AdminUsersPageHeader.tsx | 34 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/AdminUsersPageModals.tsx | 22 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/AdminUsersTable.tsx | 32 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/types.ts | 54 dòng | Model/type nội bộ của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-modals/AdminUsersAddFields.tsx | 62 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-modals/AdminUsersEditFields.tsx | 62 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-modals/AdminUsersLedgerNotice.tsx | 15 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-modals/AdminUsersModalActions.tsx | 35 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-modals/AdminUsersModalHeader.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/AdminUserActionsCell.tsx | 24 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/AdminUserBalanceCell.tsx | 30 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/AdminUserIdentityCell.tsx | 29 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/AdminUserLevelCell.tsx | 25 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/AdminUserRoleCell.tsx | 23 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/AdminUserStatusCell.tsx | 22 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/users/components/user-row/userRole.ts | 14 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/users/hooks/useAdminUsers.config.ts | 56 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/users/hooks/useAdminUsers.ts | 105 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/users/hooks/useAdminUsers.types.ts | 14 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/users/hooks/useAdminUsersModalForms.ts | 90 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/users/hooks/useAdminUsersMutations.ts | 86 dòng | Module thuộc feature `admin`.
+- /Frontend/src/features/admin/withdrawals/AdminWithdrawalsPage.tsx | 66 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalActions.tsx | 49 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalAmountInfo.tsx | 40 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalBankInfo.tsx | 31 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalCard.tsx | 59 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalDetailModal.tsx | 74 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalMetaInfo.tsx | 29 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalsEmptyState.tsx | 22 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalsHeader.tsx | 29 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/components/AdminWithdrawalsLoadingState.tsx | 21 dòng | UI/presentation của feature `admin`.
+- /Frontend/src/features/admin/withdrawals/hooks/useAdminWithdrawals.ts | 122 dòng | Module thuộc feature `admin`.
+
+## src/features/app-shell
+
+- /Frontend/src/features/app-shell/layout/UserLayout.tsx | 32 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/bottom-tab-bar/BottomTabBar.tsx | 24 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/Navbar.tsx | 81 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/NavbarAvatarMenu.tsx | 26 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/NavbarMobileMenu.tsx | 41 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/NavbarRightSection.tsx | 51 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/avatar-menu/NavbarAvatarDropdown.tsx | 31 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/avatar-menu/NavbarAvatarDropdownHeader.tsx | 27 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/navigation/navbar/avatar-menu/NavbarAvatarTrigger.tsx | 30 dòng | UI/presentation của feature `app-shell`.
+- /Frontend/src/features/app-shell/public.ts | 2 dòng | Public boundary/export của feature `app-shell`.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMainTabs.tsx | 57 dòng | UI/presentation của feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMenuItem.tsx | 31 dòng | UI/presentation của feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMenuPanel.tsx | 49 dòng | UI/presentation của feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/config.ts | 174 dòng | Module thuộc feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/getActiveBottomTabSubHref.test.ts | 15 dòng | Module thuộc feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/getActiveBottomTabSubHref.ts | 36 dòng | Module thuộc feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/useBottomTabBarState.ts | 53 dòng | Module thuộc feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/navbar/NavbarBrandSection.tsx | 20 dòng | UI/presentation của feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/navbar/NavbarDesktopLinks.tsx | 35 dòng | UI/presentation của feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/app-shell/navigation/navbar/useNavbarLogout.ts | 20 dòng | Module thuộc feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/app-shell/shared/hooks/useNavbarMenuState.ts | 63 dòng | Module thuộc feature `app-shell`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/auth
+
+- /Frontend/src/features/auth/login/LoginForm.tsx | 72 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/login/LoginPage.tsx | 15 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/login/LoginPasswordField.tsx | 38 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/login/LoginRememberField.tsx | 35 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/login/useLoginPage.ts | 96 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/public.ts | 10 dòng | Public boundary/export của feature `auth`.
+- /Frontend/src/features/auth/recovery/ForgotPasswordBackLink.tsx | 35 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/recovery/ForgotPasswordPage.tsx | 67 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/recovery/ResetPasswordForm.tsx | 56 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/recovery/ResetPasswordForm.types.ts | 25 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/recovery/ResetPasswordPage.tsx | 58 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/recovery/recovery.ts | 56 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/recovery/useForgotPasswordPage.ts | 58 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/recovery/useResetPasswordPage.ts | 66 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/register/RegisterBirthdayInput.tsx | 83 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/register/RegisterConsentField.tsx | 97 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/register/RegisterIdentityFields.tsx | 70 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/register/RegisterPage.tsx | 47 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/register/RegisterPasswordFields.tsx | 61 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/register/registerBirthdayInputValue.test.ts | 17 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/register/registerBirthdayInputValue.ts | 27 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/register/useRegisterPage.ts | 82 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/session/AppAuthSessionManager.tsx | 15 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/session/AppNavbar.tsx | 8 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/session/authStore.selector.test.tsx | 70 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/session/authStore.test.ts | 106 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/session/authStore.ts | 241 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/session/components/AuthBootstrap.tsx | 25 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/session/components/AuthGuard.tsx | 53 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/session/components/AuthSessionManager.ts | 265 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/session/components/ProtectedRoute.tsx | 18 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/session/session.ts | 148 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/session/types.ts | 17 dòng | Model/type nội bộ của feature `auth`.
+- /Frontend/src/features/auth/shared/AuthErrorBanner.tsx | 20 dòng | UI/presentation của feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/AuthSuccessCard.tsx | 44 dòng | UI/presentation của feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/app-shell/layout/AuthLayout.tsx | 50 dòng | UI/presentation của feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/auth/clientLogoutCleanup.ts | 11 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/auth/clientSessionSnapshot.ts | 158 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/gateways/clientLogoutCleanup.ts | 1 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/gateways/clientSessionSnapshot.ts | 1 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/gateways/deviceId.ts | 1 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/hooks/useAuth.ts | 127 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/hooks/usePublicRuntimePolicies.ts | 30 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/index.ts | 3 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/schemas.test.ts | 73 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/schemas.ts | 30 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/shared/validation/schemas.ts | 111 dòng | Module thuộc feature `auth`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/auth/verify-email/VerifyEmailPage.tsx | 61 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/verify-email/VerifyEmailResendButton.tsx | 41 dòng | UI/presentation của feature `auth`.
+- /Frontend/src/features/auth/verify-email/authFlowEmail.test.ts | 43 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/verify-email/authFlowEmail.ts | 30 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/verify-email/registration.ts | 75 dòng | Module thuộc feature `auth`.
+- /Frontend/src/features/auth/verify-email/useVerifyEmailPage.ts | 118 dòng | Module thuộc feature `auth`.
+
+## src/features/chat
+
+- /Frontend/src/features/chat/disputes/DisputeModalActions.tsx | 46 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/disputes/conversations.finance.ts | 180 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/inbox/ChatInboxPage.tsx | 31 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/ChatSegmentShell.tsx | 41 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/ConversationSidebar.tsx | 48 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/components/conversation-sidebar/ConversationListItem.tsx | 48 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/components/conversation-sidebar/ConversationSidebarTabs.tsx | 26 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/components/conversation-sidebar/utils.ts | 67 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/MessageDropdown.tsx | 76 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/message-dropdown/MessageBellButton.tsx | 32 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/message-dropdown/MessageDropdownContent.tsx | 67 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/message-dropdown/MessageDropdownItem.tsx | 99 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/message-dropdown/MessageDropdownPanel.tsx | 58 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/message-dropdown/messageTime.ts | 21 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/inbox/dropdown/message-dropdown/useMessageDropdownState.ts | 34 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/inbox/hooks/useChatUnreadNotifications.test.tsx | 143 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/inbox/hooks/useChatUnreadNotifications.ts | 50 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/inbox/hooks/useMessageDropdown.ts | 77 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/inbox/useChatInboxPage.ts | 55 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/payment-offers/PaymentOfferModal.tsx | 68 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/payment-offers/usePaymentOfferActions.ts | 158 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/payment-offers/usePaymentOfferModalState.ts | 84 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/public.ts | 9 dòng | Public boundary/export của feature `chat`.
+- /Frontend/src/features/chat/realtime/useChatRealtimeSync.ts | 451 dòng | Module thuộc feature `chat`. | Review: kích thước lớn; cần tránh mở rộng thêm trách nhiệm khi chỉnh sửa.
+- /Frontend/src/features/chat/realtime/usePresenceConnection.registration.chatInvalidation.ts | 46 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/ChatActionMenu.tsx | 50 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatCompleteResponseBar.tsx | 38 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatComposer.tsx | 33 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatComposerEditableFooter.tsx | 83 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatComposerInputRow.tsx | 55 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatReadOnlyFooter.tsx | 51 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatRoomActionBanners.tsx | 39 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatRoomHeader.tsx | 62 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatRoomPage.tsx | 51 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatRoomView.tsx | 13 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/ChatRoomView.types.ts | 97 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/ConversationReviewModal.tsx | 86 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/DisputeModal.tsx | 40 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/chatRoomUi.types.ts | 143 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/components/VoiceMessageBubble.tsx | 84 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/VoiceRecorderActiveInline.tsx | 70 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/VoiceRecorderButton.tsx | 91 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/VoiceRecorderErrorInline.tsx | 26 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/VoiceRecorderStartButton.tsx | 23 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/action-banners/AwaitingReaderBanner.tsx | 13 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/action-banners/CancelPendingBanner.tsx | 41 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/action-banners/ReaderDecisionBanner.tsx | 70 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/action-menu/ChatActionMenuDropdown.tsx | 69 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/action-menu/ChatActionMenuItemButton.tsx | 27 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/header/ChatHeaderAvatar.tsx | 43 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/header/ChatHeaderEscrowBadge.tsx | 23 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/header/ChatHeaderIdentity.tsx | 32 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/messages/ChatImageMessage.tsx | 33 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatImageMessage.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatMessageListItem.tsx | 64 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatMessageListItem.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatMessagesPanel.tsx | 64 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatMessagesPanel.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatPaymentOfferMessage.tsx | 69 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatPaymentOfferMessage.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatPaymentResponseMessage.tsx | 84 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatPaymentResponseMessage.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatSystemMessage.tsx | 21 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatSystemMessage.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatTextMessage.tsx | 50 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatTextMessage.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/ChatVoiceMessage.tsx | 63 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/ChatVoiceMessage.tsx`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/messages/messageHelpers.ts | 12 dòng | Chứa bản dịch locale features cho namespace `chat/room/components/messages/messageHelpers.ts`. | Review: giữ đồng bộ key giữa vi/en/zh khi sửa copy.
+- /Frontend/src/features/chat/room/components/useVoiceMessagePlayback.ts | 126 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/components/useVoiceRecorder.ts | 103 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/components/view/ChatRoomComposerSection.tsx | 44 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/view/ChatRoomHeaderSection.tsx | 33 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/view/ChatRoomMainPane.tsx | 20 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/view/ChatRoomMessagesSection.tsx | 33 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/view/ChatRoomOverlays.tsx | 41 dòng | UI/presentation của feature `chat`.
+- /Frontend/src/features/chat/room/components/voiceMessageUtils.ts | 22 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/components/voiceRecorderHelpers.ts | 65 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/components/voiceRecorderUtils.ts | 10 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/hooks/useChatConnection.ts | 135 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/hooks/useChatHistoryState.ts | 193 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/hooks/useChatSendActions.ts | 277 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/hooks/useChatSignalRLifecycle.test.tsx | 473 dòng | UI/presentation của feature `chat`. | Review: kích thước lớn; cần tránh mở rộng thêm trách nhiệm khi chỉnh sửa.
+- /Frontend/src/features/chat/room/hooks/useChatSignalRLifecycle.ts | 376 dòng | Module thuộc feature `chat`. | Review: kích thước lớn; cần tránh mở rộng thêm trách nhiệm khi chỉnh sửa.
+- /Frontend/src/features/chat/room/hooks/utils.ts | 51 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/mediaPayload.ts | 140 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomConversationActions.ts | 145 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomDerivedFlags.ts | 109 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomInputMediaActions.ts | 134 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomPageState.ts | 82 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomPageViewModel.ts | 142 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomReviewActions.ts | 161 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomScrollEffects.ts | 53 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/useChatRoomUiState.ts | 36 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/room/utils.ts | 30 dòng | Module thuộc feature `chat`.
+- /Frontend/src/features/chat/shared/actions/conversations.core.ts | 98 dòng | Application action/hook của feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/actions/conversations.flow.ts | 114 dòng | Application action/hook của feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/actions/conversations.ts | 121 dòng | Application action/hook của feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/actions/conversations.types.ts | 39 dòng | Application action/hook của feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/actions/index.ts | 9 dòng | Application action/hook của feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/gateways/realtimeSessionGuard.ts | 1 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/gateways/signalRUrl.ts | 1 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/hooks/signalRConnectionUtils.ts | 71 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/hooks/useReconnectWakeup.test.tsx | 80 dòng | UI/presentation của feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/hooks/useReconnectWakeup.ts | 35 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/mergeMessages.ts | 118 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/participantId.test.ts | 22 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/participantId.ts | 12 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/realtime/realtimeSessionGuard.ts | 15 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/chat/shared/realtime/signalRUrl.ts | 4 dòng | Module thuộc feature `chat`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/checkin
+
+- /Frontend/src/features/checkin/public.ts | 4 dòng | Public boundary/export của feature `checkin`.
+- /Frontend/src/features/checkin/streak/StreakBadge.tsx | 58 dòng | UI/presentation của feature `checkin`.
+- /Frontend/src/features/checkin/streak/actions.ts | 39 dòng | Module thuộc feature `checkin`.
+- /Frontend/src/features/checkin/streak/checkin.types.ts | 13 dòng | Module thuộc feature `checkin`.
+- /Frontend/src/features/checkin/streak/checkinQueryKeys.ts | 3 dòng | Module thuộc feature `checkin`.
+- /Frontend/src/features/checkin/streak/hooks.ts | 35 dòng | Module thuộc feature `checkin`.
+
+## src/features/collection
+
+- /Frontend/src/features/collection/cards/CollectionPage.tsx | 70 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/actions/actions/index.ts | 1 dòng | Application action/hook của feature `collection`.
+- /Frontend/src/features/collection/cards/actions/actions/user-collection.ts | 57 dòng | Application action/hook của feature `collection`.
+- /Frontend/src/features/collection/cards/collectionCatalogChunked.ts | 120 dòng | Module thuộc feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionDeckCard.tsx | 61 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionDeckGrid.tsx | 91 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionEmptyState.tsx | 29 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionFilterBar.tsx | 31 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionFilterBar.types.ts | 20 dòng | Module thuộc feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionHeader.tsx | 50 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionLoadingState.tsx | 13 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/CollectionZoomModal.tsx | 81 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/collection-grid/CollectionDeckError.tsx | 21 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/deck-card/CollectionDeckCardFooter.tsx | 48 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/deck-card/CollectionDeckCardHeader.tsx | 38 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/deck-card/CollectionDeckCardVisual.tsx | 70 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/filter-bar/CollectionFilterTabs.tsx | 63 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/filter-bar/CollectionSortTabs.tsx | 56 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/CollectionZoomCardCaption.tsx | 36 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/CollectionZoomCardImage.tsx | 102 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/CollectionZoomCardVisual.tsx | 58 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/CollectionZoomDetails.tsx | 68 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/CollectionZoomStatCard.tsx | 35 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/CollectionZoomStatsGrid.tsx | 59 dòng | UI/presentation của feature `collection`.
+- /Frontend/src/features/collection/cards/components/zoom-modal/types.ts | 22 dòng | Model/type nội bộ của feature `collection`.
+- /Frontend/src/features/collection/cards/useCollectionCatalogChunked.ts | 203 dòng | Module thuộc feature `collection`.
+- /Frontend/src/features/collection/cards/useCollectionPage.ts | 129 dòng | Module thuộc feature `collection`.
+- /Frontend/src/features/collection/cards/useCollectionPageViewModel.ts | 153 dòng | Module thuộc feature `collection`.
+- /Frontend/src/features/collection/public.ts | 2 dòng | Public boundary/export của feature `collection`.
+- /Frontend/src/features/collection/shared/collectionCatalogCache.ts | 163 dòng | Module thuộc feature `collection`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/collection/shared/gateways/collectionCatalogCacheGateway.ts | 9 dòng | Module thuộc feature `collection`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/community
+
+- /Frontend/src/features/community/feed/components/FeedPage.tsx | 37 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/feed/components/FeedPostsSection.tsx | 45 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/feed/components/FeedVisibilityTabs.tsx | 22 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/feed/useComments.ts | 36 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/feed/useCommunityImageUpload.ts | 179 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/feed/useCreatePost.ts | 20 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/feed/useFeed.ts | 24 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/feed/useToggleReaction.ts | 79 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/post/components/CommentSection.tsx | 59 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/PostCard.tsx | 24 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/PostComposer.tsx | 53 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/PostReportActions.tsx | 25 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/PostReportFields.tsx | 50 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/PostReportModal.tsx | 55 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/ReactionBar.tsx | 60 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/comment-section/CommentComposer.tsx | 84 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/comment-section/CommentItem.tsx | 69 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/comment-section/CommentsList.tsx | 37 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/post-card/PostCardActions.tsx | 31 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/post-card/PostCardContent.tsx | 40 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/post-card/PostCardHeader.tsx | 56 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/post-card/usePostCardState.ts | 30 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/post/components/post-composer/PostComposerActions.tsx | 44 dòng | UI/presentation của feature `community`.
+- /Frontend/src/features/community/post/components/post-composer/usePostComposerState.ts | 94 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/post/components/useCommentComposerState.ts | 82 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/post/components/usePostReportModalState.ts | 104 dòng | Module thuộc feature `community`.
+- /Frontend/src/features/community/public.ts | 3 dòng | Public boundary/export của feature `community`.
+- /Frontend/src/features/community/shared/actions/communityActions.ts | 124 dòng | Application action/hook của feature `community`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/community/shared/markdownImageParser.ts | 42 dòng | Module thuộc feature `community`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/community/shared/types.ts | 67 dòng | Model/type nội bộ của feature `community`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/gacha
+
+- /Frontend/src/features/gacha/history/GachaHistoryPage.tsx | 7 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/history/GachaHistoryPageClient.tsx | 76 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/history/GachaHistoryPagination.tsx | 27 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/history/GachaHistoryPreview.tsx | 93 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/history/GachaHistoryTable.tsx | 87 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/play/GachaPage.tsx | 7 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/play/GachaPageClient.tsx | 91 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/play/GachaPoolCard.tsx | 98 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/play/GachaPoolSelector.tsx | 56 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/play/GachaRewardPreview.tsx | 92 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/play/useGachaPageState.ts | 61 dòng | Module thuộc feature `gacha`.
+- /Frontend/src/features/gacha/public.ts | 12 dòng | Public boundary/export của feature `gacha`.
+- /Frontend/src/features/gacha/result/GachaResultItem.tsx | 72 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/result/GachaResultModal.tsx | 76 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/result/GachaResultModalResultStage.tsx | 46 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/result/GachaResultModalRevealStage.tsx | 30 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/result/gachaResultItemView.test.tsx | 35 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/result/gachaResultItemView.tsx | 34 dòng | UI/presentation của feature `gacha`.
+- /Frontend/src/features/gacha/result/hooks/useRareDropLottie.ts | 94 dòng | Module thuộc feature `gacha`.
+- /Frontend/src/features/gacha/shared/gachaConstants.ts | 20 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/gachaLocalization.ts | 23 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/gachaRealtimeDedup.ts | 53 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/gachaServerActions.ts | 96 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/gachaTypes.ts | 100 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/useGacha.ts | 71 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/useGachaHistory.ts | 36 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/usePullGacha.test.tsx | 89 dòng | UI/presentation của feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gacha/shared/usePullGacha.ts | 209 dòng | Module thuộc feature `gacha`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/gamification
+
+- /Frontend/src/features/gamification/achievements/AchievementsGrid.tsx | 34 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/achievements/components/achievement/AchievementCard.tsx | 56 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/achievements/components/achievement/AchievementsHeader.tsx | 21 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/GamificationDetailActions.tsx | 69 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/GamificationDetailBody.tsx | 46 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/GamificationDetailHeader.tsx | 46 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/GamificationDetailModal.tsx | 41 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/GamificationStatsBar.tsx | 34 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/NoTitleCard.tsx | 67 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/components/gamification-detail/QuestProgressSection.tsx | 26 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/components/gamification-detail/QuestRewardsSection.tsx | 54 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/components/gamification-detail/UnlockedInfoSection.tsx | 19 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/hub/components/gamification-detail/getDetailModalView.ts | 30 dòng | Module thuộc feature `gamification`.
+- /Frontend/src/features/gamification/hub/components/stats/StatsMetricCard.tsx | 47 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/LeaderboardCurrentUserCard.tsx | 47 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/LeaderboardEntryRow.tsx | 55 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/LeaderboardTable.tsx | 87 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardAvatar.tsx | 35 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardBody.tsx | 37 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardCurrencyTabs.tsx | 25 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardCurrentUserEmpty.tsx | 20 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardCurrentUserIdentity.tsx | 56 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardCurrentUserRankContent.tsx | 51 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardPeriodTabs.tsx | 19 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardRankBadge.tsx | 50 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/LeaderboardScore.tsx | 35 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/leaderboard/components/leaderboard/leaderboardRowClass.ts | 15 dòng | Module thuộc feature `gamification`.
+- /Frontend/src/features/gamification/public.ts | 9 dòng | Public boundary/export của feature `gamification`.
+- /Frontend/src/features/gamification/quests/QuestCard.tsx | 89 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/quests/QuestPanelHeader.tsx | 53 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/quests/QuestsPanel.tsx | 44 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/quests/components/quest-card/QuestClaimButton.tsx | 24 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/quests/components/quest-card/QuestRewardBadges.tsx | 20 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/quests/components/quest-panel/useQuestClaimHandlers.tsx | 54 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/shared/gamification.types.ts | 95 dòng | Module thuộc feature `gamification`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gamification/shared/gamificationQueryKeys.ts | 8 dòng | Module thuộc feature `gamification`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gamification/shared/gamificationServerActions.ts | 103 dòng | Module thuộc feature `gamification`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gamification/shared/useGamification.ts | 66 dòng | Module thuộc feature `gamification`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gamification/shared/useLocalizedField.ts | 15 dòng | Module thuộc feature `gamification`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/gamification/titles/TitleCard.tsx | 65 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/titles/TitleSelector.tsx | 40 dòng | UI/presentation của feature `gamification`.
+- /Frontend/src/features/gamification/titles/components/title-card/rarityColors.ts | 34 dòng | Module thuộc feature `gamification`.
+- /Frontend/src/features/gamification/titles/components/title-selector/TitleSelectorHeader.tsx | 21 dòng | UI/presentation của feature `gamification`.
+
+## src/features/home
+
+- /Frontend/src/features/home/landing/HomePage.tsx | 28 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/CoreFeaturesSection.tsx | 61 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/FeaturedReadersSection.tsx | 43 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/FinalCtaSection.tsx | 54 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/HeroSection.tsx | 35 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/StatsSection.tsx | 41 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/featured-readers/FeaturedReaderAvatar.tsx | 47 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/featured-readers/FeaturedReaderCard.tsx | 56 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/featured-readers/FeaturedReaderMeta.tsx | 84 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/featured-readers/FeaturedReadersFallback.tsx | 16 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/featured-readers/FeaturedReadersGrid.tsx | 67 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/featured-readers/types.ts | 11 dòng | Model/type nội bộ của feature `home`.
+- /Frontend/src/features/home/landing/components/hero/HeroActions.tsx | 54 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/hero/HeroIntro.tsx | 65 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/hero/HeroScrollIndicator.tsx | 30 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/landing/components/hero/types.ts | 6 dòng | Model/type nội bộ của feature `home`.
+- /Frontend/src/features/home/landing/components/stats/StatItem.tsx | 56 dòng | UI/presentation của feature `home`.
+- /Frontend/src/features/home/public.ts | 1 dòng | Public boundary/export của feature `home`.
+- /Frontend/src/features/home/shared/app-shell/i18n-controls/LanguageSwitcher.tsx | 34 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/i18n-controls/language-switcher/LanguageSwitcherMenu.tsx | 25 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/i18n-controls/language-switcher/LanguageSwitcherOption.tsx | 25 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/i18n-controls/language-switcher/localeConfig.ts | 13 dòng | Module thuộc feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/i18n-controls/language-switcher/useLanguageSwitcherState.ts | 37 dòng | Module thuộc feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/layout/Footer.tsx | 37 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/layout/footer/FooterBrandSection.tsx | 32 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/layout/footer/FooterLinksRow.tsx | 25 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/layout/footer/FooterSocialRow.tsx | 28 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/theme/ThemeSwitcher.tsx | 30 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/theme/theme-switcher/ThemeSwitcherButton.tsx | 23 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/theme/theme-switcher/ThemeSwitcherDropdown.tsx | 30 dòng | UI/presentation của feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/home/shared/app-shell/theme/theme-switcher/useThemeSwitcherState.ts | 46 dòng | Module thuộc feature `home`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/inventory
+
+- /Frontend/src/features/inventory/browse/InventoryGrid.tsx | 73 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/browse/InventoryItemCard.tsx | 81 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/browse/InventoryPage.tsx | 7 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/browse/InventoryPageClient.tsx | 93 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/browse/InventoryPageHero.tsx | 64 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/browse/InventoryQueryState.tsx | 26 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/browse/inventoryItemCardView.test.ts | 29 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/browse/inventoryItemCardView.ts | 27 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/public.ts | 9 dòng | Public boundary/export của feature `inventory`.
+- /Frontend/src/features/inventory/shared/cardOption.ts | 14 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/shared/inventoryConstants.ts | 16 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/shared/inventoryRealtimeDedup.ts | 53 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/shared/inventoryServerActions.ts | 25 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/shared/inventoryTypes.ts | 66 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/shared/useInventory.ts | 31 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/shared/useOwnedInventoryCards.ts | 93 dòng | Module thuộc feature `inventory`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/inventory/use-item/UseItemActionButton.tsx | 55 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemCardPreview.tsx | 93 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemCardSelector.tsx | 43 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemModal.tsx | 96 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemModal.types.ts | 28 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemQuantitySelector.tsx | 96 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemResultPanel.helpers.ts | 49 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/UseItemResultPanel.tsx | 97 dòng | UI/presentation của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/use-use-item/cache.ts | 150 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/use-use-item/idempotency.ts | 16 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/use-use-item/normalizer.ts | 170 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/use-use-item/optimistic.ts | 34 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/use-use-item/types.ts | 7 dòng | Model/type nội bộ của feature `inventory`.
+- /Frontend/src/features/inventory/use-item/useUseItem.ts | 93 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/useUseItemModalController.ts | 88 dòng | Module thuộc feature `inventory`.
+- /Frontend/src/features/inventory/use-item/useUseItemModalState.ts | 63 dòng | Module thuộc feature `inventory`.
+
+## src/features/legal
+
+- /Frontend/src/features/legal/pages/AiDisclaimerPage.tsx | 46 dòng | UI/presentation của feature `legal`.
+- /Frontend/src/features/legal/pages/PrivacyPolicyPage.tsx | 45 dòng | UI/presentation của feature `legal`.
+- /Frontend/src/features/legal/pages/TermsOfServicePage.tsx | 45 dòng | UI/presentation của feature `legal`.
+- /Frontend/src/features/legal/pages/components/LegalContent.tsx | 94 dòng | UI/presentation của feature `legal`.
+- /Frontend/src/features/legal/public.ts | 4 dòng | Public boundary/export của feature `legal`.
+- /Frontend/src/features/legal/runtime-policies/actions/consent-status.ts | 43 dòng | Application action/hook của feature `legal`.
+- /Frontend/src/features/legal/runtime-policies/actions/legalActions.test.ts | 102 dòng | Application action/hook của feature `legal`.
+- /Frontend/src/features/legal/runtime-policies/actions/record-consent.ts | 38 dòng | Application action/hook của feature `legal`.
+- /Frontend/src/features/legal/runtime-policies/actions/types.ts | 6 dòng | Application action/hook của feature `legal`.
+
+## src/features/notifications
+
+- /Frontend/src/features/notifications/dropdown/NotificationDropdown.tsx | 77 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/hooks/useNotificationDropdown.test.tsx | 186 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/hooks/useNotificationDropdown.ts | 154 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/NotificationBellButton.tsx | 25 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/NotificationDropdownContent.tsx | 41 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/NotificationDropdownFooter.tsx | 16 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/NotificationDropdownHeader.tsx | 24 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/NotificationDropdownItem.tsx | 46 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/NotificationDropdownPanel.tsx | 35 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/notificationTime.ts | 25 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/useNotificationDropdownItem.ts | 35 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/dropdown/notification-dropdown/useNotificationDropdownState.ts | 54 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/list/NotificationsPage.tsx | 59 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/list/components/NotificationFilters.tsx | 49 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/list/components/NotificationListItem.tsx | 61 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/list/components/NotificationLoadingState.tsx | 18 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/list/components/NotificationsContent.tsx | 67 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/list/components/index.ts | 7 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/list/components/utils.ts | 58 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/list/hooks/useNotificationMarkRead.ts | 32 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/list/useNotificationsPage.test.tsx | 172 dòng | UI/presentation của feature `notifications`.
+- /Frontend/src/features/notifications/list/useNotificationsPage.ts | 68 dòng | Module thuộc feature `notifications`.
+- /Frontend/src/features/notifications/public.ts | 5 dòng | Public boundary/export của feature `notifications`.
+- /Frontend/src/features/notifications/shared/actions/index.ts | 4 dòng | Application action/hook của feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/actions/list.ts | 51 dòng | Application action/hook của feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/actions/mark-as-read.ts | 60 dòng | Application action/hook của feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/actions/types.ts | 18 dòng | Application action/hook của feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/actions/unread-count.ts | 32 dòng | Application action/hook của feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/gateways/parseApiError.ts | 1 dòng | Module thuộc feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/notificationCache.test.ts | 78 dòng | Module thuộc feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/notifications/shared/notificationCache.ts | 91 dòng | Module thuộc feature `notifications`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/profile
+
+- /Frontend/src/features/profile/mfa/ProfileMfaPage.tsx | 68 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/actions/actions/challenge.ts | 32 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/mfa/actions/actions/index.ts | 4 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/mfa/actions/actions/setup.ts | 31 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/mfa/actions/actions/status.ts | 28 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/mfa/actions/actions/types.ts | 5 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaBackupCodesCard.tsx | 36 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaCheckingState.tsx | 18 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaEnabledCard.tsx | 29 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaQrCodeCard.tsx | 50 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaSetupFlow.tsx | 39 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaSetupStartCard.tsx | 49 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/components/MfaVerifyCodeCard.tsx | 78 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/mfa/useProfileMfaPage.ts | 101 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/ProfilePage.tsx | 70 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/ReaderBusyToggle.tsx | 63 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/actions/actions/get-profile.ts | 86 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/overview/actions/actions/index.ts | 2 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/overview/actions/actions/update-profile.ts | 45 dòng | Application action/hook của feature `profile`.
+- /Frontend/src/features/profile/overview/components/ProfileLoadingState.tsx | 36 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/ProfileReaderUpgradeCard.tsx | 70 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/ProfileSettingsFormCard.tsx | 55 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/ProfileSummaryCard.tsx | 74 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-settings/ProfileFormStatusMessages.tsx | 37 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-settings/ProfilePayoutFields.tsx | 51 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-settings/ProfileSettingsFieldsGrid.tsx | 46 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-settings/ProfileSettingsSubmitButton.tsx | 36 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-settings/types.ts | 25 dòng | Model/type nội bộ của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileActionsRow.tsx | 35 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileAvatarSpinner.tsx | 12 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileAvatarUploader.tsx | 60 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileBadgesRow.tsx | 30 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileDetailsPanel.tsx | 31 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileIdentity.tsx | 24 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-summary/ProfileInfoBadge.tsx | 23 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-upgrade/ProfileUpgradeApplyState.tsx | 36 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-upgrade/ProfileUpgradeHeader.tsx | 40 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-upgrade/ProfileUpgradePendingState.tsx | 34 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-upgrade/ProfileUpgradeRejectedState.tsx | 60 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/overview/components/profile-upgrade/types.ts | 12 dòng | Model/type nội bộ của feature `profile`.
+- /Frontend/src/features/profile/overview/profileDetailQuery.ts | 14 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/uploadProfileAvatar.ts | 102 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.avatar.ts | 82 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.helpers.ts | 60 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.submit.ts | 67 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.test.tsx | 337 dòng | UI/presentation của feature `profile`. | Review: kích thước lớn; cần tránh mở rộng thêm trách nhiệm khi chỉnh sửa.
+- /Frontend/src/features/profile/overview/useProfilePage.ts | 146 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.types.ts | 9 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.validation.test.ts | 46 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useProfilePage.validation.ts | 90 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/overview/useReaderBusyToggleState.ts | 56 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/public.ts | 5 dòng | Public boundary/export của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/ProfileReaderSettingsPage.tsx | 90 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsBioField.tsx | 34 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsExperienceField.tsx | 38 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsFormCard.tsx | 83 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsHeader.tsx | 26 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsLoadingState.tsx | 22 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsPriceField.tsx | 37 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsSocialLinksFields.tsx | 71 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsSpecialtiesField.tsx | 54 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/ReaderSettingsSubmitButton.tsx | 33 dòng | UI/presentation của feature `profile`.
+- /Frontend/src/features/profile/reader-settings/components/useReaderSettingsFormCard.ts | 164 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/reader-settings/useProfileReaderSettings.handlers.ts | 87 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/reader-settings/useProfileReaderSettings.types.ts | 25 dòng | Module thuộc feature `profile`.
+- /Frontend/src/features/profile/reader-settings/useProfileReaderSettingsPage.ts | 89 dòng | Module thuộc feature `profile`.
+
+## src/features/reader
+
+- /Frontend/src/features/reader/apply/ReaderApplyPage.tsx | 41 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/application.ts | 98 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyExperiencePriceRow.tsx | 63 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyFeedbackMessage.tsx | 21 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyHeader.tsx | 22 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyIntroField.tsx | 36 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyLoadingState.tsx | 15 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyPendingPanel.tsx | 47 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyRejectedNotice.tsx | 22 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplySocialLinksFields.tsx | 69 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplySpecialtiesField.tsx | 58 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyStatusPanel.tsx | 70 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplyStepsGrid.tsx | 40 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/components/ReaderApplySubmitButton.tsx | 33 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/apply/readerApplyFormSchema.ts | 94 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/apply/readerApplyHydration.ts | 11 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/apply/useReaderApplyPage.ts | 44 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/apply/useReaderApplyPageForm.ts | 113 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/directory/ReadersDirectoryPage.tsx | 28 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDetailActions.tsx | 24 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDetailHeader.tsx | 47 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDetailModal.tsx | 45 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDetailStats.tsx | 46 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDirectoryCard.tsx | 53 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDirectoryFilters.tsx | 44 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDirectoryHeader.tsx | 38 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderDirectoryListSection.tsx | 50 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/ReaderStatusIndicator.tsx | 42 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/card/ReaderDirectoryCardAvatar.tsx | 44 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/card/ReaderDirectoryCardProfile.tsx | 36 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/card/ReaderDirectoryCardSocialLinks.tsx | 45 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/card/ReaderDirectoryCardSpecialties.tsx | 37 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/card/ReaderDirectoryCardStats.tsx | 42 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/filters/ReaderDirectorySearchInput.tsx | 34 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/filters/ReaderDirectorySelectField.tsx | 44 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/index.ts | 5 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/list/ReaderDirectoryEmptyState.tsx | 26 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/list/ReaderDirectoryGrid.tsx | 39 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/list/ReaderDirectoryLoadingState.tsx | 38 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/page/ReadersDirectoryFiltersSection.tsx | 24 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/page/ReadersDirectoryModalSection.tsx | 23 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/page/ReadersDirectoryResultsSection.tsx | 23 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/types.ts | 26 dòng | Model/type nội bộ của feature `reader`.
+- /Frontend/src/features/reader/directory/components/readers-directory/utils.ts | 21 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/directory/directory.ts | 200 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/directory/useReaderConversationModal.ts | 63 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/directory/useReadersDirectoryPage.ts | 92 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/directory/useReadersDirectoryViewModel.ts | 113 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/profile/ReaderPublicProfilePage.tsx | 50 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/ReaderProfileLoadingState.tsx | 18 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/ReaderProfileNotFoundState.tsx | 28 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/reader-profile/ReaderProfileBackButton.tsx | 21 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/reader-profile/ReaderProfileBioPanel.tsx | 42 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/reader-profile/ReaderProfileCard.tsx | 44 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/reader-profile/ReaderProfileFooter.tsx | 32 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/reader-profile/ReaderProfileHero.tsx | 53 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/components/reader-profile/ReaderProfileStatsGrid.tsx | 32 dòng | UI/presentation của feature `reader`.
+- /Frontend/src/features/reader/profile/homeSnapshotMapper.ts | 55 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/profile/profile.ts | 74 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/profile/useReaderPublicProfilePage.ts | 56 dòng | Module thuộc feature `reader`.
+- /Frontend/src/features/reader/public.ts | 4 dòng | Public boundary/export của feature `reader`.
+- /Frontend/src/features/reader/shared/ReaderSocialLinksInline.tsx | 48 dòng | UI/presentation của feature `reader`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reader/shared/ReaderStatusBadge.tsx | 33 dòng | UI/presentation của feature `reader`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reader/shared/index.ts | 6 dòng | Module thuộc feature `reader`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reader/shared/readerSocialLinks.ts | 68 dòng | Module thuộc feature `reader`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reader/shared/readerSpecialties.ts | 7 dòng | Module thuộc feature `reader`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reader/shared/readerStatus.ts | 28 dòng | Module thuộc feature `reader`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+
+## src/features/reading
+
+- /Frontend/src/features/reading/ai-interpretation/AiInterpretationStream.tsx | 78 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/AiStreamNotReadyState.tsx | 17 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/ReadingMarkdownRenderer.tsx | 67 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamErrorBanner.tsx | 25 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamFollowupBadge.tsx | 25 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamFollowupComposer.tsx | 44 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamFollowupForm.tsx | 82 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamHardCapState.tsx | 15 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamLoadingPlaceholder.tsx | 17 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamMessageItem.tsx | 29 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamMessages.tsx | 41 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/AiStreamStreamingDots.tsx | 11 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/types.ts | 6 dòng | Model/type nội bộ của feature `reading`.
+- /Frontend/src/features/reading/ai-interpretation/components/ai-stream/useAiStreamSession.ts | 213 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/history/HistoryDetailPage.tsx | 47 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/HistoryPage.tsx | 59 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/actions/admin-sessions.ts | 67 dòng | Application action/hook của feature `reading`.
+- /Frontend/src/features/reading/history/actions/index.ts | 3 dòng | Application action/hook của feature `reading`.
+- /Frontend/src/features/reading/history/actions/types.ts | 17 dòng | Application action/hook của feature `reading`.
+- /Frontend/src/features/reading/history/actions/user-sessions.ts | 135 dòng | Application action/hook của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistoryEmptyState.tsx | 25 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistoryErrorBanner.tsx | 15 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistoryFilters.tsx | 51 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistoryLoadingGrid.tsx | 11 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistoryPageHeader.tsx | 51 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistoryPaginationDock.tsx | 34 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistorySessionCard.tsx | 51 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/HistorySessionsGrid.tsx | 38 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/detail/HistoryDetailAiSummary.tsx | 67 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/detail/HistoryDetailCardItem.tsx | 49 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/detail/HistoryDetailCardsGrid.tsx | 32 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/detail/HistoryDetailHeader.tsx | 60 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/detail/HistoryDetailStates.tsx | 42 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/history/components/detail/index.ts | 4 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/history/components/index.ts | 6 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/history/historyQueryKeys.ts | 13 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/history/spreadLabels.ts | 13 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/history/useHistoryDetailPage.ts | 78 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/history/useHistorySessionsPage.ts | 97 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/public.ts | 8 dòng | Public boundary/export của feature `reading`.
+- /Frontend/src/features/reading/session/ReadingSessionPage.tsx | 30 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/AiInterpretationPanel.tsx | 60 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/DrawPhaseContent.tsx | 37 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/DrawPhaseSection.tsx | 13 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/DrawPhaseSection.types.ts | 37 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/FlyingCardsLayer.tsx | 42 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/PickProgress.tsx | 49 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/PickedCardsStack.tsx | 56 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/ReadingSessionContent.tsx | 22 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/ReadingSessionContent.types.ts | 65 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/ReadingSessionHeader.tsx | 44 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/RevealConfirmActions.tsx | 58 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/RevealConfirmModal.tsx | 59 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/RevealedCardItem.tsx | 30 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/RevealedCardsGrid.tsx | 51 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/SessionQuestionCard.tsx | 30 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/ShuffleCard.tsx | 45 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/ShuffleIntro.tsx | 50 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/TarotDeckGrid.tsx | 65 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/session/components/constants.ts | 28 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/types.ts | 21 dòng | Model/type nội bộ của feature `reading`.
+- /Frontend/src/features/reading/session/components/useDeckFlight.ts | 149 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/useDeckLayout.ts | 50 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/useDeckSelection.ts | 30 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/useFlyingCardAnimations.ts | 123 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/useRevealReading.ts | 72 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/useSessionSetup.ts | 15 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/components/utils.ts | 63 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/session/useReadingSessionPageState.ts | 125 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/setup/ReadingSetupPage.tsx | 89 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/setup/components/ReadingCurrencySelector.tsx | 44 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/setup/components/ReadingFreeDrawQuotaSummary.tsx | 41 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/setup/components/ReadingSetupSubmitAction.tsx | 30 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/setup/components/ReadingSpreadCard.tsx | 56 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/setup/components/ReadingSpreadsGrid.tsx | 34 dòng | UI/presentation của feature `reading`.
+- /Frontend/src/features/reading/setup/components/index.ts | 4 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/setup/reading-setup-snapshot.ts | 54 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/setup/useReadingSetupPage.ts | 209 dòng | Module thuộc feature `reading`.
+- /Frontend/src/features/reading/shared/actions/index.ts | 4 dòng | Application action/hook của feature `reading`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reading/shared/actions/init-session.ts | 40 dòng | Application action/hook của feature `reading`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reading/shared/actions/readingActions.test.ts | 135 dòng | Application action/hook của feature `reading`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reading/shared/actions/reveal-session.ts | 40 dòng | Application action/hook của feature `reading`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reading/shared/actions/types.ts | 26 dòng | Application action/hook của feature `reading`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/reading/tarot-catalog/actions/cards-catalog.ts | 47 dòng | Application action/hook của feature `reading`.
+- /Frontend/src/features/reading/tarot-catalog/useCardsCatalog.ts | 87 dòng | Module thuộc feature `reading`.
+
+## src/features/wallet
+
+- /Frontend/src/features/wallet/deposit/DepositHistoryPage.tsx | 79 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/DepositPackagePicker.tsx | 51 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/DepositPage.tsx | 65 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/DepositPaymentPanel.tsx | 86 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/actions/index.ts | 2 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/actions/types.ts | 65 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/actions/user-orders.test.ts | 269 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/actions/user-orders.ts | 161 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/components/history/DepositHistoryFilters.tsx | 72 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/components/history/DepositHistoryHeader.tsx | 42 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/components/history/DepositHistoryPagination.tsx | 60 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/components/history/DepositHistoryRow.tsx | 87 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/components/history/DepositHistoryTable.tsx | 84 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/deposit/components/history/index.ts | 4 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/deposit/useDepositHistoryPage.ts | 80 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/deposit/useDepositPage.ts | 205 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/deposit/useDepositPageViewModel.ts | 45 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/ledger/actions/ledger.ts | 35 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/ledger/actions/walletActions.test.ts | 122 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/overview/OverviewHeader.tsx | 49 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletAssetCard.tsx | 57 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletBalanceCards.tsx | 47 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletLedgerRow.tsx | 46 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletLedgerTable.tsx | 67 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletLedgerTableBody.tsx | 50 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletLedgerToolbar.tsx | 26 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletOverviewPage.tsx | 63 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/WalletStoreBridge.tsx | 9 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/overview/getWalletBalanceClient.ts | 23 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/overview/index.ts | 4 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/overview/useWalletBalanceQuery.ts | 17 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/overview/useWalletOverviewPage.ts | 49 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/overview/useWalletStoreBridge.ts | 19 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/public.ts | 10 dòng | Public boundary/export của feature `wallet`.
+- /Frontend/src/features/wallet/shared/actions/balance.ts | 29 dòng | Application action/hook của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/actions/index.ts | 2 dòng | Application action/hook của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/models/pagination.ts | 8 dòng | Model/type nội bộ của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/types.ts | 20 dòng | Model/type nội bộ của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/walletStore.test.ts | 79 dòng | Module thuộc feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/walletStore.ts | 237 dòng | Module thuộc feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/widget/WalletWidget.tsx | 22 dòng | UI/presentation của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/widget/wallet-widget/WalletWidgetContent.tsx | 48 dòng | UI/presentation của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/widget/wallet-widget/WalletWidgetLoading.tsx | 9 dòng | UI/presentation của feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/widget/wallet-widget/useWalletWidgetState.ts | 54 dòng | Module thuộc feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/shared/withdrawalStatus.ts | 44 dòng | Module thuộc feature `wallet`. | Review: shared nội bộ feature; không import trực tiếp từ feature khác nếu chưa qua public boundary.
+- /Frontend/src/features/wallet/withdraw/WithdrawAlertMessage.tsx | 21 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawAmountField.tsx | 35 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawAmountSection.tsx | 54 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawBankFields.tsx | 85 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawEstimateCard.tsx | 38 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawFormCard.tsx | 68 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawFormCard.types.ts | 46 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawHistoryAmountRow.tsx | 27 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawHistoryItem.tsx | 58 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawHistoryMetaRow.tsx | 29 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawHistorySection.tsx | 60 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawPage.tsx | 51 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawPageHeader.tsx | 40 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawSubmitButton.tsx | 33 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/WithdrawSubmitSection.tsx | 53 dòng | UI/presentation của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/actions/admin.ts | 116 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/actions/index.ts | 3 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/actions/reader.ts | 84 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/actions/types.ts | 22 dòng | Application action/hook của feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/index.ts | 3 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/useWithdrawFormCard.ts | 77 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/useWithdrawPage.ts | 172 dòng | Module thuộc feature `wallet`.
+- /Frontend/src/features/wallet/withdraw/useWithdrawPageViewModel.ts | 47 dòng | Module thuộc feature `wallet`.

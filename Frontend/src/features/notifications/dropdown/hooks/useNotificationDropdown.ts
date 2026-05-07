@@ -96,16 +96,18 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
   mutationFn: (id: string) => sendNotificationPatch(NOTIFICATION_API_ROUTES.markRead(id)),
  });
 
- const markAsRead = async (id: string) => {
+ const markAsRead = async (id: string): Promise<{ success: boolean }> => {
   applyNotificationReadPatch(queryClient, { id });
 
   try {
    await markReadMutation.mutateAsync(id);
+   return { success: true };
   } catch {
    await Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeyList, exact: true }),
     queryClient.invalidateQueries({ queryKey: queryKeyCount, exact: true }),
    ]);
+   return { success: false };
   }
  };
 

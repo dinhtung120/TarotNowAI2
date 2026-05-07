@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -70,6 +70,7 @@ export function useReadingSetupPage() {
  const [selectedCurrency, setSelectedCurrency] = useState<'gold' | 'diamond'>('gold');
  const [initError, setInitError] = useState('');
  const [isInitializing, setIsInitializing] = useState(false);
+ const isInitializingRef = useRef(false);
 
  const formSchema = useMemo(
   () =>
@@ -146,11 +147,17 @@ export function useReadingSetupPage() {
  );
 
  const submitSetup = async (data: ReadingSetupFormData) => {
+  if (isInitializingRef.current) {
+   return;
+  }
+
+  isInitializingRef.current = true;
   setIsInitializing(true);
   setInitError('');
 
   if (!readingSetupSnapshotQuery.data?.pricing) {
    setInitError(t('error_init_failed'));
+   isInitializingRef.current = false;
    setIsInitializing(false);
    return;
   }
@@ -176,6 +183,7 @@ export function useReadingSetupPage() {
    );
   } catch (error) {
    setInitError(error instanceof Error ? error.message : t('error_init_failed'));
+   isInitializingRef.current = false;
    setIsInitializing(false);
    return;
   }

@@ -2,6 +2,18 @@ import type { NextRequest } from 'next/server';
 
 type SupportedProtocol = 'http' | 'https';
 
+const PUBLIC_HOST_ALLOWLIST = new Set([
+ 'localhost',
+ '127.0.0.1',
+ 'www.tarotnow.xyz',
+ 'tarotnow.xyz',
+ 'staging.tarotnow.xyz',
+]);
+
+function isAllowedPublicHost(hostname: string): boolean {
+ return PUBLIC_HOST_ALLOWLIST.has(hostname.toLowerCase());
+}
+
 function readForwardedHeaderValue(
  request: NextRequest,
  headerName: string,
@@ -89,6 +101,10 @@ function resolvePublicOrigin(request: NextRequest): string {
 
  const parsedAuthority = parseAuthority(host);
  if (!parsedAuthority) {
+  return request.nextUrl.origin;
+ }
+
+ if (!isAllowedPublicHost(parsedAuthority.hostname)) {
   return request.nextUrl.origin;
  }
 

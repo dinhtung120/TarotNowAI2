@@ -27,6 +27,8 @@ export function resolveRecorderMimeType() {
 }
 
 export function buildWaveformBars(dataArray: Uint8Array, barCount: number) {
+ if (barCount <= 0) return [];
+
  const step = Math.max(1, Math.floor(dataArray.length / barCount));
  const bars: number[] = [];
 
@@ -35,7 +37,8 @@ export function buildWaveformBars(dataArray: Uint8Array, barCount: number) {
   const start = i * step;
   const end = Math.min(start + step, dataArray.length);
   for (let j = start; j < end; j++) sum += dataArray[j];
-  bars.push(sum / ((end - start) * 255));
+  const segmentLength = end - start;
+  bars.push(segmentLength > 0 ? Math.min(1, sum / (segmentLength * 255)) : 0);
  }
 
  return bars;

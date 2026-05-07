@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import type { WithdrawFormCardProps } from './WithdrawFormCard.types';
+import { parseWholeWithdrawAmount } from './withdrawAmount';
 
 type WithdrawFormCardFormValues = {
   amount: string;
@@ -30,8 +31,8 @@ export function useWithdrawFormCard(props: WithdrawFormCardProps) {
       .trim()
       .min(1)
       .refine((value) => {
-        const parsed = Number.parseInt(value, 10);
-        return Number.isFinite(parsed) && parsed >= minWithdrawDiamond;
+        const parsed = parseWholeWithdrawAmount(value);
+        return parsed !== null && parsed >= minWithdrawDiamond;
       }),
     userNote: z.string().max(1_000),
   });

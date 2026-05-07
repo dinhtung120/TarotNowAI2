@@ -53,4 +53,15 @@ describe('buildPublicRequestUrl', () => {
 
   expect(buildPublicRequestUrl(request, '/vi/login').toString()).toBe('https://www.tarotnow.xyz/vi/login');
  });
+
+ it('ignores hostile forwarded hosts when building public URLs', () => {
+  const request = new NextRequest('https://www.tarotnow.xyz/api/auth/session/handshake', {
+   headers: {
+    'x-forwarded-host': 'evil.tld',
+    'x-forwarded-proto': 'https',
+   },
+  });
+
+  expect(buildPublicRequestUrl(request, '/vi/login').toString()).toBe('https://www.tarotnow.xyz/vi/login');
+ });
 });
