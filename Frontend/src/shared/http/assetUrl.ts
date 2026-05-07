@@ -60,11 +60,15 @@ export function shouldUseUnoptimizedImage(src: string | null | undefined): boole
 
   if (raw.startsWith('blob:') || raw.startsWith('data:')) return true;
   if (raw.toLowerCase().includes('.gif')) return true;
+  if (raw.startsWith('/api/collection/card-image')) return true;
   if (raw.startsWith('/')) return false;
   if (!HTTP_URL_REGEX.test(raw)) return false;
 
   try {
     const parsed = new URL(raw);
+    if (parsed.pathname === '/api/collection/card-image') {
+      return true;
+    }
     if (parsed.pathname.toLowerCase().endsWith('.gif')) {
       return true;
     }
