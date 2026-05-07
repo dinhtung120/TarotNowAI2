@@ -2,10 +2,10 @@ import dynamic from 'next/dynamic';
 import AdminRouteLoadingFallback from '@/app/_shared/app-shell/loading/AdminRouteLoadingFallback';
 import { getServerAccessToken } from '@/shared/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/http/serverHttpClient';
-import type { AdminSystemConfigItem } from '@/features/admin/public';
+import type { AdminSystemConfigItem } from '@/features/admin/system-configs/system-config.types';
 
 const AdminSystemConfigsPage = dynamic(
- () => import('@/features/admin/public').then((module) => module.AdminSystemConfigsPage),
+ () => import('@/features/admin/system-configs/AdminSystemConfigsPage'),
  {
   loading: () => <AdminRouteLoadingFallback />,
  },

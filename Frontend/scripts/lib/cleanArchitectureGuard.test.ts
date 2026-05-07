@@ -5,6 +5,7 @@ import {
  findForbiddenSharedLayerFolder,
  findSensitiveStreamViolation,
  findUnclassifiedRuntimeFiles,
+ isAllowedFeatureRouteDirectImport,
  isAllowedSharedFeatureImport,
  isSharedComponentsPath,
  isSharedImportingFeature,
@@ -92,6 +93,21 @@ describe('cleanArchitectureGuard', () => {
    expect(isAllowedSharedFeatureImport('src/shared/server/prefetch/runners/user/wallet.ts')).toBe(true);
    expect(isAllowedSharedFeatureImport('src/shared/app-shell/navigation/navbar/NavbarRightSection.tsx')).toBe(true);
    expect(isAllowedSharedFeatureImport('src/shared/ui/Button.tsx')).toBe(false);
+  });
+
+  it('allows hotspot routes to import their page components directly', () => {
+   expect(isAllowedFeatureRouteDirectImport(
+    'src/app/[locale]/admin/page.tsx',
+    '@/features/admin/dashboard/AdminDashboardPage',
+   )).toBe(true);
+   expect(isAllowedFeatureRouteDirectImport(
+    'src/app/[locale]/(auth)/login/page.tsx',
+    '@/features/auth/login/LoginPage',
+   )).toBe(true);
+   expect(isAllowedFeatureRouteDirectImport(
+    'src/app/[locale]/(user)/profile/page.tsx',
+    '@/features/profile/overview/ProfilePage',
+   )).toBe(false);
   });
  });
 });

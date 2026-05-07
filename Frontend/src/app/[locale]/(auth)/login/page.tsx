@@ -1,4 +1,4 @@
-import { LoginPage } from '@/features/auth/public';
+import LoginPage from '@/features/auth/login/LoginPage';
 import { redirectAuthenticatedAuthEntry } from '@/app/_shared/server/auth/redirectAuthenticatedAuthEntry';
 
 export default async function LoginRoutePage({

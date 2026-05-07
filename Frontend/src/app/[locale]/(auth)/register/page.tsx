@@ -1,4 +1,4 @@
-import { RegisterPage } from '@/features/auth/public';
+import RegisterPage from '@/features/auth/register/RegisterPage';
 import { redirectAuthenticatedAuthEntry } from '@/app/_shared/server/auth/redirectAuthenticatedAuthEntry';
 
 export default async function RegisterRoutePage({

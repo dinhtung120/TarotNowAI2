@@ -9,6 +9,7 @@ import {
  findLine,
  findSensitiveStreamViolation,
  findUnclassifiedRuntimeFiles,
+ isAllowedFeatureRouteDirectImport,
  isAllowedSharedFeatureImport,
  isSharedImportingFeature,
  isTestFile,
@@ -68,6 +69,7 @@ for (const relativePath of sourceFiles) {
    isAppPageOrLayout(relativePath)
    && importPath.startsWith('@/features/')
    && !/^@\/features\/[^/]+\/public$/.test(importPath)
+   && !isAllowedFeatureRouteDirectImport(relativePath, importPath)
   ) {
    pagePublicApiViolations.push({
     file: relativePath,

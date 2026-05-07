@@ -79,6 +79,16 @@ export function isAllowedSharedFeatureImport(filePath) {
   || normalized.startsWith('src/shared/app-shell/navigation/');
 }
 
+export function isAllowedFeatureRouteDirectImport(filePath, importPath) {
+ const normalized = normalizePath(filePath);
+ if (!/^src\/app\/\[locale\]\/((\(auth\)\/[^/]+)|admin(?:\/[^/]+)?)\/page\.(ts|tsx|mts)$/.test(normalized)) {
+  return false;
+ }
+
+ return importPath.startsWith('@/features/auth/')
+  || importPath.startsWith('@/features/admin/');
+}
+
 export function resolveLayer(filePath) {
  const normalized = normalizePath(filePath);
 

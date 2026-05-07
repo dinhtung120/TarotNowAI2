@@ -4,7 +4,7 @@ import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/se
 import { prefetchAdminWithdrawalsQueuePage } from '@/app/_shared/server/prefetch/runners';
 
 const AdminWithdrawalsPage = dynamic(
- () => import('@/features/admin/public').then((m) => m.AdminWithdrawalsPage),
+ () => import('@/features/admin/withdrawals/AdminWithdrawalsPage'),
  {
   loading: () => <AdminRouteLoadingFallback />,
  }
