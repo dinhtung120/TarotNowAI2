@@ -416,9 +416,9 @@
 
 1. Phase 1 complete: auth-public presence/session gating is covered by regression tests and post-deploy `auth-public` benchmark shows `0` pending requests.
 2. Phase 2 complete: collection image proxy URLs are image-like and Cloudflare caches them; post-deploy benchmark shows no collection proxy image request >800ms.
-3. Continue with Phase 3: reduce bundle/static request count on auth-public and admin routes.
-4. Fix duplicate API calls by inspecting query keys, staleTime, refetch triggers, and parent/child component fetch ownership.
-5. Re-run the affected feature benchmark after every hotspot fix, then run full matrix before final deploy validation.
+3. Phase 3 complete: auth-public and admin route pages now import their concrete page components directly instead of dynamic-loading feature public barrels.
+4. Remaining static request hotspots are broader shared/layout chunks and route families such as community, reading, and inventory, not the Phase 3 route-barrel import pattern.
+5. Run a final full-matrix benchmark before any release sign-off that depends on these staged performance optimizations.
 
 ## Recommended Refactors
 
@@ -447,3 +447,9 @@
 - Phase 2 GitHub Actions: `CD Fast Deploy` run `25515738110` completed successfully after push to `main`.
 - Phase 2 production benchmark: `BENCHMARK_FEATURE=inventory-gacha-collection` feature-matrix completed at `2026-05-07T19:12:47.831Z`; collection-focus reported `0` image requests >800ms on 4 collection image requests in the focused summary.
 - Phase 2 CDN validation: repeated production requests to the new `/api/collection/card-image/81a3d9698977fda2.avif?...` URL returned `cf-cache-status: HIT` with non-zero `age`, replacing the prior `cf-cache-status: DYNAMIC` behavior on extensionless API proxy URLs.
+- Phase 3 bundle/static request validation: commit `4888e12c` replaced auth-public and admin page imports from `@/features/auth/public` and `@/features/admin/public` with concrete page-component imports, while keeping layout-level public API imports intact.
+- Phase 3 regression coverage: `scripts/lib/cleanArchitectureGuard.test.ts` now covers the controlled direct-import exception for auth-public/admin hotspot routes; `npm run lint:architecture` passed with 1117 files checked.
+- Phase 3 local verification: `npx vitest run scripts/lib/cleanArchitectureGuard.test.ts`, `npm run lint`, and `npm run build` passed. The build kept the existing Next.js warning about custom `Cache-Control` for `/_next/static/:path*`.
+- Phase 3 GitHub Actions: `CD Fast Deploy` run `25517782964` completed successfully after push to `main`.
+- Phase 3 production benchmark: `BENCHMARK_FEATURE=auth-public` completed at `2026-05-07T20:04:56.108Z`; the JSON artifact reported 154 sampled pages, average 28.7 requests/page, max 50 requests, and `0` pending requests. The local Playwright web server logged Turbopack/OOM noise after the passing test, so production metrics should be interpreted from the generated artifact rather than the post-test server stderr.
+- Phase 3 production benchmark: `BENCHMARK_FEATURE=admin` completed at `2026-05-07T20:12:25.024Z`; the focused artifact reported 116 sampled pages, average 29.8 requests/page, max 39 requests, average 26.9 static requests/page, and 1 pending request. Admin route rows in the same artifact were 29-31 requests on desktop and 30-31 on mobile for the primary admin pages.
