@@ -71,7 +71,7 @@ export function toCollectionImageProxyUrl(sourceUrl: string | null | undefined, 
     src: raw,
     iv: version,
   });
-  return `/api/collection/card-image?${params.toString()}`;
+  return `/api/collection/card-image/${encodeURIComponent(version)}.avif?${params.toString()}`;
 }
 
 export async function fetchCollectionCatalogManifest(): Promise<CollectionCatalogManifest> {
