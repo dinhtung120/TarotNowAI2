@@ -15,6 +15,9 @@
       "loading": "Loading...",
       "empty_title": "No conversations yet.",
       "empty_subtitle": "Start a new connection",
+      "welcomeTitle": "Welcome to TarotNow Chat",
+      "welcomeDescription": "Choose a conversation from the list on the left to start discussing with your reader. If you do not have any conversations yet, visit the reader directory to start a new consultation.",
+      "privacyLabel": "Secure • Private",
       "list_label_reader": "Reader",
       "list_label_user": "User",
       "status": {

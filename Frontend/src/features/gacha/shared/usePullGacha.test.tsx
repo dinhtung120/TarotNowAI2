@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePullGacha } from '@/features/gacha/shared/usePullGacha';
 import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
+import type { InventoryResponse } from '@/features/inventory/shared/inventoryTypes';
 
 vi.mock('@tanstack/react-query', () => ({
  useMutation: vi.fn(),
@@ -49,6 +51,72 @@ describe('usePullGacha', () => {
   act(() => root.unmount());
   container.remove();
   vi.clearAllMocks();
+ });
+
+ it('adds newly rewarded inventory items to the optimistic inventory cache', () => {
+  let capturedOptions: Record<string, unknown> | null = null;
+  const inventory: InventoryResponse = { items: [] };
+  const setQueryData = vi.fn((queryKey, updater) => {
+   if (JSON.stringify(queryKey) !== JSON.stringify(inventoryQueryKeys.mine())) return undefined;
+   const nextInventory = typeof updater === 'function' ? updater(inventory) : updater;
+   inventory.items = nextInventory.items;
+   return nextInventory;
+  });
+  mockedUseQueryClient.mockReturnValue({
+   setQueryData,
+   setQueriesData: vi.fn(),
+   invalidateQueries: vi.fn().mockResolvedValue(undefined),
+  } as never);
+  mockedUseMutation.mockImplementation((options: unknown) => {
+   capturedOptions = options as Record<string, unknown>;
+   return {
+    mutateAsync: vi.fn(),
+    isPending: false,
+   } as never;
+  });
+
+  act(() => {
+   root.render(<Harness onChange={() => {}} />);
+  });
+
+  (capturedOptions?.onSuccess as (
+   result: unknown,
+   variables: unknown,
+   context: unknown,
+  ) => void)(
+   {
+    success: true,
+    isIdempotentReplay: false,
+    poolCode: 'daily',
+    currentPityCount: 1,
+    hardPityThreshold: 50,
+    wasPityTriggered: false,
+    rewards: [{
+     kind: 'item',
+     rarity: 'rare',
+     itemDefinitionId: 'new-item-id',
+     itemCode: 'new-item-code',
+     quantityGranted: 2,
+     iconUrl: null,
+     nameVi: 'Vật phẩm mới',
+     nameEn: 'New item',
+     nameZh: '新物品',
+    }],
+   },
+   { poolCode: 'daily', count: 1 },
+   { idempotencyKey: 'local-key' },
+  );
+
+  expect(inventory.items).toEqual(
+   expect.arrayContaining([
+    expect.objectContaining({
+     itemDefinitionId: 'new-item-id',
+     itemCode: 'new-item-code',
+     quantity: 2,
+     canUse: true,
+    }),
+   ]),
+  );
  });
 
  it('does not mutate input payload when generating idempotency key', async () => {

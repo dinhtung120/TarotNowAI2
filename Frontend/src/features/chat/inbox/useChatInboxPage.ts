@@ -7,6 +7,7 @@ import {
    type ConversationDto,
    type InboxTab,
 } from '@/features/chat/shared/actions';
+import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 export function useChatInboxPage(initialTab: InboxTab = 'active') {
    const [tab, setTab] = useState<InboxTab>(initialTab);
@@ -15,7 +16,7 @@ export function useChatInboxPage(initialTab: InboxTab = 'active') {
    const [nowTs, setNowTs] = useState(0);
 
    const { data, isLoading, refetch } = useQuery({
-      queryKey: ['chat', 'inbox', tab],
+      queryKey: userStateQueryKeys.chat.inbox(tab),
       queryFn: async () => {
          const result = await listConversations(tab, 1, 100);
          if (result.success && result.data) {

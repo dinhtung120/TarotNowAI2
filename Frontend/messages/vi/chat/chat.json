@@ -15,6 +15,9 @@
       "loading": "Đang tải...",
       "empty_title": "Chưa có cuộc trò chuyện nào.",
       "empty_subtitle": "Hãy bắt đầu một kết nối mới",
+      "welcomeTitle": "Chào mừng đến với TarotNow Chat",
+      "welcomeDescription": "Chọn một cuộc trò chuyện từ danh sách bên trái để bắt đầu thảo luận với Reader của bạn. Nếu bạn chưa có cuộc trò chuyện nào, hãy truy cập thư mục Reader để bắt đầu một phiên tư vấn mới.",
+      "privacyLabel": "Bảo mật • Riêng tư",
       "list_label_reader": "Reader",
       "list_label_user": "User",
       "status": {

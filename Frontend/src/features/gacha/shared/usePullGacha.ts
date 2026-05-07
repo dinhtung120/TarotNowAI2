@@ -19,21 +19,49 @@ import type {
  PullGachaReward,
 } from '@/features/gacha/shared/gachaTypes';
 import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
-import type { InventoryResponse } from '@/features/inventory/shared/inventoryTypes';
+import type { InventoryItem, InventoryResponse } from '@/features/inventory/shared/inventoryTypes';
 
 const GACHA_HISTORY_QUERY_KEY = [...gachaQueryKeys.all, 'history'] as const;
 const GACHA_PULL_TIMEOUT_MS = 12_000;
+
+function createInventoryItemFromReward(reward: PullGachaReward, quantity: number): InventoryItem {
+ const itemCode = reward.itemCode?.trim() ?? '';
+ const now = new Date().toISOString();
+ return {
+  itemDefinitionId: reward.itemDefinitionId ?? itemCode,
+  itemCode,
+  itemType: reward.kind,
+  enhancementType: null,
+  rarity: reward.rarity,
+  isConsumable: true,
+  isPermanent: false,
+  effectValue: 0,
+  successRatePercent: 0,
+  nameVi: reward.nameVi,
+  nameEn: reward.nameEn,
+  nameZh: reward.nameZh,
+  descriptionVi: '',
+  descriptionEn: '',
+  descriptionZh: '',
+  iconUrl: reward.iconUrl ?? null,
+  quantity,
+  canUse: quantity > 0,
+  requiresTargetCard: false,
+  blockedReason: null,
+  acquiredAtUtc: now,
+ };
+}
 
 function updateInventoryCacheFromGachaResult(
  queryClient: ReturnType<typeof useQueryClient>,
  result: PullGachaResult,
 ): void {
  queryClient.setQueryData<InventoryResponse | undefined>(inventoryQueryKeys.mine(), (currentInventory) => {
-  if (!currentInventory?.items?.length) {
+  if (!currentInventory) {
    return currentInventory;
   }
 
-  const rewardQuantityByItemCode = new Map<string, number>();
+  const rewardQuantityByItemCode = new Map<string, { reward: PullGachaReward; quantity: number }>();
   for (const reward of result.rewards) {
    if (!reward.itemCode) {
     continue;
@@ -44,16 +72,23 @@ function updateInventoryCacheFromGachaResult(
     continue;
    }
 
-   const currentQuantity = rewardQuantityByItemCode.get(normalizedCode) ?? 0;
-   rewardQuantityByItemCode.set(normalizedCode, currentQuantity + Math.max(0, reward.quantityGranted));
+   const current = rewardQuantityByItemCode.get(normalizedCode);
+   rewardQuantityByItemCode.set(normalizedCode, {
+    reward,
+    quantity: (current?.quantity ?? 0) + Math.max(0, reward.quantityGranted),
+   });
   }
 
   if (rewardQuantityByItemCode.size === 0) {
    return currentInventory;
   }
 
+  const seenItemCodes = new Set<string>();
   const updatedItems = currentInventory.items.map((item) => {
-   const delta = rewardQuantityByItemCode.get(item.itemCode.trim().toLowerCase()) ?? 0;
+   const normalizedCode = item.itemCode.trim().toLowerCase();
+   seenItemCodes.add(normalizedCode);
+   const rewardEntry = rewardQuantityByItemCode.get(normalizedCode);
+   const delta = rewardEntry?.quantity ?? 0;
    if (delta === 0) {
     return item;
    }
@@ -65,9 +100,13 @@ function updateInventoryCacheFromGachaResult(
    };
   });
 
+  const newItems = Array.from(rewardQuantityByItemCode.entries())
+   .filter(([itemCode, entry]) => entry.quantity > 0 && !seenItemCodes.has(itemCode))
+   .map(([, entry]) => createInventoryItemFromReward(entry.reward, entry.quantity));
+
   return {
    ...currentInventory,
-   items: updatedItems,
+   items: [...updatedItems, ...newItems],
   };
  });
 }
