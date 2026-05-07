@@ -2490,7 +2490,7 @@ test.describe('TarotNow production benchmark', () => {
 
     for (const scenario of runResult.scenarios) {
       if (
-        runResult.benchmarkMode === 'targeted-hotspots'
+        (runResult.benchmarkMode === 'targeted-hotspots' || runResult.benchmarkMode === 'feature-matrix')
         && scenario.scenario === 'logged-out'
         && scenario.pages.length === 0
       ) {
