@@ -33,35 +33,30 @@ export default function CollectionZoomCardImage({
     }
 
     let disposed = false;
-    const preloader = new window.Image();
-    preloader.decoding = "async";
-    preloader.src = fullUrl;
-
+    let preloader: HTMLImageElement | null = null;
     const revealFullImage = () => {
       if (disposed) return;
       setLoadedFullImageUrl(fullUrl);
     };
 
-    if (preloader.complete) {
-      revealFullImage();
-      return () => {
-        disposed = true;
-      };
-    }
+    const preloadTimer = window.setTimeout(() => {
+      if (disposed) return;
+      preloader = new window.Image();
+      preloader.decoding = "async";
+      preloader.src = fullUrl;
 
-    if (typeof preloader.decode === "function") {
-      preloader.decode()
-        .then(revealFullImage)
-        .catch(revealFullImage);
-    } else {
+      if (preloader.complete) revealFullImage();
       preloader.onload = revealFullImage;
       preloader.onerror = revealFullImage;
-    }
+    }, 450);
 
     return () => {
       disposed = true;
-      preloader.onload = null;
-      preloader.onerror = null;
+      window.clearTimeout(preloadTimer);
+      if (preloader) {
+        preloader.onload = null;
+        preloader.onerror = null;
+      }
     };
   }, [fullUrl, previewUrl]);
 
