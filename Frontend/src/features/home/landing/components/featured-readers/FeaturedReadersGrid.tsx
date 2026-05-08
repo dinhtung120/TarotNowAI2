@@ -6,7 +6,6 @@ import type { ReaderProfile } from '@/features/reader/public';
 import FeaturedReaderCard from '@/features/home/landing/components/featured-readers/FeaturedReaderCard';
 import FeaturedReadersFallback from '@/features/home/landing/components/featured-readers/FeaturedReadersFallback';
 import { fetchJsonOrThrow } from '@/shared/gateways/clientFetch';
-import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { cn } from '@/lib/utils';
 
@@ -17,13 +16,9 @@ interface FeaturedReadersResponse {
 
 export default function FeaturedReadersGrid() {
   const t = useTranslations('Index');
-  const runtimePoliciesQuery = useRuntimePolicies();
-  const featuredLimit = runtimePoliciesQuery.data?.ui.readers.featuredLimit
-    ?? RUNTIME_POLICY_FALLBACKS.ui.readers.featuredLimit;
-  const directoryStaleMs = runtimePoliciesQuery.data?.ui.readers.directoryStaleMs
-    ?? RUNTIME_POLICY_FALLBACKS.ui.readers.directoryStaleMs;
-  const clientTimeoutMs = runtimePoliciesQuery.data?.http.clientTimeoutMs
-    ?? RUNTIME_POLICY_FALLBACKS.http.clientTimeoutMs;
+  const featuredLimit = RUNTIME_POLICY_FALLBACKS.ui.readers.featuredLimit;
+  const directoryStaleMs = RUNTIME_POLICY_FALLBACKS.ui.readers.directoryStaleMs;
+  const clientTimeoutMs = RUNTIME_POLICY_FALLBACKS.http.clientTimeoutMs;
 
   const featuredReadersQuery = useQuery({
     queryKey: ['readers', 'home-featured', featuredLimit],

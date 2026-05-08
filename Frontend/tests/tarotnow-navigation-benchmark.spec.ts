@@ -2053,6 +2053,7 @@ async function runScenario(
         if (queue.includes(discovered)) continue;
         if (scenario === 'logged-out' && isProtectedRoutePath(discovered)) continue;
         if (scenario === 'logged-in-reader' && isAdminRoutePath(discovered)) continue;
+        if (scenario !== 'logged-out' && isAuthEntryRoutePath(discovered)) continue;
         queue.push(discovered);
       }
     }
