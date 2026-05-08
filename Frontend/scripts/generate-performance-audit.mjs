@@ -36,6 +36,55 @@ function allRequests(result) {
   return allPages(result).flatMap((page) => (page.requests ?? []).map((request) => ({ ...request, page })));
 }
 
+function stripLocale(route, localePrefix) {
+  if (route === localePrefix) return '/';
+  return route.startsWith(`${localePrefix}/`) ? route.slice(localePrefix.length) : route;
+}
+
+function routeFamily(route, localePrefix) {
+  const routePath = stripLocale(route, localePrefix);
+  if (routePath === '/') return 'home';
+
+  const firstSegment = routePath.split('/').filter(Boolean)[0] ?? 'home';
+  if (['login', 'register', 'forgot-password', 'reset-password', 'verify-email', 'legal'].includes(firstSegment)) return 'auth-public';
+  if (['inventory', 'gacha', 'collection'].includes(firstSegment)) return 'inventory-gacha-collection';
+  if (['profile', 'wallet', 'notifications'].includes(firstSegment)) return 'profile-wallet-notifications';
+  if (['reader', 'readers', 'chat'].includes(firstSegment)) return 'reader-chat';
+  if (['community', 'leaderboard', 'gamification'].includes(firstSegment)) return 'community-leaderboard-quest';
+  return firstSegment;
+}
+
+function routeFamilyLines(result, pages) {
+  const localePrefix = result.localePrefix ?? '/vi';
+  const groups = new Map();
+
+  for (const page of pages) {
+    const family = routeFamily(page.route, localePrefix);
+    const key = `${page.scenario}|${page.viewport}|${family}`;
+    const current = groups.get(key) ?? {
+      scenario: page.scenario,
+      viewport: page.viewport,
+      family,
+      pages: 0,
+      requests: 0,
+      nav: 0,
+      pending: 0,
+      failed: 0,
+    };
+
+    current.pages += 1;
+    current.requests += Number(page.requestCount ?? 0);
+    current.nav += Number(page.navigationMs ?? 0);
+    current.pending += Number(page.pendingCount ?? 0);
+    current.failed += Number(page.failedRequestCount ?? 0);
+    groups.set(key, current);
+  }
+
+  return [...groups.values()]
+    .sort((left, right) => left.scenario.localeCompare(right.scenario) || left.viewport.localeCompare(right.viewport) || left.family.localeCompare(right.family))
+    .map((entry) => `| ${entry.scenario} | ${entry.viewport} | ${entry.family} | ${entry.pages} | ${format(entry.requests / entry.pages, 1)} | ${format(entry.nav / entry.pages)} | ${entry.pending} | ${entry.failed} |`);
+}
+
 function tableOrEmpty(lines, emptyLine) {
   return lines.length > 0 ? lines : [emptyLine];
 }
@@ -108,12 +157,20 @@ function buildReport(result) {
     `- Medium pages: ${mediumPages.length}`,
     `- Slow requests >${slowHigh}ms: ${slowCriticalRequests.length}`,
     `- Slow requests ${slowMedium}-${slowHigh}ms: ${slowMediumRequests.length}`,
+    `- Request thresholds: >${requestHigh} suspicious, >${requestCritical} severe`,
+    `- Slow request thresholds: >${slowMedium}ms optimize, >${slowHigh}ms serious`,
     '',
     '## Scenario Coverage',
     '',
     '| Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Pending | Failed | Login bootstrap |',
     '| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |',
     ...scenarioLines,
+    '',
+    '## Route Family Coverage',
+    '',
+    '| Scenario | Viewport | Family | Pages | Avg requests/page | Avg nav (ms) | Pending | Failed |',
+    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |',
+    ...tableOrEmpty(routeFamilyLines(result, pages), '| - | - | - | - | - | - | - | - |'),
     '',
     '## Detailed Metrics Table',
     '',

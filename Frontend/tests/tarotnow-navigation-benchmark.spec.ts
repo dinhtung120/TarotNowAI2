@@ -1456,6 +1456,10 @@ function buildSeedRoutes(
     routes.add(`${LOCALE_PREFIX}/chat/${id}`);
   }
 
+  for (const id of dynamic.communityPostIds) {
+    routes.add(`${LOCALE_PREFIX}/community/${id}`);
+  }
+
   const scenarioFiltered = filterRoutesForScenario(scenario, [...routes]);
   return {
     routes: scenarioFiltered.routes,
