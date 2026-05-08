@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export default function QuestsPanel() {
  const t = useTranslations("Gamification");
- const defaultQuestType = RUNTIME_POLICY_FALLBACKS.gamification.defaultQuestType === "weekly" ? "weekly" : "daily";
+ const defaultQuestType = RUNTIME_POLICY_FALLBACKS.gamification.defaultQuestType;
  const [selectedQuestType, setSelectedQuestType] = useState<"daily" | "weekly" | null>(null);
  const questType = selectedQuestType ?? defaultQuestType;
  const { data: quests, isLoading, isError } = useQuests(questType ?? undefined);
