@@ -23,6 +23,7 @@ import {
 import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 const DEFAULT_VISIBLE_CHUNK_WINDOW = 1;
+const INITIAL_VISIBLE_CARD_COUNT = 8;
 const CHUNK_WINDOW_EXPAND_COOLDOWN_MS = 600;
 
 interface UseCollectionCatalogChunkedOptions {
@@ -91,11 +92,11 @@ export function useCollectionCatalogChunked({
 
   const visibleCardIds = useMemo(() => {
     if (!orderedCardIds.length) return [];
-    const visibleCount = Math.min(
-      orderedCardIds.length,
-      visibleChunkWindow * (manifest?.chunkSize ?? 16),
-    );
-    return orderedCardIds.slice(0, visibleCount);
+    const chunkSize = manifest?.chunkSize ?? 16;
+    const visibleCount = visibleChunkWindow === DEFAULT_VISIBLE_CHUNK_WINDOW
+      ? Math.min(INITIAL_VISIBLE_CARD_COUNT, chunkSize)
+      : visibleChunkWindow * chunkSize;
+    return orderedCardIds.slice(0, Math.min(orderedCardIds.length, visibleCount));
   }, [manifest?.chunkSize, orderedCardIds, visibleChunkWindow]);
 
   const hasMoreVisibleCards = visibleCardIds.length < orderedCardIds.length;
