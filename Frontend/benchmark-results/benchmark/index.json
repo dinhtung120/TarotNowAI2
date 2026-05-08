@@ -34,5 +34,104 @@
     "json": "benchmark-results/benchmark/runs/prod-auth-entry-filter-20260508T164636Z/tarotnow-benchmark.json",
     "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
     "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-runtime-policy-public-fix-20260509T172820Z",
+    "generatedAtUtc": "2026-05-08T17:43:12.201Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-runtime-policy-public-fix-20260509T172820Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-static-spike-confirm-20260509T174345Z",
+    "generatedAtUtc": "2026-05-08T17:54:33.188Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-static-spike-confirm-20260509T174345Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-collection-preload-fix-20260509T180311Z",
+    "generatedAtUtc": "2026-05-08T18:12:54.962Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-collection-preload-fix-20260509T180311Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-thumb-cdn-bypass-20260509T0119Z",
+    "generatedAtUtc": "2026-05-08T18:30:44.619Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-thumb-cdn-bypass-20260509T0119Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-collection-fanout-8-20260509T0138Z",
+    "generatedAtUtc": "2026-05-08T18:46:27.352Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-collection-fanout-8-20260509T0138Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-gamification-hotpath-fix-20260509T0158Z",
+    "generatedAtUtc": "2026-05-08T19:08:23.915Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-gamification-hotpath-fix-20260509T0158Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-runtime-policy-session-cache-20260509T0217Z",
+    "generatedAtUtc": "2026-05-08T19:27:48.928Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-runtime-policy-session-cache-20260509T0217Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-presence-runtime-policy-removal-20260509T0240Z",
+    "generatedAtUtc": "2026-05-08T19:44:52.162Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-presence-runtime-policy-removal-20260509T0240Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-chat-runtime-policy-removal-20260509T0300Z",
+    "generatedAtUtc": "2026-05-08T20:10:48.971Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-chat-runtime-policy-removal-20260509T0300Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-chat-runtime-policy-removal-rerun-20260509T0315Z",
+    "generatedAtUtc": "2026-05-08T20:21:39.520Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-chat-runtime-policy-removal-rerun-20260509T0315Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-chat-runtime-policy-removal-rerun2-20260509T0330Z",
+    "generatedAtUtc": "2026-05-08T20:32:14.963Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-chat-runtime-policy-removal-rerun2-20260509T0330Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
   }
 ]
