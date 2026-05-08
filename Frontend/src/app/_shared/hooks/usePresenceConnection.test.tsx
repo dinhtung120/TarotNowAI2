@@ -9,7 +9,6 @@ const cancelWakeup = vi.fn();
 const ensureRealtimeSession = vi.fn();
 const registerPresenceConnectionHandlers = vi.fn();
 const useAuthStore = vi.fn();
-const useRuntimePolicies = vi.fn();
 const useQueryClient = vi.fn();
 
 const fakeConnection = {
@@ -80,10 +79,6 @@ vi.mock('@/features/chat/shared/hooks/useReconnectWakeup', () => ({
  }),
 }));
 
-vi.mock('@/shared/hooks/useRuntimePolicies', () => ({
- useRuntimePolicies: () => useRuntimePolicies(),
-}));
-
 vi.mock('@/app/_shared/hooks/usePresenceConnection.registration', () => ({
  registerPresenceConnectionHandlers: (...args: unknown[]) => registerPresenceConnectionHandlers(...args),
 }));
@@ -114,22 +109,6 @@ describe('usePresenceConnection', () => {
   useAuthStore.mockImplementation((selector: (state: { isAuthenticated: boolean }) => unknown) =>
    selector(authState),
   );
-  useRuntimePolicies.mockReturnValue({
-   data: {
-    realtime: {
-     reconnectScheduleMs: [0, 20],
-     negotiationTimeoutMs: 10,
-     presenceNegotiationCooldownMs: 50,
-     serverTimeoutMs: 1_000,
-     chat: {
-      typingClearMs: 100,
-      invalidateDebounceMs: 100,
-      initialLoadGuardMs: 100,
-      appStartGuardMs: 100,
-     },
-    },
-   },
-  });
   ensureRealtimeSession.mockResolvedValue(true);
   registerPresenceConnectionHandlers.mockReturnValue({
    dispose: vi.fn(),
@@ -174,7 +153,7 @@ describe('usePresenceConnection', () => {
   expect(scheduleWakeup).toHaveBeenCalled();
 
   wakeupState.wakeupVersion = 1;
-  vi.setSystemTime(new Date('2026-04-28T08:00:45.100Z'));
+  vi.setSystemTime(new Date('2026-04-28T08:00:48.100Z'));
   act(() => {
    root.render(<Harness />);
   });
@@ -226,7 +205,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await vi.advanceTimersByTimeAsync(3_011);
+   await vi.advanceTimersByTimeAsync(11_001);
    await Promise.resolve();
   });
 
@@ -244,7 +223,6 @@ describe('usePresenceConnection', () => {
    await Promise.resolve();
   });
 
-  expect(useRuntimePolicies).toHaveBeenCalled();
   expect(ensureRealtimeSession).not.toHaveBeenCalled();
   expect(fakeConnection.start).not.toHaveBeenCalled();
   expect(cancelWakeup).toHaveBeenCalled();
@@ -262,7 +240,6 @@ describe('usePresenceConnection', () => {
    await Promise.resolve();
   });
 
-  expect(useRuntimePolicies).toHaveBeenCalled();
   expect(ensureRealtimeSession).not.toHaveBeenCalled();
   expect(fakeConnection.start).not.toHaveBeenCalled();
   expect(cancelWakeup).toHaveBeenCalled();

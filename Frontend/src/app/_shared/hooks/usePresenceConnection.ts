@@ -9,9 +9,7 @@ import { getSignalRHubUrl } from '@/features/chat/shared/gateways/signalRUrl';
 import { ensureRealtimeSession } from '@/features/chat/shared/gateways/realtimeSessionGuard';
 import { useReconnectWakeup } from '@/features/chat/shared/hooks/useReconnectWakeup';
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
-import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import {
-  hasSameNumberArray,
   isUnauthorizedNegotiationError,
   shouldStopConnection,
   startConnectionWithTimeout,
@@ -26,8 +24,6 @@ interface UsePresenceConnectionOptions {
 export function usePresenceConnection(options: UsePresenceConnectionOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const runtimePoliciesQuery = useRuntimePolicies(enabled && isAuthenticated);
-  const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectBlockedUntilRef = useRef(0);
   const queryClient = useQueryClient();
@@ -41,23 +37,6 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
     negotiationCooldownMs: RUNTIME_POLICY_FALLBACKS.realtime.presenceNegotiationCooldownMs as number,
     serverTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs as number,
   });
-
-  // Cập nhật các giá trị cấu hình vào ref khi runtimePolicies thay đổi, nhưng không trigger re-render
-  // và quan trọng nhất là không làm cho useEffect kết nối SignalR chạy lại.
-  useEffect(() => {
-    const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
-    // So sánh JSON để tránh cập nhật ref nếu giá trị thực tế không đổi (tránh clone array vô ích).
-    if (!hasSameNumberArray(reconnectScheduleRef.current, currentSchedule)) {
-      reconnectScheduleRef.current = [...currentSchedule];
-    }
-
-    configRef.current = {
-      negotiationTimeoutMs: realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs,
-      negotiationCooldownMs:
-        realtimePolicy?.presenceNegotiationCooldownMs ?? RUNTIME_POLICY_FALLBACKS.realtime.presenceNegotiationCooldownMs,
-      serverTimeoutMs: realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs,
-    };
-  }, [realtimePolicy]);
 
   useEffect(() => {
     /*
