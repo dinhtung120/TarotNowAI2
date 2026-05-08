@@ -2,18 +2,18 @@
 
 ## Executive Summary
 
-- Generated at (UTC): 2026-05-08T13:19:50.003Z
-- Benchmark generated at (UTC): 2026-05-08T13:19:39.923Z
+- Generated at (UTC): 2026-05-08T13:40:35.715Z
+- Benchmark generated at (UTC): 2026-05-08T13:40:07.341Z
 - Base origin: https://www.tarotnow.xyz
 - Locale prefix: /vi
 - Benchmark mode: full-matrix
 - Total scenarios: 6
-- Total pages measured: 196
-- Critical pages: 34
-- High pages: 139
-- Medium pages: 23
-- Slow requests >800ms: 132
-- Slow requests 400-800ms: 545
+- Total pages measured: 194
+- Critical pages: 29
+- High pages: 129
+- Medium pages: 36
+- Slow requests >800ms: 110
+- Slow requests 400-800ms: 455
 - Request thresholds: >25 suspicious, >35 severe
 - Slow request thresholds: >400ms optimize, >800ms serious
 
@@ -21,373 +21,348 @@
 
 | Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Pending | Failed | Login bootstrap |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| logged-out | desktop | 9 | 25.3 | 3058 | 0 | 1 | yes |
-| logged-in-admin | desktop | 50 | 30.7 | 3126 | 4 | 5 | yes |
-| logged-in-reader | desktop | 40 | 30.4 | 3057 | 0 | 5 | yes |
-| logged-out | mobile | 9 | 25.2 | 3677 | 2 | 1 | yes |
-| logged-in-admin | mobile | 49 | 30.7 | 3057 | 0 | 8 | yes |
-| logged-in-reader | mobile | 39 | 30.1 | 2992 | 1 | 4 | yes |
+| logged-out | desktop | 9 | 24.9 | 2954 | 0 | 0 | yes |
+| logged-in-admin | desktop | 49 | 30.1 | 3092 | 0 | 4 | yes |
+| logged-in-reader | desktop | 39 | 29.4 | 3057 | 0 | 2 | yes |
+| logged-out | mobile | 9 | 25.1 | 2848 | 0 | 1 | yes |
+| logged-in-admin | mobile | 49 | 30.6 | 3029 | 0 | 11 | yes |
+| logged-in-reader | mobile | 39 | 31.0 | 3280 | 0 | 5 | yes |
 
 ## Route Family Coverage
 
 | Scenario | Viewport | Family | Pages | Avg requests/page | Avg nav (ms) | Pending | Failed |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| logged-in-admin | desktop | admin | 10 | 29.6 | 3002 | 0 | 0 |
-| logged-in-admin | desktop | auth-public | 8 | 35.3 | 3120 | 1 | 3 |
-| logged-in-admin | desktop | community-leaderboard-quest | 4 | 28.0 | 3268 | 0 | 2 |
-| logged-in-admin | desktop | home | 1 | 26.0 | 2734 | 0 | 0 |
-| logged-in-admin | desktop | inventory-gacha-collection | 4 | 35.3 | 4210 | 0 | 0 |
-| logged-in-admin | desktop | profile-wallet-notifications | 8 | 29.5 | 2935 | 2 | 0 |
-| logged-in-admin | desktop | reader-chat | 9 | 28.2 | 2829 | 1 | 0 |
-| logged-in-admin | desktop | reading | 6 | 31.5 | 3295 | 0 | 0 |
-| logged-in-admin | mobile | admin | 10 | 29.8 | 2975 | 0 | 0 |
-| logged-in-admin | mobile | auth-public | 8 | 35.8 | 3105 | 0 | 3 |
-| logged-in-admin | mobile | community-leaderboard-quest | 4 | 25.8 | 3027 | 0 | 1 |
-| logged-in-admin | mobile | home | 1 | 26.0 | 2776 | 0 | 0 |
-| logged-in-admin | mobile | inventory-gacha-collection | 4 | 33.0 | 3691 | 0 | 0 |
-| logged-in-admin | mobile | profile-wallet-notifications | 8 | 28.9 | 2860 | 0 | 0 |
-| logged-in-admin | mobile | reader-chat | 9 | 31.8 | 3122 | 0 | 4 |
-| logged-in-admin | mobile | reading | 5 | 28.0 | 2912 | 0 | 0 |
-| logged-in-reader | desktop | auth-public | 8 | 35.4 | 3167 | 0 | 3 |
-| logged-in-reader | desktop | community-leaderboard-quest | 4 | 24.8 | 2948 | 0 | 1 |
-| logged-in-reader | desktop | home | 1 | 26.0 | 2724 | 0 | 0 |
-| logged-in-reader | desktop | inventory-gacha-collection | 4 | 33.0 | 3776 | 0 | 0 |
-| logged-in-reader | desktop | profile-wallet-notifications | 8 | 29.6 | 2898 | 0 | 1 |
-| logged-in-reader | desktop | reader-chat | 9 | 29.8 | 3060 | 0 | 0 |
-| logged-in-reader | desktop | reading | 6 | 28.2 | 2765 | 0 | 0 |
-| logged-in-reader | mobile | auth-public | 8 | 34.1 | 2968 | 0 | 3 |
-| logged-in-reader | mobile | community-leaderboard-quest | 4 | 24.8 | 2926 | 0 | 1 |
-| logged-in-reader | mobile | home | 1 | 26.0 | 2922 | 0 | 0 |
-| logged-in-reader | mobile | inventory-gacha-collection | 4 | 33.0 | 3598 | 0 | 0 |
-| logged-in-reader | mobile | profile-wallet-notifications | 8 | 29.6 | 2940 | 0 | 0 |
-| logged-in-reader | mobile | reader-chat | 9 | 28.1 | 2804 | 1 | 0 |
-| logged-in-reader | mobile | reading | 5 | 31.0 | 3032 | 0 | 0 |
-| logged-out | desktop | auth-public | 8 | 24.5 | 2830 | 0 | 0 |
-| logged-out | desktop | home | 1 | 32.0 | 4877 | 0 | 1 |
-| logged-out | mobile | auth-public | 8 | 24.5 | 3647 | 0 | 0 |
-| logged-out | mobile | home | 1 | 31.0 | 3914 | 2 | 1 |
+| logged-in-admin | desktop | admin | 10 | 29.4 | 3106 | 0 | 0 |
+| logged-in-admin | desktop | auth-public | 8 | 31.3 | 2897 | 0 | 2 |
+| logged-in-admin | desktop | community-leaderboard-quest | 4 | 30.0 | 3453 | 0 | 2 |
+| logged-in-admin | desktop | home | 1 | 26.0 | 2787 | 0 | 0 |
+| logged-in-admin | desktop | inventory-gacha-collection | 4 | 33.8 | 4157 | 0 | 0 |
+| logged-in-admin | desktop | profile-wallet-notifications | 8 | 29.6 | 3008 | 0 | 0 |
+| logged-in-admin | desktop | reader-chat | 9 | 29.2 | 2870 | 0 | 0 |
+| logged-in-admin | desktop | reading | 5 | 29.8 | 2834 | 0 | 0 |
+| logged-in-admin | mobile | admin | 10 | 29.5 | 2890 | 0 | 0 |
+| logged-in-admin | mobile | auth-public | 8 | 35.3 | 3140 | 0 | 3 |
+| logged-in-admin | mobile | community-leaderboard-quest | 4 | 24.8 | 3212 | 0 | 1 |
+| logged-in-admin | mobile | home | 1 | 26.0 | 2684 | 0 | 0 |
+| logged-in-admin | mobile | inventory-gacha-collection | 4 | 31.8 | 3552 | 0 | 0 |
+| logged-in-admin | mobile | profile-wallet-notifications | 8 | 29.5 | 2983 | 0 | 0 |
+| logged-in-admin | mobile | reader-chat | 9 | 32.6 | 2965 | 0 | 7 |
+| logged-in-admin | mobile | reading | 5 | 28.4 | 2826 | 0 | 0 |
+| logged-in-reader | desktop | auth-public | 8 | 28.0 | 2930 | 0 | 1 |
+| logged-in-reader | desktop | community-leaderboard-quest | 4 | 25.0 | 2958 | 0 | 1 |
+| logged-in-reader | desktop | home | 1 | 26.0 | 2807 | 0 | 0 |
+| logged-in-reader | desktop | inventory-gacha-collection | 4 | 35.3 | 4022 | 0 | 0 |
+| logged-in-reader | desktop | profile-wallet-notifications | 8 | 30.1 | 2998 | 0 | 0 |
+| logged-in-reader | desktop | reader-chat | 9 | 28.9 | 2855 | 0 | 0 |
+| logged-in-reader | desktop | reading | 5 | 30.6 | 3081 | 0 | 0 |
+| logged-in-reader | mobile | auth-public | 8 | 34.5 | 3101 | 0 | 3 |
+| logged-in-reader | mobile | community-leaderboard-quest | 4 | 26.3 | 3147 | 0 | 2 |
+| logged-in-reader | mobile | home | 1 | 41.0 | 4338 | 0 | 0 |
+| logged-in-reader | mobile | inventory-gacha-collection | 4 | 33.3 | 3949 | 0 | 0 |
+| logged-in-reader | mobile | profile-wallet-notifications | 8 | 30.0 | 3012 | 0 | 0 |
+| logged-in-reader | mobile | reader-chat | 9 | 30.0 | 3427 | 0 | 0 |
+| logged-in-reader | mobile | reading | 5 | 29.0 | 3092 | 0 | 0 |
+| logged-out | desktop | auth-public | 8 | 24.4 | 2869 | 0 | 0 |
+| logged-out | desktop | home | 1 | 29.0 | 3630 | 0 | 0 |
+| logged-out | mobile | auth-public | 8 | 24.4 | 2790 | 0 | 0 |
+| logged-out | mobile | home | 1 | 31.0 | 3311 | 0 | 1 |
 
 ## Detailed Metrics Table
 
 | Severity | Feature | Scenario | Viewport | Route | Requests | API | Static | Third-party | Nav (ms) | FCP (ms) | LCP (ms) | TBT (ms) | CLS | Pending | Failed | Transfer bytes |
 | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | 62 | 6 | 52 | 0 | 4149 | 920 | 1280 | 0.0 | 0.0000 | 0 | 4 | 1208430 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | 60 | 5 | 50 | 0 | 3931 | 600 | 1100 | 189.0 | 0.0033 | 0 | 1 | 1114731 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/register | 60 | 5 | 50 | 0 | 3688 | 816 | 816 | 0.0 | 0.0051 | 0 | 1 | 1115664 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/login | 53 | 0 | 49 | 0 | 3720 | 1136 | 1136 | 27.0 | 0.0039 | 0 | 1 | 1108401 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/register | 53 | 0 | 49 | 0 | 3666 | 932 | 932 | 114.0 | 0.0039 | 1 | 1 | 1108547 |
-| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | 50 | 0 | 46 | 0 | 3576 | 748 | 1256 | 148.0 | 0.0035 | 0 | 1 | 1038252 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/login | 50 | 0 | 46 | 0 | 3253 | 588 | 1088 | 103.0 | 0.0033 | 0 | 1 | 1038327 |
-| Critical | auth-public | logged-in-reader | desktop | /vi/forgot-password | 50 | 0 | 46 | 0 | 3320 | 652 | 1164 | 129.0 | 0.0033 | 0 | 1 | 1038288 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/login | 50 | 0 | 46 | 0 | 3691 | 580 | 948 | 0.0 | 0.0051 | 0 | 1 | 1038023 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | 50 | 0 | 46 | 0 | 3304 | 556 | 908 | 0.0 | 0.0051 | 0 | 1 | 1038044 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/login | 50 | 0 | 46 | 0 | 3595 | 656 | 1020 | 0.0 | 0.0055 | 0 | 1 | 1038111 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/register | 50 | 0 | 46 | 0 | 3342 | 556 | 924 | 0.0 | 0.0055 | 0 | 1 | 1038362 |
-| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | 50 | 0 | 46 | 0 | 3309 | 584 | 940 | 0.0 | 0.0055 | 0 | 1 | 1038312 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | 41 | 5 | 34 | 0 | 3637 | 796 | 1176 | 0.0 | 0.0039 | 0 | 0 | 665841 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha | 40 | 4 | 34 | 0 | 3650 | 752 | 1128 | 0.0 | 0.0039 | 0 | 0 | 746732 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/fa9476c1-9a62-465e-9123-3720ac2ddba3 | 39 | 5 | 32 | 0 | 3200 | 780 | 3108 | 0.0 | 0.0039 | 0 | 0 | 738281 |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/2aee7a1c-4322-427e-b5c1-30972072e89b | 39 | 6 | 31 | 0 | 3574 | 608 | 3224 | 0.0 | 0.0000 | 0 | 0 | 708025 |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | 38 | 3 | 33 | 0 | 4018 | 684 | 2272 | 0.0 | 0.0039 | 0 | 1 | 780033 |
-| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | 36 | 1 | 33 | 0 | 2947 | 608 | 972 | 0.0 | 0.0039 | 0 | 0 | 653605 |
-| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | 36 | 1 | 33 | 0 | 2998 | 612 | 996 | 0.0 | 0.0039 | 0 | 0 | 735123 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | 36 | 1 | 33 | 0 | 2944 | 604 | 936 | 0.0 | 0.0000 | 0 | 0 | 662315 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | 36 | 1 | 33 | 0 | 3321 | 644 | 984 | 0.0 | 0.0069 | 0 | 0 | 799166 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | 36 | 1 | 33 | 0 | 2930 | 548 | 888 | 0.0 | 0.0000 | 0 | 0 | 662700 |
-| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | 36 | 1 | 33 | 0 | 2950 | 548 | 904 | 0.0 | 0.0000 | 0 | 0 | 799471 |
-| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile | 34 | 3 | 28 | 0 | 2974 | 624 | 976 | 0.0 | 0.0726 | 0 | 1 | 640265 |
-| Critical | auth-public | logged-out | desktop | /vi | 32 | 2 | 28 | 0 | 4877 | 1332 | 1332 | 223.0 | 0.0000 | 0 | 1 | 613578 |
-| Critical | auth-public | logged-out | mobile | /vi | 31 | 2 | 27 | 0 | 3914 | 1064 | 1064 | 0.0 | 0.0000 | 2 | 1 | 603560 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | 28 | 0 | 26 | 0 | 2780 | 1088 | 1456 | 0.0 | 0.0486 | 2 | 0 | 630804 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers | 27 | 0 | 25 | 0 | 2794 | 940 | 1436 | 122.0 | 0.0039 | 1 | 0 | 607724 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | 27 | 0 | 25 | 0 | 2850 | 1072 | 1072 | 0.0 | 0.0055 | 1 | 0 | 607448 |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 2519 | 392 | 392 | 0.0 | 0.0000 | 0 | 1 | 166142 |
-| Critical | community-leaderboard-quest | logged-in-reader | desktop | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 2633 | 504 | 504 | 0.0 | 0.0000 | 0 | 1 | 166162 |
-| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 2562 | 372 | 372 | 0.0 | 0.0000 | 0 | 1 | 166150 |
-| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 2608 | 344 | 344 | 0.0 | 0.0000 | 0 | 1 | 166148 |
-| High | reading | logged-in-admin | desktop | /vi/reading/history | 35 | 5 | 28 | 0 | 4494 | 604 | 2636 | 0.0 | 0.0039 | 0 | 0 | 647541 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 35 | 5 | 28 | 0 | 4886 | 728 | 2924 | 0.0 | 0.0039 | 0 | 0 | 648207 |
-| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/leaderboard | 34 | 3 | 29 | 0 | 3199 | 560 | 896 | 0.0 | 0.0196 | 0 | 0 | 654982 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | 34 | 3 | 28 | 0 | 3072 | 548 | 1096 | 0.0 | 0.0000 | 0 | 0 | 650335 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile | 33 | 3 | 28 | 0 | 3128 | 760 | 1128 | 0.0 | 0.0486 | 0 | 0 | 640671 |
-| High | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | 33 | 3 | 28 | 0 | 3329 | 680 | 1008 | 0.0 | 0.0177 | 0 | 0 | 653027 |
-| High | admin | logged-in-admin | desktop | /vi/admin/gamification | 33 | 1 | 30 | 0 | 3464 | 912 | 1224 | 0.0 | 0.0022 | 0 | 0 | 699546 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile | 33 | 3 | 28 | 0 | 3156 | 560 | 892 | 0.0 | 0.0000 | 0 | 0 | 651951 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/withdraw | 33 | 3 | 27 | 0 | 3037 | 568 | 916 | 0.0 | 0.0330 | 0 | 0 | 639401 |
-| High | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | 32 | 3 | 27 | 0 | 3205 | 656 | 1020 | 0.0 | 0.0189 | 0 | 0 | 647181 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | 32 | 3 | 27 | 0 | 3076 | 628 | 1000 | 0.0 | 0.0044 | 0 | 0 | 636308 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | 32 | 3 | 27 | 0 | 3023 | 632 | 1000 | 0.0 | 0.0039 | 0 | 0 | 635909 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | 32 | 3 | 27 | 0 | 3045 | 596 | 944 | 0.0 | 0.0039 | 0 | 0 | 635692 |
-| High | admin | logged-in-admin | mobile | /vi/admin/gamification | 32 | 0 | 30 | 0 | 3032 | 568 | 888 | 0.0 | 0.0000 | 0 | 0 | 698738 |
-| High | reading | logged-in-reader | mobile | /vi/reading | 32 | 3 | 27 | 0 | 2944 | 572 | 896 | 0.0 | 0.0000 | 0 | 0 | 646960 |
-| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | 31 | 1 | 28 | 0 | 3087 | 732 | 1248 | 0.0 | 0.0039 | 0 | 0 | 727066 |
-| High | reading | logged-in-admin | desktop | /vi/reading/session/eb1f6399-08c3-4a62-ac47-1989f2a4a680 | 31 | 0 | 29 | 0 | 3538 | 700 | 1100 | 0.0 | 0.0039 | 0 | 0 | 712872 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 31 | 2 | 27 | 0 | 2810 | 860 | 992 | 0.0 | 0.0039 | 0 | 0 | 636130 |
-| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha/history | 31 | 1 | 28 | 0 | 2880 | 588 | 1108 | 0.0 | 0.0039 | 0 | 0 | 725452 |
-| High | reader-chat | logged-in-reader | desktop | /vi/reader/apply | 31 | 2 | 27 | 0 | 2830 | 836 | 836 | 0.0 | 0.0039 | 0 | 0 | 635861 |
-| High | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | 31 | 1 | 28 | 0 | 2967 | 604 | 948 | 0.0 | 0.0000 | 0 | 0 | 726878 |
-| High | admin | logged-in-admin | mobile | /vi/admin/deposits | 31 | 1 | 28 | 0 | 3136 | 568 | 892 | 0.0 | 0.0000 | 0 | 0 | 650210 |
-| High | admin | logged-in-admin | mobile | /vi/admin/readings | 31 | 1 | 28 | 0 | 3319 | 668 | 1000 | 0.0 | 0.0000 | 0 | 0 | 651389 |
-| High | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | 31 | 1 | 28 | 0 | 2944 | 556 | 896 | 0.0 | 0.0000 | 0 | 0 | 725270 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | 30 | 2 | 26 | 0 | 3002 | 612 | 1032 | 0.0 | 0.0039 | 0 | 0 | 634089 |
-| High | admin | logged-in-admin | desktop | /vi/admin/deposits | 30 | 0 | 28 | 0 | 2924 | 912 | 948 | 0.0 | 0.0000 | 0 | 0 | 649409 |
-| High | admin | logged-in-admin | desktop | /vi/admin/system-configs | 30 | 0 | 28 | 0 | 2978 | 912 | 972 | 0.0 | 0.0000 | 0 | 0 | 689626 |
-| High | admin | logged-in-admin | desktop | /vi/admin/users | 30 | 0 | 28 | 0 | 2923 | 828 | 1180 | 0.0 | 0.0000 | 0 | 0 | 649933 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers | 30 | 1 | 27 | 0 | 2906 | 596 | 984 | 0.0 | 0.0039 | 0 | 0 | 636607 |
-| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/leaderboard | 30 | 0 | 28 | 0 | 2796 | 692 | 1048 | 0.0 | 0.0177 | 0 | 0 | 649972 |
-| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/community | 30 | 0 | 28 | 0 | 3346 | 600 | 1792 | 0.0 | 0.0039 | 0 | 0 | 643509 |
-| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/gamification | 30 | 1 | 27 | 0 | 3017 | 696 | 1060 | 0.0 | 0.0190 | 0 | 0 | 644841 |
-| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | 30 | 0 | 28 | 0 | 3482 | 572 | 1940 | 0.0 | 0.0051 | 0 | 0 | 643174 |
-| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/gamification | 30 | 1 | 27 | 0 | 2866 | 604 | 940 | 0.0 | 0.0000 | 0 | 0 | 644616 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | 30 | 2 | 26 | 0 | 2916 | 784 | 1120 | 0.0 | 0.0000 | 0 | 0 | 636281 |
-| High | admin | logged-in-admin | mobile | /vi/admin/system-configs | 30 | 0 | 28 | 0 | 2866 | 724 | 724 | 0.0 | 0.0000 | 0 | 0 | 689279 |
-| High | admin | logged-in-admin | mobile | /vi/admin/users | 30 | 0 | 28 | 0 | 2762 | 560 | 892 | 0.0 | 0.0000 | 0 | 0 | 649997 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers | 30 | 1 | 27 | 0 | 2915 | 560 | 904 | 0.0 | 0.0000 | 0 | 0 | 642031 |
-| High | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | 30 | 0 | 28 | 0 | 2740 | 560 | 892 | 0.0 | 0.0196 | 0 | 0 | 649688 |
-| High | community-leaderboard-quest | logged-in-reader | mobile | /vi/community | 30 | 0 | 28 | 0 | 3482 | 636 | 1776 | 0.0 | 0.0051 | 0 | 0 | 643421 |
-| High | community-leaderboard-quest | logged-in-reader | mobile | /vi/gamification | 30 | 1 | 27 | 0 | 2873 | 564 | 896 | 0.0 | 0.0000 | 0 | 0 | 645034 |
-| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | 29 | 0 | 27 | 0 | 6464 | 692 | 692 | 0.0 | 0.0040 | 0 | 0 | 643136 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | 29 | 1 | 26 | 0 | 2851 | 624 | 1072 | 0.0 | 0.0039 | 0 | 0 | 635390 |
-| High | admin | logged-in-admin | desktop | /vi/admin | 29 | 0 | 27 | 0 | 3306 | 924 | 924 | 0.0 | 0.0000 | 0 | 0 | 647668 |
-| High | admin | logged-in-admin | desktop | /vi/admin/disputes | 29 | 0 | 27 | 0 | 2902 | 660 | 968 | 0.0 | 0.0000 | 0 | 0 | 646148 |
-| High | admin | logged-in-admin | desktop | /vi/admin/reader-requests | 29 | 0 | 27 | 0 | 2869 | 940 | 940 | 0.0 | 0.0000 | 0 | 0 | 646671 |
-| High | admin | logged-in-admin | desktop | /vi/admin/readings | 29 | 0 | 27 | 0 | 2920 | 768 | 1160 | 0.0 | 0.0000 | 0 | 0 | 648927 |
-| High | admin | logged-in-admin | desktop | /vi/admin/withdrawals | 29 | 0 | 27 | 0 | 2886 | 900 | 900 | 0.0 | 0.0000 | 0 | 0 | 646403 |
-| High | reading | logged-in-reader | desktop | /vi/reading | 29 | 1 | 26 | 0 | 2948 | 608 | 980 | 0.0 | 0.0039 | 0 | 0 | 642976 |
-| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | 29 | 0 | 27 | 0 | 6280 | 620 | 620 | 0.0 | 0.0040 | 0 | 0 | 642111 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet | 29 | 1 | 26 | 0 | 2888 | 700 | 1220 | 0.0 | 0.0039 | 0 | 0 | 635299 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | 29 | 1 | 26 | 0 | 2886 | 648 | 1036 | 0.0 | 0.0095 | 0 | 0 | 634326 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | 29 | 1 | 26 | 0 | 2814 | 616 | 988 | 0.0 | 0.0040 | 0 | 0 | 633316 |
-| High | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | 29 | 0 | 27 | 0 | 5533 | 528 | 528 | 0.0 | 0.0000 | 0 | 0 | 643033 |
-| High | admin | logged-in-admin | mobile | /vi/admin | 29 | 0 | 27 | 0 | 2941 | 612 | 928 | 0.0 | 0.0000 | 0 | 0 | 647607 |
-| High | admin | logged-in-admin | mobile | /vi/admin/disputes | 29 | 0 | 27 | 0 | 2805 | 604 | 920 | 0.0 | 0.0000 | 0 | 0 | 645897 |
-| High | admin | logged-in-admin | mobile | /vi/admin/reader-requests | 29 | 0 | 27 | 0 | 3176 | 748 | 1072 | 0.0 | 0.0000 | 0 | 0 | 646573 |
-| High | admin | logged-in-admin | mobile | /vi/admin/withdrawals | 29 | 0 | 27 | 0 | 2837 | 556 | 864 | 0.0 | 0.0000 | 0 | 0 | 646200 |
-| High | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | 29 | 0 | 27 | 0 | 5567 | 572 | 572 | 0.0 | 0.0000 | 0 | 0 | 642449 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit | 29 | 1 | 26 | 0 | 2920 | 560 | 904 | 0.0 | 0.0000 | 0 | 0 | 632848 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/notifications | 29 | 1 | 26 | 0 | 2897 | 556 | 888 | 0.0 | 0.0000 | 0 | 0 | 633357 |
-| High | reading | logged-in-admin | desktop | /vi/reading | 28 | 0 | 26 | 0 | 2864 | 692 | 1084 | 0.0 | 0.0039 | 0 | 0 | 641979 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | 28 | 0 | 26 | 0 | 2882 | 812 | 1176 | 0.0 | 0.0039 | 0 | 0 | 631428 |
-| High | reader-chat | logged-in-admin | desktop | /vi/chat | 28 | 0 | 26 | 0 | 2845 | 624 | 1024 | 0.0 | 0.0039 | 0 | 0 | 631583 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 2862 | 616 | 1128 | 0.0 | 0.0039 | 0 | 0 | 632632 |
-| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 2897 | 680 | 1192 | 0.0 | 0.0039 | 0 | 0 | 631088 |
-| High | reader-chat | logged-in-admin | desktop | /vi/reader/apply | 28 | 0 | 26 | 0 | 2835 | 748 | 1108 | 0.0 | 0.0039 | 0 | 0 | 632863 |
-| High | auth-public | logged-in-admin | desktop | /vi/legal/privacy | 28 | 1 | 24 | 0 | 3089 | 608 | 904 | 0.0 | 0.0019 | 0 | 0 | 529277 |
-| High | admin | logged-in-admin | desktop | /vi/admin/promotions | 28 | 0 | 26 | 0 | 2846 | 864 | 864 | 0.0 | 0.0000 | 0 | 0 | 644758 |
-| High | reading | logged-in-admin | desktop | /vi/reading/session/babb4901-7efc-4608-9c2a-2f440593355a | 28 | 0 | 26 | 0 | 2777 | 648 | 1028 | 0.0 | 0.0039 | 0 | 0 | 632303 |
-| High | reading | logged-in-admin | desktop | /vi/reading/session/f8120485-4229-4f7a-940d-177a8c493b86 | 28 | 0 | 26 | 0 | 2895 | 844 | 1200 | 0.0 | 0.0039 | 0 | 0 | 632698 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 2870 | 716 | 1064 | 0.0 | 0.0039 | 0 | 0 | 631626 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2885 | 688 | 1036 | 0.0 | 0.0039 | 0 | 0 | 631111 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2760 | 692 | 1048 | 0.0 | 0.0039 | 0 | 0 | 631005 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 2772 | 648 | 1176 | 0.0 | 0.0039 | 0 | 0 | 633116 |
-| High | reader-chat | logged-in-admin | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 2890 | 740 | 1216 | 0.0 | 0.0039 | 0 | 0 | 633239 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/mfa | 28 | 0 | 26 | 0 | 2771 | 608 | 964 | 0.0 | 0.0039 | 0 | 0 | 631701 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/reader | 28 | 0 | 26 | 0 | 3076 | 588 | 976 | 0.0 | 0.0039 | 0 | 0 | 632287 |
-| High | reader-chat | logged-in-reader | desktop | /vi/chat | 28 | 0 | 26 | 0 | 2788 | 660 | 1028 | 0.0 | 0.0039 | 0 | 0 | 632056 |
-| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 2749 | 616 | 1012 | 0.0 | 0.0039 | 0 | 0 | 632273 |
-| High | reading | logged-in-reader | desktop | /vi/reading/history | 28 | 0 | 26 | 0 | 2690 | 564 | 1052 | 0.0 | 0.0039 | 0 | 0 | 633142 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/2df0d894-36ec-4c7f-8504-0214c910d622 | 28 | 0 | 26 | 0 | 2754 | 576 | 916 | 0.0 | 0.0039 | 0 | 0 | 632474 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/b1566634-eec7-4757-aa30-6b2551343a3e | 28 | 0 | 26 | 0 | 2778 | 620 | 988 | 0.0 | 0.0039 | 0 | 0 | 632528 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/2e1d559a-b66e-4284-a674-a724ac8db4bc | 28 | 0 | 26 | 0 | 2693 | 588 | 972 | 0.0 | 0.0039 | 0 | 0 | 632354 |
-| High | reading | logged-in-reader | desktop | /vi/reading/session/6e93c793-9c57-497b-b4e8-6472f2ceab98 | 28 | 0 | 26 | 0 | 2729 | 576 | 944 | 0.0 | 0.0039 | 0 | 0 | 632618 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2900 | 644 | 1048 | 0.0 | 0.0039 | 0 | 0 | 631560 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2750 | 696 | 1068 | 0.0 | 0.0039 | 0 | 0 | 631517 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 2691 | 604 | 1044 | 0.0 | 0.0039 | 0 | 0 | 633147 |
-| High | reader-chat | logged-in-reader | desktop | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 2745 | 576 | 1112 | 0.0 | 0.0039 | 0 | 0 | 633168 |
-| High | reading | logged-in-admin | mobile | /vi/reading | 28 | 0 | 26 | 0 | 3290 | 1064 | 1404 | 0.0 | 0.0000 | 0 | 0 | 641733 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 2736 | 564 | 904 | 0.0 | 0.0000 | 0 | 0 | 631679 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 2767 | 724 | 724 | 0.0 | 0.0712 | 0 | 0 | 630936 |
-| High | reader-chat | logged-in-admin | mobile | /vi/chat | 28 | 0 | 26 | 0 | 2731 | 560 | 888 | 0.0 | 0.0000 | 0 | 0 | 631710 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 2999 | 660 | 1000 | 0.0 | 0.0000 | 0 | 0 | 631810 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 2941 | 708 | 1036 | 0.0 | 0.0000 | 0 | 0 | 632378 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 2692 | 668 | 1008 | 0.0 | 0.0069 | 0 | 0 | 630870 |
-| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | 28 | 0 | 26 | 0 | 2673 | 548 | 888 | 0.0 | 0.0000 | 0 | 0 | 632013 |
-| High | reader-chat | logged-in-admin | mobile | /vi/reader/apply | 28 | 0 | 26 | 0 | 3323 | 1140 | 1468 | 0.0 | 0.0000 | 0 | 0 | 632518 |
-| High | reading | logged-in-admin | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 2796 | 580 | 908 | 0.0 | 0.0000 | 0 | 0 | 632846 |
-| High | auth-public | logged-in-admin | mobile | /vi/legal/privacy | 28 | 1 | 24 | 0 | 3043 | 588 | 1020 | 0.0 | 0.0028 | 0 | 0 | 529968 |
-| High | admin | logged-in-admin | mobile | /vi/admin/promotions | 28 | 0 | 26 | 0 | 2874 | 632 | 944 | 0.0 | 0.0000 | 0 | 0 | 644790 |
-| High | reading | logged-in-admin | mobile | /vi/reading/session/b601df3a-c033-40f9-94f7-fe7326b26ede | 28 | 0 | 26 | 0 | 2807 | 576 | 916 | 0.0 | 0.0000 | 0 | 0 | 632466 |
-| High | reading | logged-in-admin | mobile | /vi/reading/session/6f3411e2-e177-4e3e-9ff0-73cd67d7c8ab | 28 | 0 | 26 | 0 | 2932 | 724 | 1072 | 0.0 | 0.0000 | 0 | 0 | 632481 |
-| High | reading | logged-in-admin | mobile | /vi/reading/session/88b356a6-9950-4682-9c9b-191c0d5831df | 28 | 0 | 26 | 0 | 2736 | 552 | 896 | 0.0 | 0.0000 | 0 | 0 | 632216 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 2800 | 584 | 904 | 0.0 | 0.0000 | 0 | 0 | 631217 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2752 | 564 | 900 | 0.0 | 0.0000 | 0 | 0 | 631308 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 3211 | 580 | 924 | 0.0 | 0.0069 | 0 | 0 | 631532 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 3431 | 1248 | 1584 | 0.0 | 0.0000 | 0 | 0 | 632775 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 2909 | 744 | 1152 | 0.0 | 0.0000 | 0 | 0 | 632952 |
-| High | reader-chat | logged-in-admin | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 2792 | 572 | 912 | 0.0 | 0.0000 | 0 | 0 | 633270 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 2853 | 812 | 812 | 0.0 | 0.0000 | 0 | 0 | 631887 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 2779 | 576 | 1324 | 0.0 | 0.0000 | 0 | 0 | 632518 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | 28 | 0 | 26 | 0 | 2930 | 576 | 992 | 0.0 | 0.0000 | 0 | 0 | 634257 |
-| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 3033 | 612 | 948 | 0.0 | 0.0000 | 0 | 0 | 632011 |
-| High | reader-chat | logged-in-reader | mobile | /vi/reader/apply | 28 | 0 | 26 | 0 | 2783 | 568 | 896 | 0.0 | 0.0000 | 0 | 0 | 632851 |
-| High | reading | logged-in-reader | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 2809 | 556 | 980 | 0.0 | 0.0000 | 0 | 0 | 633329 |
-| High | reading | logged-in-reader | mobile | /vi/reading/session/8560e503-b2e2-441b-902c-d1ca24570b99 | 28 | 0 | 26 | 0 | 2955 | 676 | 1008 | 0.0 | 0.0000 | 0 | 0 | 632490 |
-| High | reading | logged-in-reader | mobile | /vi/reading/session/3a1a8539-ac7d-4b3c-830c-4d82a830739d | 28 | 0 | 26 | 0 | 2880 | 676 | 1008 | 0.0 | 0.0000 | 0 | 0 | 632283 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 2835 | 708 | 1036 | 0.0 | 0.0000 | 0 | 0 | 631593 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2713 | 548 | 880 | 0.0 | 0.0000 | 0 | 0 | 631368 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2723 | 560 | 880 | 0.0 | 0.0000 | 0 | 0 | 631166 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 2760 | 556 | 968 | 0.0 | 0.0000 | 0 | 0 | 632860 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 2783 | 580 | 984 | 0.0 | 0.0000 | 0 | 0 | 633164 |
-| High | reader-chat | logged-in-reader | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 2874 | 604 | 1008 | 0.0 | 0.0000 | 0 | 0 | 633684 |
-| High | auth-public | logged-in-admin | desktop | /vi | 26 | 0 | 24 | 0 | 2734 | 688 | 1184 | 135.0 | 0.0035 | 0 | 0 | 537608 |
-| High | auth-public | logged-in-reader | desktop | /vi | 26 | 0 | 24 | 0 | 2724 | 628 | 1152 | 159.0 | 0.0033 | 0 | 0 | 537810 |
-| High | auth-public | logged-in-admin | mobile | /vi | 26 | 0 | 24 | 0 | 2776 | 632 | 984 | 0.0 | 0.0028 | 0 | 0 | 537720 |
-| High | auth-public | logged-in-reader | mobile | /vi | 26 | 0 | 24 | 0 | 2922 | 684 | 1036 | 0.0 | 0.0032 | 0 | 0 | 537415 |
-| High | auth-public | logged-out | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3133 | 752 | 752 | 0.0 | 0.0000 | 0 | 0 | 525849 |
-| High | auth-public | logged-in-reader | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 3417 | 668 | 964 | 0.0 | 0.0019 | 0 | 0 | 526394 |
-| High | auth-public | logged-out | mobile | /vi/register | 25 | 1 | 22 | 0 | 3773 | 1452 | 1452 | 0.0 | 0.0000 | 0 | 0 | 513688 |
-| High | auth-public | logged-out | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 3426 | 1092 | 1092 | 0.0 | 0.0000 | 0 | 0 | 525958 |
-| High | auth-public | logged-out | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3480 | 1088 | 1088 | 0.0 | 0.0000 | 0 | 0 | 525978 |
-| High | auth-public | logged-out | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 3843 | 1692 | 2008 | 0.0 | 0.0000 | 0 | 0 | 526115 |
-| High | auth-public | logged-out | mobile | /vi/login | 24 | 0 | 22 | 0 | 3462 | 1452 | 1452 | 0.0 | 0.0000 | 0 | 0 | 512411 |
-| High | auth-public | logged-out | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 4165 | 2156 | 2156 | 0.0 | 0.0000 | 0 | 0 | 512010 |
-| High | auth-public | logged-out | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 3341 | 1164 | 1164 | 0.0 | 0.0000 | 0 | 0 | 512060 |
-| High | auth-public | logged-out | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 3688 | 1128 | 1128 | 0.0 | 0.0000 | 0 | 0 | 512240 |
-| High | auth-public | logged-in-admin | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 2916 | 828 | 828 | 0.0 | 0.0000 | 0 | 0 | 512234 |
-| Medium | auth-public | logged-out | desktop | /vi/register | 25 | 1 | 22 | 0 | 2728 | 620 | 620 | 0.0 | 0.0000 | 0 | 0 | 513621 |
-| Medium | auth-public | logged-out | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 3049 | 1012 | 1012 | 0.0 | 0.0000 | 0 | 0 | 525913 |
-| Medium | auth-public | logged-out | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2680 | 592 | 592 | 0.0 | 0.0000 | 0 | 0 | 526206 |
-| Medium | auth-public | logged-in-admin | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 2811 | 624 | 956 | 0.0 | 0.0019 | 0 | 0 | 526357 |
-| Medium | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2744 | 600 | 932 | 0.0 | 0.0019 | 0 | 0 | 526478 |
-| Medium | auth-public | logged-in-reader | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3116 | 756 | 756 | 0.0 | 0.0019 | 0 | 0 | 526510 |
-| Medium | auth-public | logged-in-reader | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2829 | 596 | 924 | 0.0 | 0.0019 | 0 | 0 | 526521 |
-| Medium | auth-public | logged-in-admin | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 2672 | 540 | 852 | 0.0 | 0.0028 | 0 | 0 | 526197 |
-| Medium | auth-public | logged-in-admin | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2837 | 600 | 932 | 0.0 | 0.0028 | 0 | 0 | 526466 |
-| Medium | auth-public | logged-in-reader | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 2672 | 548 | 860 | 0.0 | 0.0032 | 0 | 0 | 526373 |
-| Medium | auth-public | logged-in-reader | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2732 | 568 | 876 | 0.0 | 0.0032 | 0 | 0 | 526120 |
-| Medium | auth-public | logged-in-reader | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2746 | 580 | 892 | 0.0 | 0.0032 | 0 | 0 | 526344 |
-| Medium | auth-public | logged-out | desktop | /vi/login | 24 | 0 | 22 | 0 | 2715 | 636 | 636 | 0.0 | 0.0000 | 0 | 0 | 512367 |
-| Medium | auth-public | logged-out | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 2654 | 576 | 576 | 0.0 | 0.0000 | 0 | 0 | 512038 |
-| Medium | auth-public | logged-out | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 2702 | 608 | 608 | 0.0 | 0.0000 | 0 | 0 | 512122 |
-| Medium | auth-public | logged-out | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 2981 | 752 | 752 | 0.0 | 0.0000 | 0 | 0 | 512231 |
-| Medium | auth-public | logged-in-admin | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 2710 | 692 | 692 | 0.0 | 0.0000 | 0 | 0 | 512132 |
-| Medium | auth-public | logged-in-admin | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 2640 | 652 | 652 | 0.0 | 0.0000 | 0 | 0 | 512147 |
-| Medium | auth-public | logged-in-reader | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 2692 | 640 | 640 | 0.0 | 0.0000 | 0 | 0 | 512076 |
-| Medium | auth-public | logged-in-reader | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 2774 | 672 | 672 | 0.0 | 0.0000 | 0 | 0 | 512241 |
-| Medium | auth-public | logged-in-admin | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 2687 | 592 | 592 | 0.0 | 0.0000 | 0 | 0 | 512150 |
-| Medium | auth-public | logged-in-reader | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 2662 | 556 | 556 | 0.0 | 0.0000 | 0 | 0 | 512089 |
-| Medium | auth-public | logged-in-reader | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 2688 | 552 | 552 | 0.0 | 0.0000 | 0 | 0 | 512156 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/login | 59 | 5 | 49 | 0 | 3598 | 540 | 900 | 0.0 | 0.0051 | 0 | 1 | 1113443 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/chat | 57 | 4 | 49 | 0 | 3649 | 868 | 1224 | 0.0 | 0.0051 | 0 | 3 | 1135277 |
+| Critical | auth-public | logged-in-reader | desktop | /vi/login | 53 | 0 | 49 | 0 | 4470 | 680 | 1212 | 56.0 | 0.0038 | 0 | 1 | 1108448 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/login | 53 | 0 | 49 | 0 | 3497 | 720 | 720 | 0.0 | 0.0055 | 0 | 1 | 1108091 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/register | 50 | 0 | 46 | 0 | 3220 | 584 | 1096 | 148.0 | 0.0035 | 0 | 1 | 1038118 |
+| Critical | auth-public | logged-in-admin | desktop | /vi/forgot-password | 50 | 0 | 46 | 0 | 3213 | 604 | 1084 | 18.0 | 0.0035 | 0 | 1 | 1037911 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/register | 50 | 0 | 46 | 0 | 3227 | 532 | 896 | 0.0 | 0.0051 | 0 | 1 | 1037993 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/forgot-password | 50 | 0 | 46 | 0 | 3345 | 604 | 956 | 0.0 | 0.0051 | 0 | 1 | 1038080 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/register | 50 | 0 | 46 | 0 | 3316 | 552 | 904 | 0.0 | 0.0055 | 0 | 1 | 1038078 |
+| Critical | auth-public | logged-in-reader | mobile | /vi/forgot-password | 50 | 0 | 46 | 0 | 3314 | 564 | 924 | 0.0 | 0.0055 | 0 | 1 | 1037952 |
+| Critical | auth-public | logged-in-reader | mobile | /vi | 41 | 8 | 30 | 0 | 4338 | 620 | 972 | 0.0 | 0.0032 | 0 | 0 | 644743 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/e45cd035-4284-42a9-a061-e51f15d14232 | 40 | 6 | 32 | 0 | 4128 | 716 | 3364 | 0.0 | 0.0039 | 0 | 0 | 739768 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha | 38 | 3 | 33 | 0 | 3378 | 584 | 960 | 0.0 | 0.0039 | 0 | 0 | 737232 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | 38 | 3 | 33 | 0 | 3945 | 612 | 1880 | 0.0 | 0.0039 | 0 | 1 | 780090 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | 38 | 3 | 33 | 0 | 3181 | 592 | 988 | 0.0 | 0.0039 | 0 | 0 | 737146 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | 38 | 2 | 34 | 0 | 3507 | 616 | 960 | 0.0 | 0.0071 | 0 | 0 | 802411 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | 37 | 5 | 30 | 0 | 3688 | 632 | 968 | 0.0 | 0.0039 | 0 | 0 | 664599 |
+| Critical | reading | logged-in-admin | desktop | /vi/reading/session/09d47355-7176-48b9-a07b-a5049c924895 | 37 | 4 | 31 | 0 | 3075 | 584 | 940 | 0.0 | 0.0039 | 0 | 0 | 728862 |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/readers | 37 | 6 | 28 | 0 | 3149 | 520 | 852 | 0.0 | 0.0000 | 0 | 4 | 647241 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | 36 | 5 | 29 | 0 | 3676 | 756 | 1100 | 0.0 | 0.0039 | 0 | 0 | 658241 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | 36 | 1 | 33 | 0 | 2912 | 600 | 980 | 0.0 | 0.0039 | 0 | 0 | 653400 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | 36 | 1 | 33 | 0 | 3018 | 640 | 996 | 0.0 | 0.0000 | 0 | 0 | 799252 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers | 36 | 5 | 29 | 0 | 5918 | 552 | 880 | 0.0 | 0.0000 | 0 | 0 | 656179 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community | 35 | 0 | 33 | 0 | 3589 | 736 | 1560 | 0.0 | 0.0000 | 0 | 1 | 776962 |
+| Critical | auth-public | logged-out | mobile | /vi | 31 | 2 | 27 | 0 | 3311 | 988 | 988 | 0.0 | 0.0000 | 0 | 1 | 603588 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 2501 | 376 | 376 | 0.0 | 0.0000 | 0 | 1 | 166149 |
+| Critical | community-leaderboard-quest | logged-in-reader | desktop | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 2599 | 424 | 424 | 0.0 | 0.0000 | 0 | 1 | 166163 |
+| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 3582 | 1352 | 1352 | 0.0 | 0.0000 | 0 | 1 | 166155 |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/community/69db54fc297f66f734421a3c | 9 | 0 | 7 | 0 | 3056 | 332 | 332 | 0.0 | 0.0000 | 0 | 1 | 166179 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | 35 | 5 | 28 | 0 | 3500 | 632 | 968 | 0.0 | 0.0039 | 0 | 0 | 645928 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | 35 | 5 | 28 | 0 | 3484 | 616 | 1104 | 0.0 | 0.0039 | 0 | 0 | 645988 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | 35 | 5 | 28 | 0 | 3321 | 560 | 888 | 0.0 | 0.0000 | 0 | 0 | 650036 |
+| High | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | 35 | 0 | 33 | 0 | 3643 | 636 | 976 | 0.0 | 0.0071 | 0 | 0 | 661497 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 35 | 5 | 28 | 0 | 3459 | 684 | 1104 | 0.0 | 0.0000 | 0 | 0 | 648745 |
+| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | 34 | 3 | 29 | 0 | 3361 | 604 | 1656 | 0.0 | 0.0039 | 0 | 0 | 648989 |
+| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | 34 | 4 | 28 | 0 | 6557 | 604 | 968 | 0.0 | 0.0040 | 0 | 0 | 647261 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile | 34 | 3 | 28 | 0 | 3063 | 604 | 972 | 0.0 | 0.0726 | 0 | 0 | 641721 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | 34 | 3 | 28 | 0 | 3319 | 564 | 1324 | 0.0 | 0.0821 | 0 | 0 | 650442 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit/history | 33 | 3 | 28 | 0 | 3671 | 596 | 1736 | 0.0 | 0.0039 | 0 | 0 | 645975 |
+| High | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha/history | 33 | 3 | 28 | 0 | 3438 | 636 | 1272 | 0.0 | 0.0039 | 0 | 0 | 727440 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile | 33 | 3 | 28 | 0 | 3083 | 588 | 920 | 0.0 | 0.0000 | 0 | 0 | 651749 |
+| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | 32 | 3 | 27 | 0 | 6791 | 568 | 1388 | 0.0 | 0.0040 | 0 | 0 | 646238 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile | 32 | 3 | 27 | 0 | 2973 | 616 | 984 | 0.0 | 0.0544 | 0 | 0 | 639676 |
+| High | admin | logged-in-admin | desktop | /vi/admin/gamification | 32 | 0 | 30 | 0 | 3841 | 620 | 964 | 0.0 | 0.0022 | 0 | 0 | 698713 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit/history | 32 | 3 | 27 | 0 | 3060 | 736 | 1100 | 0.0 | 0.0039 | 0 | 0 | 636065 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/mfa | 32 | 3 | 27 | 0 | 3182 | 560 | 888 | 0.0 | 0.0000 | 0 | 0 | 637032 |
+| High | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | 31 | 1 | 28 | 0 | 3097 | 620 | 1004 | 0.0 | 0.0039 | 0 | 0 | 727238 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | 31 | 3 | 26 | 0 | 3149 | 572 | 956 | 0.0 | 0.0486 | 0 | 0 | 634205 |
+| High | admin | logged-in-admin | desktop | /vi/admin/disputes | 31 | 1 | 28 | 0 | 3153 | 608 | 932 | 0.0 | 0.0000 | 0 | 0 | 649138 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 31 | 3 | 26 | 0 | 2984 | 612 | 1084 | 0.0 | 0.0039 | 0 | 0 | 636432 |
+| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/leaderboard | 31 | 1 | 28 | 0 | 2919 | 584 | 952 | 0.0 | 0.0177 | 0 | 0 | 650852 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet | 31 | 2 | 27 | 0 | 3010 | 628 | 1348 | 0.0 | 0.0039 | 0 | 0 | 637573 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | 31 | 2 | 27 | 0 | 3100 | 604 | 1396 | 0.0 | 0.0095 | 0 | 0 | 636341 |
+| High | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | 31 | 1 | 28 | 0 | 2820 | 548 | 880 | 0.0 | 0.0000 | 0 | 0 | 645616 |
+| High | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | 31 | 1 | 28 | 0 | 2861 | 520 | 944 | 0.0 | 0.0000 | 0 | 0 | 727133 |
+| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/leaderboard | 31 | 1 | 28 | 0 | 2912 | 556 | 888 | 0.0 | 0.0196 | 0 | 0 | 650963 |
+| High | reader-chat | logged-in-admin | mobile | /vi/reader/apply | 31 | 2 | 27 | 0 | 2963 | 548 | 916 | 0.0 | 0.0000 | 0 | 0 | 637025 |
+| High | admin | logged-in-admin | mobile | /vi/admin/gamification | 31 | 1 | 28 | 0 | 2827 | 540 | 852 | 0.0 | 0.0000 | 0 | 0 | 665979 |
+| High | admin | logged-in-admin | mobile | /vi/admin/reader-requests | 31 | 1 | 28 | 0 | 3038 | 544 | 856 | 0.0 | 0.0000 | 0 | 0 | 649243 |
+| High | reading | logged-in-reader | mobile | /vi/reading | 31 | 2 | 27 | 0 | 3120 | 584 | 1104 | 0.0 | 0.0000 | 0 | 0 | 645849 |
+| High | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | 31 | 1 | 28 | 0 | 3082 | 584 | 916 | 0.0 | 0.0071 | 0 | 0 | 725490 |
+| High | community-leaderboard-quest | logged-in-reader | mobile | /vi/leaderboard | 31 | 1 | 28 | 0 | 2922 | 572 | 908 | 0.0 | 0.0196 | 0 | 0 | 650799 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/withdraw | 31 | 2 | 27 | 0 | 2861 | 664 | 1020 | 0.0 | 0.0330 | 0 | 0 | 637237 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 31 | 2 | 27 | 0 | 3225 | 596 | 932 | 0.0 | 0.0000 | 0 | 0 | 636912 |
+| High | admin | logged-in-admin | desktop | /vi/admin/users | 30 | 0 | 28 | 0 | 2991 | 728 | 1080 | 0.0 | 0.0000 | 0 | 0 | 650094 |
+| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/community | 30 | 0 | 28 | 0 | 3451 | 604 | 1732 | 0.0 | 0.0039 | 0 | 0 | 643338 |
+| High | community-leaderboard-quest | logged-in-reader | desktop | /vi/gamification | 30 | 1 | 27 | 0 | 2862 | 608 | 1000 | 0.0 | 0.0190 | 0 | 0 | 644782 |
+| High | reading | logged-in-admin | mobile | /vi/reading | 30 | 2 | 26 | 0 | 2911 | 548 | 888 | 0.0 | 0.0000 | 0 | 0 | 644048 |
+| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | 30 | 0 | 28 | 0 | 3436 | 572 | 1872 | 0.0 | 0.0051 | 0 | 0 | 643395 |
+| High | admin | logged-in-admin | mobile | /vi/admin/system-configs | 30 | 0 | 28 | 0 | 3044 | 628 | 956 | 0.0 | 0.0000 | 0 | 0 | 689450 |
+| High | admin | logged-in-admin | mobile | /vi/admin/users | 30 | 0 | 28 | 0 | 2863 | 556 | 1188 | 0.0 | 0.0000 | 0 | 0 | 650152 |
+| High | community-leaderboard-quest | logged-in-reader | mobile | /vi/gamification | 30 | 1 | 27 | 0 | 3021 | 764 | 1092 | 0.0 | 0.0000 | 0 | 0 | 645009 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/notifications | 30 | 2 | 26 | 0 | 2840 | 768 | 768 | 0.0 | 0.0000 | 0 | 0 | 634597 |
+| High | reading | logged-in-reader | mobile | /vi/reading/session/5ee1ae7a-f9a3-4a46-974b-109190abef8a | 30 | 0 | 28 | 0 | 3384 | 576 | 912 | 0.0 | 0.0071 | 0 | 0 | 681217 |
+| High | auth-public | logged-out | desktop | /vi | 29 | 0 | 27 | 0 | 3630 | 1012 | 1012 | 285.0 | 0.0000 | 0 | 0 | 601313 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers | 29 | 1 | 26 | 0 | 2827 | 624 | 976 | 0.0 | 0.0039 | 0 | 0 | 635519 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | 29 | 1 | 26 | 0 | 2837 | 608 | 1160 | 0.0 | 0.0039 | 0 | 0 | 635318 |
+| High | admin | logged-in-admin | desktop | /vi/admin | 29 | 0 | 27 | 0 | 3542 | 624 | 1004 | 0.0 | 0.0000 | 0 | 0 | 647474 |
+| High | admin | logged-in-admin | desktop | /vi/admin/deposits | 29 | 0 | 27 | 0 | 2950 | 624 | 1056 | 0.0 | 0.0000 | 0 | 0 | 647794 |
+| High | admin | logged-in-admin | desktop | /vi/admin/reader-requests | 29 | 0 | 27 | 0 | 2847 | 624 | 964 | 0.0 | 0.0000 | 0 | 0 | 646656 |
+| High | admin | logged-in-admin | desktop | /vi/admin/readings | 29 | 0 | 27 | 0 | 3007 | 704 | 1124 | 0.0 | 0.0000 | 0 | 0 | 648927 |
+| High | admin | logged-in-admin | desktop | /vi/admin/withdrawals | 29 | 0 | 27 | 0 | 2881 | 644 | 992 | 0.0 | 0.0000 | 0 | 0 | 646275 |
+| High | reading | logged-in-reader | desktop | /vi/reading | 29 | 1 | 26 | 0 | 2932 | 616 | 984 | 0.0 | 0.0039 | 0 | 0 | 642951 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers | 29 | 1 | 26 | 0 | 2881 | 644 | 1012 | 0.0 | 0.0039 | 0 | 0 | 635365 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/notifications | 29 | 1 | 26 | 0 | 2839 | 644 | 1000 | 0.0 | 0.0040 | 0 | 0 | 633509 |
+| High | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | 29 | 0 | 27 | 0 | 5507 | 604 | 604 | 0.0 | 0.0000 | 0 | 0 | 643479 |
+| High | community-leaderboard-quest | logged-in-admin | mobile | /vi/gamification | 29 | 0 | 27 | 0 | 2917 | 548 | 872 | 0.0 | 0.0000 | 0 | 0 | 643756 |
+| High | admin | logged-in-admin | mobile | /vi/admin | 29 | 0 | 27 | 0 | 3494 | 568 | 884 | 0.0 | 0.0000 | 0 | 0 | 647633 |
+| High | admin | logged-in-admin | mobile | /vi/admin/deposits | 29 | 0 | 27 | 0 | 2692 | 528 | 852 | 0.0 | 0.0000 | 0 | 0 | 647680 |
+| High | admin | logged-in-admin | mobile | /vi/admin/disputes | 29 | 0 | 27 | 0 | 2666 | 532 | 836 | 0.0 | 0.0000 | 0 | 0 | 645945 |
+| High | admin | logged-in-admin | mobile | /vi/admin/readings | 29 | 0 | 27 | 0 | 2762 | 556 | 892 | 0.0 | 0.0000 | 0 | 0 | 648979 |
+| High | admin | logged-in-admin | mobile | /vi/admin/withdrawals | 29 | 0 | 27 | 0 | 2787 | 592 | 904 | 0.0 | 0.0000 | 0 | 0 | 646182 |
+| High | inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | 29 | 0 | 27 | 0 | 5563 | 564 | 564 | 0.0 | 0.0000 | 0 | 0 | 642278 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit | 29 | 1 | 26 | 0 | 2808 | 660 | 992 | 0.0 | 0.0000 | 0 | 0 | 632847 |
+| High | reading | logged-in-admin | desktop | /vi/reading | 28 | 0 | 26 | 0 | 2857 | 588 | 980 | 0.0 | 0.0039 | 0 | 0 | 642065 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | 28 | 0 | 26 | 0 | 2703 | 576 | 932 | 0.0 | 0.0039 | 0 | 0 | 631562 |
+| High | reader-chat | logged-in-admin | desktop | /vi/chat | 28 | 0 | 26 | 0 | 2711 | 564 | 960 | 0.0 | 0.0039 | 0 | 0 | 631849 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 2777 | 624 | 992 | 0.0 | 0.0039 | 0 | 0 | 631700 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 3192 | 648 | 1160 | 0.0 | 0.0039 | 0 | 0 | 631190 |
+| High | profile-wallet-notifications | logged-in-admin | desktop | /vi/notifications | 28 | 0 | 26 | 0 | 2760 | 692 | 1044 | 0.0 | 0.0044 | 0 | 0 | 632487 |
+| High | reader-chat | logged-in-admin | desktop | /vi/reader/apply | 28 | 0 | 26 | 0 | 2748 | 664 | 1008 | 0.0 | 0.0039 | 0 | 0 | 632486 |
+| High | reading | logged-in-admin | desktop | /vi/reading/history | 28 | 0 | 26 | 0 | 2824 | 584 | 1048 | 0.0 | 0.0039 | 0 | 0 | 633023 |
+| High | auth-public | logged-in-admin | desktop | /vi/legal/tos | 28 | 1 | 24 | 0 | 3209 | 696 | 992 | 0.0 | 0.0019 | 0 | 0 | 528961 |
+| High | admin | logged-in-admin | desktop | /vi/admin/promotions | 28 | 0 | 26 | 0 | 3010 | 616 | 992 | 0.0 | 0.0000 | 0 | 0 | 644751 |
+| High | admin | logged-in-admin | desktop | /vi/admin/system-configs | 28 | 0 | 26 | 0 | 2841 | 648 | 1072 | 0.0 | 0.0000 | 0 | 0 | 655982 |
+| High | reading | logged-in-admin | desktop | /vi/reading/session/d7608b10-f43f-4f2f-8ce2-211eb46881fe | 28 | 0 | 26 | 0 | 2745 | 644 | 1004 | 0.0 | 0.0039 | 0 | 0 | 632492 |
+| High | reading | logged-in-admin | desktop | /vi/reading/session/dab1af0a-2e0f-461d-8199-7eabfb4197fd | 28 | 0 | 26 | 0 | 2670 | 584 | 944 | 0.0 | 0.0039 | 0 | 0 | 632336 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2689 | 584 | 912 | 0.0 | 0.0039 | 0 | 0 | 631108 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2706 | 584 | 948 | 0.0 | 0.0039 | 0 | 0 | 631285 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 2943 | 644 | 1152 | 0.0 | 0.0039 | 0 | 0 | 632919 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 2724 | 788 | 868 | 0.0 | 0.0039 | 0 | 0 | 633255 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/mfa | 28 | 0 | 26 | 0 | 3398 | 628 | 992 | 0.0 | 0.0039 | 0 | 0 | 631836 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/reader | 28 | 0 | 26 | 0 | 2723 | 600 | 1276 | 0.0 | 0.0039 | 0 | 0 | 632713 |
+| High | reader-chat | logged-in-reader | desktop | /vi/chat | 28 | 0 | 26 | 0 | 2712 | 572 | 976 | 0.0 | 0.0039 | 0 | 0 | 631774 |
+| High | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 2788 | 636 | 1016 | 0.0 | 0.0039 | 0 | 0 | 631856 |
+| High | reader-chat | logged-in-reader | desktop | /vi/reader/apply | 28 | 0 | 26 | 0 | 2726 | 588 | 988 | 0.0 | 0.0039 | 0 | 0 | 632587 |
+| High | reading | logged-in-reader | desktop | /vi/reading/history | 28 | 0 | 26 | 0 | 2747 | 604 | 1152 | 0.0 | 0.0039 | 0 | 0 | 632938 |
+| High | reading | logged-in-reader | desktop | /vi/reading/session/990ae2a5-857f-4dcc-bef8-6905f735bbd1 | 28 | 0 | 26 | 0 | 2766 | 616 | 968 | 0.0 | 0.0039 | 0 | 0 | 632520 |
+| High | reading | logged-in-reader | desktop | /vi/reading/session/3ec512b4-a850-41cb-897f-3e4d6efac79f | 28 | 0 | 26 | 0 | 2831 | 636 | 1008 | 0.0 | 0.0039 | 0 | 0 | 632491 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2723 | 648 | 984 | 0.0 | 0.0039 | 0 | 0 | 631390 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2725 | 636 | 996 | 0.0 | 0.0039 | 0 | 0 | 631283 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 2801 | 660 | 1152 | 0.0 | 0.0039 | 0 | 0 | 633130 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 2814 | 636 | 1104 | 0.0 | 0.0039 | 0 | 0 | 633271 |
+| High | reader-chat | logged-in-reader | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 2825 | 696 | 1224 | 0.0 | 0.0039 | 0 | 0 | 633435 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/mfa | 28 | 0 | 26 | 0 | 2729 | 568 | 900 | 0.0 | 0.0000 | 0 | 0 | 631729 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 2718 | 580 | 924 | 0.0 | 0.0757 | 0 | 0 | 631015 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit | 28 | 0 | 26 | 0 | 2747 | 532 | 864 | 0.0 | 0.0000 | 0 | 0 | 631716 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 2737 | 528 | 856 | 0.0 | 0.0000 | 0 | 0 | 632227 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/withdraw | 28 | 0 | 26 | 0 | 2811 | 588 | 912 | 0.0 | 0.0069 | 0 | 0 | 631073 |
+| High | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | 28 | 0 | 26 | 0 | 3719 | 544 | 872 | 0.0 | 0.0072 | 0 | 0 | 632244 |
+| High | reading | logged-in-admin | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 2804 | 532 | 860 | 0.0 | 0.0000 | 0 | 0 | 632855 |
+| High | admin | logged-in-admin | mobile | /vi/admin/promotions | 28 | 0 | 26 | 0 | 2729 | 560 | 872 | 0.0 | 0.0000 | 0 | 0 | 644764 |
+| High | reading | logged-in-admin | mobile | /vi/reading/session/b3786d7f-1f99-42aa-93ab-9c69c9bff3ff | 28 | 0 | 26 | 0 | 2805 | 536 | 860 | 0.0 | 0.0000 | 0 | 0 | 632350 |
+| High | reading | logged-in-admin | mobile | /vi/reading/session/4d8e7a80-3e53-49f9-88bf-8fd4020205ed | 28 | 0 | 26 | 0 | 2790 | 576 | 896 | 0.0 | 0.0000 | 0 | 0 | 632491 |
+| High | reading | logged-in-admin | mobile | /vi/reading/session/9bf8b60e-afc7-450a-9f45-0e8610f17c60 | 28 | 0 | 26 | 0 | 2821 | 584 | 916 | 0.0 | 0.0000 | 0 | 0 | 632438 |
+| High | reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 2805 | 580 | 900 | 0.0 | 0.0000 | 0 | 0 | 631619 |
+| High | reader-chat | logged-in-admin | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2857 | 560 | 884 | 0.0 | 0.0000 | 0 | 0 | 631261 |
+| High | reader-chat | logged-in-admin | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2785 | 656 | 984 | 0.0 | 0.0000 | 0 | 0 | 631219 |
+| High | reader-chat | logged-in-admin | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | 28 | 0 | 26 | 0 | 2703 | 548 | 876 | 0.0 | 0.0000 | 0 | 0 | 632776 |
+| High | reader-chat | logged-in-admin | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | 28 | 0 | 26 | 0 | 2771 | 548 | 932 | 0.0 | 0.0000 | 0 | 0 | 632900 |
+| High | reader-chat | logged-in-admin | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 3006 | 552 | 888 | 0.0 | 0.0069 | 0 | 0 | 633270 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile/reader | 28 | 0 | 26 | 0 | 2832 | 604 | 932 | 0.0 | 0.0000 | 0 | 0 | 632859 |
+| High | reader-chat | logged-in-reader | mobile | /vi/chat | 28 | 0 | 26 | 0 | 2911 | 624 | 948 | 0.0 | 0.0000 | 0 | 0 | 631893 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | 28 | 0 | 26 | 0 | 2916 | 568 | 988 | 0.0 | 0.0000 | 0 | 0 | 634410 |
+| High | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | 28 | 0 | 26 | 0 | 3341 | 1352 | 1352 | 0.0 | 0.0000 | 0 | 0 | 632114 |
+| High | reader-chat | logged-in-reader | mobile | /vi/reader/apply | 28 | 0 | 26 | 0 | 3305 | 1280 | 1604 | 0.0 | 0.0000 | 0 | 0 | 632598 |
+| High | reading | logged-in-reader | mobile | /vi/reading/history | 28 | 0 | 26 | 0 | 3260 | 1264 | 1264 | 0.0 | 0.0000 | 0 | 0 | 633123 |
+| High | reading | logged-in-reader | mobile | /vi/reading/session/11865119-b59e-409c-a5ec-40acec724d21 | 28 | 0 | 26 | 0 | 2857 | 680 | 1004 | 0.0 | 0.0000 | 0 | 0 | 632515 |
+| High | reading | logged-in-reader | mobile | /vi/reading/session/d86ce147-b023-4d99-a3bb-b3f6d9d84f93 | 28 | 0 | 26 | 0 | 2839 | 588 | 924 | 0.0 | 0.0000 | 0 | 0 | 632482 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | 28 | 0 | 26 | 0 | 3631 | 596 | 932 | 0.0 | 0.0071 | 0 | 0 | 631341 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers/69dbe86b052d3c8f3f55e231 | 28 | 0 | 26 | 0 | 2855 | 552 | 864 | 0.0 | 0.0000 | 0 | 0 | 631449 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers/69e7b9fa5b238c89fadb3a0b | 28 | 0 | 26 | 0 | 2835 | 608 | 928 | 0.0 | 0.0000 | 0 | 0 | 631341 |
+| High | reader-chat | logged-in-reader | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | 28 | 0 | 26 | 0 | 2701 | 548 | 884 | 0.0 | 0.0000 | 0 | 0 | 633228 |
+| High | auth-public | logged-in-admin | desktop | /vi | 26 | 0 | 24 | 0 | 2787 | 684 | 1188 | 132.0 | 0.0035 | 0 | 0 | 537603 |
+| High | auth-public | logged-in-reader | desktop | /vi | 26 | 0 | 24 | 0 | 2807 | 640 | 1148 | 147.0 | 0.0033 | 0 | 0 | 537661 |
+| High | auth-public | logged-in-admin | mobile | /vi | 26 | 0 | 24 | 0 | 2684 | 592 | 944 | 0.0 | 0.0028 | 0 | 0 | 537864 |
+| High | auth-public | logged-out | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 3403 | 628 | 628 | 0.0 | 0.0000 | 0 | 0 | 512329 |
+| High | auth-public | logged-in-admin | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 3957 | 720 | 720 | 0.0 | 0.0000 | 0 | 0 | 512136 |
+| Medium | auth-public | logged-out | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 2837 | 604 | 604 | 0.0 | 0.0000 | 0 | 0 | 525979 |
+| Medium | auth-public | logged-out | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2781 | 616 | 616 | 0.0 | 0.0000 | 0 | 0 | 526023 |
+| Medium | auth-public | logged-out | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2840 | 608 | 608 | 0.0 | 0.0000 | 0 | 0 | 526145 |
+| Medium | auth-public | logged-in-admin | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2696 | 652 | 964 | 0.0 | 0.0019 | 0 | 0 | 526314 |
+| Medium | auth-public | logged-in-admin | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2710 | 584 | 916 | 0.0 | 0.0019 | 0 | 0 | 526426 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/legal/tos | 25 | 0 | 23 | 0 | 2707 | 608 | 960 | 0.0 | 0.0019 | 0 | 0 | 526515 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2711 | 612 | 896 | 0.0 | 0.0019 | 0 | 0 | 526156 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2661 | 652 | 960 | 0.0 | 0.0019 | 0 | 0 | 526390 |
+| Medium | auth-public | logged-out | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 2722 | 588 | 588 | 0.0 | 0.0000 | 0 | 0 | 526083 |
+| Medium | auth-public | logged-out | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2761 | 596 | 596 | 0.0 | 0.0000 | 0 | 0 | 526009 |
+| Medium | auth-public | logged-out | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2745 | 588 | 588 | 0.0 | 0.0000 | 0 | 0 | 526166 |
+| Medium | auth-public | logged-in-admin | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 2756 | 536 | 856 | 0.0 | 0.0028 | 0 | 0 | 526178 |
+| Medium | auth-public | logged-in-admin | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 2730 | 536 | 844 | 0.0 | 0.0028 | 0 | 0 | 526053 |
+| Medium | auth-public | logged-in-admin | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 2861 | 544 | 872 | 0.0 | 0.0028 | 0 | 0 | 526372 |
+| Medium | auth-public | logged-in-reader | mobile | /vi/legal/tos | 25 | 0 | 23 | 0 | 2967 | 948 | 1260 | 0.0 | 0.0032 | 0 | 0 | 526299 |
+| Medium | auth-public | logged-in-reader | mobile | /vi/legal/privacy | 25 | 0 | 23 | 0 | 3097 | 1072 | 1388 | 0.0 | 0.0032 | 0 | 0 | 526445 |
+| Medium | auth-public | logged-in-reader | mobile | /vi/legal/ai-disclaimer | 25 | 0 | 23 | 0 | 3114 | 700 | 700 | 0.0 | 0.0032 | 0 | 0 | 526503 |
+| Medium | auth-public | logged-out | desktop | /vi/login | 24 | 0 | 22 | 0 | 2838 | 688 | 688 | 0.0 | 0.0000 | 0 | 0 | 512512 |
+| Medium | auth-public | logged-out | desktop | /vi/register | 24 | 0 | 22 | 0 | 2742 | 644 | 644 | 0.0 | 0.0000 | 0 | 0 | 512974 |
+| Medium | auth-public | logged-out | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 2693 | 592 | 592 | 0.0 | 0.0000 | 0 | 0 | 511997 |
+| Medium | auth-public | logged-out | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 2821 | 592 | 592 | 0.0 | 0.0000 | 0 | 0 | 512161 |
+| Medium | auth-public | logged-in-admin | desktop | /vi/login | 24 | 0 | 22 | 0 | 2761 | 632 | 1136 | 130.0 | 0.0035 | 0 | 0 | 511043 |
+| Medium | auth-public | logged-in-admin | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 2650 | 664 | 664 | 0.0 | 0.0000 | 0 | 0 | 512193 |
+| Medium | auth-public | logged-in-admin | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 2719 | 680 | 680 | 0.0 | 0.0000 | 0 | 0 | 512292 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/register | 24 | 0 | 22 | 0 | 2820 | 636 | 1148 | 108.0 | 0.0033 | 0 | 0 | 511183 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/forgot-password | 24 | 0 | 22 | 0 | 2716 | 908 | 908 | 58.0 | 0.0038 | 0 | 0 | 511124 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/reset-password | 24 | 0 | 22 | 0 | 2658 | 664 | 664 | 0.0 | 0.0000 | 0 | 0 | 512233 |
+| Medium | auth-public | logged-in-reader | desktop | /vi/verify-email | 24 | 0 | 22 | 0 | 2696 | 720 | 720 | 0.0 | 0.0000 | 0 | 0 | 512150 |
+| Medium | auth-public | logged-out | mobile | /vi/login | 24 | 0 | 22 | 0 | 2802 | 736 | 736 | 0.0 | 0.0000 | 0 | 0 | 512503 |
+| Medium | auth-public | logged-out | mobile | /vi/register | 24 | 0 | 22 | 0 | 2683 | 596 | 596 | 0.0 | 0.0000 | 0 | 0 | 512966 |
+| Medium | auth-public | logged-out | mobile | /vi/forgot-password | 24 | 0 | 22 | 0 | 2808 | 592 | 592 | 0.0 | 0.0000 | 0 | 0 | 511944 |
+| Medium | auth-public | logged-out | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 2660 | 588 | 588 | 0.0 | 0.0000 | 0 | 0 | 512150 |
+| Medium | auth-public | logged-out | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 3141 | 616 | 616 | 0.0 | 0.0000 | 0 | 0 | 512203 |
+| Medium | auth-public | logged-in-admin | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 2648 | 588 | 588 | 0.0 | 0.0000 | 0 | 0 | 512184 |
+| Medium | auth-public | logged-in-reader | mobile | /vi/reset-password | 24 | 0 | 22 | 0 | 2739 | 588 | 588 | 0.0 | 0.0000 | 0 | 0 | 512096 |
+| Medium | auth-public | logged-in-reader | mobile | /vi/verify-email | 24 | 0 | 22 | 0 | 2763 | 680 | 680 | 0.0 | 0.0000 | 0 | 0 | 512225 |
 
 ## Major Issues Found
 
-- Critical: 34 page(s) có request count >35, pending request, failed request, hoặc issue nghiêm trọng.
-- High: 139 page(s) vượt ngưỡng >25 requests hoặc có request >800ms.
-- Medium: 23 page(s) có request trong dải 400-800ms.
-- Duplicate: 305 nhóm duplicate request cần kiểm tra over-fetch/cache key.
-- Pending: 5 page(s) có pending request không phải websocket/eventsource.
+- Critical: 29 page(s) có request count >35, pending request, failed request, hoặc issue nghiêm trọng.
+- High: 129 page(s) vượt ngưỡng >25 requests hoặc có request >800ms.
+- Medium: 36 page(s) có request trong dải 400-800ms.
+- Duplicate: 239 nhóm duplicate request cần kiểm tra over-fetch/cache key.
+- Pending: chưa phát hiện pending request bất thường.
 
 ### Slow Requests
 
 | Severity | Feature | Scenario | Viewport | Route | Method | Status | Duration (ms) | TTFB (ms) | Category | URL |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 2919 | 1862 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F15_Temperance_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | reader-chat | logged-in-reader | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | GET | 200 | 2728 | 313 | html | https://www.tarotnow.xyz/vi/readers/97410d49-ab32-469d-b421-f57321b262a2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 2522 | 1775 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F13_The_Hanged_Man_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 2460 | 1435 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/history | GET | 200 | 2353 | 331 | html | https://www.tarotnow.xyz/vi/reading/history |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 2136 | 1406 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 2074 | 908 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
-| Critical | auth-public | logged-out | mobile | /vi | GET | 200 | 1942 | 1940 | api | https://www.tarotnow.xyz/api/readers?page=1&pageSize=4 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1877 | 171 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | mobile | /vi/forgot-password | GET | 200 | 1869 | 1461 | html | https://www.tarotnow.xyz/vi/forgot-password |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1864 | 126 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1719 | 253 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1710 | 1140 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F16_The_Devil_50_20260325_181357.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | mobile | /vi/register | GET | 200 | 1701 | 562 | html | https://www.tarotnow.xyz/vi/register |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1701 | 219 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1658 | 150 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1636 | 139 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1627 | 206 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1626 | 301 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F15_Temperance_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | reader-chat | logged-in-reader | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | GET | 200 | 1591 | 1587 | api | https://www.tarotnow.xyz/api/auth/session |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1448 | 306 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 | GET | 200 | 1350 | 998 | html | https://www.tarotnow.xyz/vi/readers/bff951d3-ee70-43c9-99d0-aba27e81f580 |
-| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | GET | 200 | 1251 | 782 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Fcommunity%2F2ef125e575c84b8d990e4c90ed64d5f3.webp&w=1920&q=75 |
-| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | GET | 200 | 1242 | 912 | html | https://www.tarotnow.xyz/vi/reader/apply |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1224 | 257 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F13_The_Hanged_Man_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | reading | logged-in-admin | mobile | /vi/reading | GET | 200 | 1220 | 823 | html | https://www.tarotnow.xyz/vi/reading |
-| Critical | reading | logged-in-reader | mobile | /vi/reading/session/2aee7a1c-4322-427e-b5c1-30972072e89b | GET | 200 | 1212 | 854 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/history | GET | 200 | 1188 | 1185 | api | https://www.tarotnow.xyz/api/auth/session |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1177 | 112 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1171 | 290 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1166 | 313 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1163 | 313 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | reading | logged-in-admin | desktop | /vi/reading/session/eb1f6399-08c3-4a62-ac47-1989f2a4a680 | GET | 200 | 1157 | 1144 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| Critical | auth-public | logged-out | mobile | /vi/verify-email | GET | 200 | 1148 | 549 | html | https://www.tarotnow.xyz/vi/verify-email |
-| Critical | auth-public | logged-out | mobile | /vi/legal/ai-disclaimer | GET | 200 | 1148 | 1115 | html | https://www.tarotnow.xyz/vi/legal/ai-disclaimer |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1085 | 110 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 1079 | 1071 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=384&q=75 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | GET | 200 | 1079 | 332 | html | https://www.tarotnow.xyz/vi/profile |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1077 | 328 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 1072 | 545 | static | https://www.tarotnow.xyz/_next/static/chunks/0e-efl~gmt6zm.js |
-| Critical | auth-public | logged-in-reader | desktop | /vi/legal/tos | GET | 200 | 1065 | 1052 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| Critical | auth-public | logged-out | mobile | /vi/verify-email | GET | 200 | 1063 | 409 | static | https://www.tarotnow.xyz/_next/static/chunks/0e-efl~gmt6zm.js |
-| Critical | auth-public | logged-out | mobile | /vi/verify-email | GET | 200 | 1061 | 503 | static | https://www.tarotnow.xyz/_next/static/chunks/07c1epgcg_nj_.js |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1060 | 133 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 1059 | 544 | static | https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1059 | 127 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | mobile | /vi | GET | 200 | 1057 | 604 | html | https://www.tarotnow.xyz/vi |
-| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 1050 | 578 | html | https://www.tarotnow.xyz/vi |
-| Critical | auth-public | logged-out | desktop | /vi/legal/privacy | GET | 200 | 1050 | 356 | html | https://www.tarotnow.xyz/vi/legal/privacy |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1040 | 100 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | GET | 200 | 1024 | 1020 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Frare_title_lucky_star_50_20260416_165453.avif&w=48&q=75 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1024 | 206 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F08_The_Chariot_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1022 | 99 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1019 | 126 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1011 | 300 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1009 | 100 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | GET | 200 | 1004 | 514 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Fcommunity%2F2ef125e575c84b8d990e4c90ed64d5f3.webp&w=1200&q=75 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 994 | 96 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-in-admin | mobile | /vi/login | GET | 200 | 984 | 318 | html | https://www.tarotnow.xyz/vi/login |
-| Critical | auth-public | logged-in-admin | mobile | /vi/legal/privacy | GET | 200 | 971 | 349 | html | https://www.tarotnow.xyz/vi/legal/privacy |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 966 | 103 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | mobile | /vi/legal/tos | GET | 200 | 966 | 552 | html | https://www.tarotnow.xyz/vi/legal/tos |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 962 | 170 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | GET | 200 | 961 | 956 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Fpower_booster_50_20260416_165453.avif&w=48&q=75 |
-| Critical | auth-public | logged-out | mobile | /vi/reset-password | GET | 200 | 960 | 603 | html | https://www.tarotnow.xyz/vi/reset-password |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | GET | 200 | 955 | 949 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Fexp_booster_50_20260416_165452.avif&w=48&q=75 |
-| Critical | auth-public | logged-out | mobile | /vi | GET | 401 | 951 | 947 | api | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | GET | 200 | 945 | 702 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Frare_title_lucky_star_50_20260416_165453.avif&w=256&q=75 |
-| Critical | auth-public | logged-out | mobile | /vi/legal/privacy | GET | 200 | 921 | 602 | html | https://www.tarotnow.xyz/vi/legal/privacy |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | GET | 200 | 915 | 913 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Fdefense_booster_50_20260416_165452.avif&w=48&q=75 |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | GET | 200 | 914 | 910 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Ffree_draw_ticket_50_20260416_165452.avif&w=48&q=75 |
-| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet/deposit | GET | 200 | 911 | 340 | html | https://www.tarotnow.xyz/vi/wallet/deposit |
-| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha | GET | 200 | 900 | 642 | static | https://www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 900 | 259 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F16_The_Devil_50_20260325_181357.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | auth-public | logged-out | mobile | /vi/login | GET | 200 | 898 | 572 | html | https://www.tarotnow.xyz/vi/login |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit | GET | 200 | 897 | 331 | html | https://www.tarotnow.xyz/vi/wallet/deposit |
-| Critical | auth-public | logged-in-reader | desktop | /vi/register | GET | 200 | 895 | 203 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
-| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 895 | 76 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
-| Critical | admin | logged-in-admin | mobile | /vi/admin/readings | GET | 200 | 895 | 750 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
-| Critical | auth-public | logged-out | mobile | /vi/verify-email | GET | 200 | 887 | 365 | static | https://www.tarotnow.xyz/_next/static/chunks/0boqrfoz8awwu.js |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers | GET | 200 | 3571 | 297 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1986 | 301 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | auth-public | logged-in-reader | mobile | /vi | GET | 200 | 1981 | 309 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1902 | 201 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1765 | 276 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | reading | logged-in-reader | desktop | /vi/reading/session/e45cd035-4284-42a9-a061-e51f15d14232 | GET | 200 | 1709 | 967 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1688 | 200 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1666 | 310 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1660 | 283 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1654 | 403 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F15_Temperance_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1549 | 150 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1534 | 113 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F04_The_Empress_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1531 | 318 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F13_The_Hanged_Man_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet/deposit/history | GET | 200 | 1515 | 318 | html | https://www.tarotnow.xyz/vi/wallet/deposit/history |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1480 | 274 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F11_Wheel_of+_Fortune_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | auth-public | logged-in-admin | mobile | /vi/verify-email | GET | 200 | 1463 | 1446 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1435 | 282 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F08_The_Chariot_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1420 | 311 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1391 | 113 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F06_The_Hierophant_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1366 | 200 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1359 | 378 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/notifications | GET | 200 | 1358 | 1342 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community/69db54fc297f66f734421a3c | GET | 404 | 1344 | 1332 | html | https://www.tarotnow.xyz/vi/community/69db54fc297f66f734421a3c |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | GET | 200 | 1315 | 321 | html | https://www.tarotnow.xyz/vi/inventory |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | GET | 200 | 1277 | 1258 | static | https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1266 | 297 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F10_The_Hermit_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1263 | 326 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F16_The_Devil_50_20260325_181357.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1261 | 113 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F05_The_Emperor_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1248 | 379 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F15_Temperance_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1247 | 307 | html | https://www.tarotnow.xyz/vi/collection |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1244 | 123 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F01_The_Fool_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1219 | 127 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F09_Strength_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/69d93c24bc68b27090414f6c | GET | 200 | 1209 | 1123 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | auth-public | logged-in-reader | desktop | /vi/login | GET | 200 | 1197 | 1177 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | GET | 200 | 1192 | 331 | html | https://www.tarotnow.xyz/vi/readers/69d93c24bc68b27090414f6c |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1181 | 189 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/profile | GET | 200 | 1176 | 327 | html | https://www.tarotnow.xyz/vi/profile |
+| Critical | admin | logged-in-admin | desktop | /vi/admin | GET | 200 | 1162 | 814 | static | https://www.tarotnow.xyz/_next/static/chunks/0sssfnyzk3ei5.js |
+| Critical | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | GET | 200 | 1156 | 253 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha/history | GET | 200 | 1142 | 320 | html | https://www.tarotnow.xyz/vi/gacha/history |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1133 | 246 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | admin | logged-in-admin | mobile | /vi/admin | GET | 200 | 1124 | 980 | static | https://www.tarotnow.xyz/_next/static/chunks/0sssfnyzk3ei5.js |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1123 | 281 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F13_The_Hanged_Man_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1100 | 403 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F14_Death_50_20260325_181356.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | GET | 200 | 1084 | 362 | html | https://www.tarotnow.xyz/vi/profile/reader |
+| Critical | reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | GET | 200 | 1076 | 341 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 1063 | 172 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F12_Justice_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 1051 | 559 | static | https://www.tarotnow.xyz/_next/static/chunks/00xu_deqr9.nw.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/profile/mfa | GET | 200 | 1046 | 1034 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet/withdraw | GET | 200 | 1042 | 317 | html | https://www.tarotnow.xyz/vi/wallet/withdraw |
+| Critical | reading | logged-in-reader | mobile | /vi/reading | GET | 200 | 1032 | 317 | html | https://www.tarotnow.xyz/vi/reading |
+| Critical | auth-public | logged-out | desktop | /vi/verify-email | GET | 200 | 1030 | 370 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | GET | 200 | 1011 | 990 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 1007 | 84 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | admin | logged-in-admin | desktop | /vi/admin/gamification | GET | 200 | 1006 | 996 | static | https://www.tarotnow.xyz/_next/static/chunks/0pndj~zu5fxx~.js |
+| Critical | auth-public | logged-out | mobile | /vi | GET | 200 | 1004 | 588 | html | https://www.tarotnow.xyz/vi |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 993 | 117 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F02_The_Magician_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | reading | logged-in-reader | mobile | /vi/reading/session/5ee1ae7a-f9a3-4a46-974b-109190abef8a | GET | 200 | 992 | 975 | static | https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| Critical | reader-chat | logged-in-reader | mobile | /vi/readers/40c8fbd5-9484-475e-8713-37d6a41a5bcf | GET | 200 | 986 | 260 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | profile-wallet-notifications | logged-in-admin | mobile | /vi/wallet | GET | 200 | 978 | 373 | static | https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 975 | 128 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F07_The_Lovers_50_20260325_181351.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 969 | 271 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F10_The_Hermit_50_20260325_181353.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | community-leaderboard-quest | logged-in-admin | mobile | /vi/community | GET | 200 | 954 | 492 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Fcommunity%2F2ef125e575c84b8d990e4c90ed64d5f3.webp&w=1200&q=75 |
+| Critical | profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet/deposit/history | GET | 200 | 953 | 947 | static | https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 949 | 307 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/community | GET | 200 | 949 | 485 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Fcommunity%2F2ef125e575c84b8d990e4c90ed64d5f3.webp&w=1920&q=75 |
+| Critical | inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | GET | 200 | 948 | 337 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F03_The_High+Priestess+_50_20260325_181348.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dfull&iv=81a3d9698977fda2 |
+| Critical | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | GET | 200 | 930 | 476 | html | https://www.tarotnow.xyz/vi/gamification |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | GET | 200 | 926 | 694 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Frare_title_lucky_star_50_20260416_165453.avif&w=256&q=75 |
+| Critical | auth-public | logged-out | desktop | /vi | GET | 200 | 921 | 543 | static | https://www.tarotnow.xyz/_next/static/chunks/0mddo4pcihb63.js |
+| Critical | profile-wallet-notifications | logged-in-reader | desktop | /vi/wallet | GET | 200 | 915 | 327 | html | https://www.tarotnow.xyz/vi/wallet |
+| Critical | community-leaderboard-quest | logged-in-reader | mobile | /vi/gamification | GET | 200 | 908 | 396 | html | https://www.tarotnow.xyz/vi/gamification |
+| Critical | admin | logged-in-admin | desktop | /vi/admin/readings | GET | 200 | 907 | 406 | html | https://www.tarotnow.xyz/vi/admin/readings |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | GET | 200 | 894 | 314 | api | https://www.tarotnow.xyz/api/collection/card-image/81a3d9698977fda2.avif?src=https%3A%2F%2Fimg.tarotnow.xyz%2Flight-god-50%2F16_The_Devil_50_20260325_181357.avif%3Fiv%3D81a3d9698977fda2%26variant%3Dthumb&iv=81a3d9698977fda2 |
+| Critical | admin | logged-in-admin | desktop | /vi/admin/promotions | GET | 200 | 882 | 316 | html | https://www.tarotnow.xyz/vi/admin/promotions |
+| Critical | reader-chat | logged-in-admin | mobile | /vi/reader/apply | GET | 200 | 877 | 306 | html | https://www.tarotnow.xyz/vi/reader/apply |
+| Critical | admin | logged-in-admin | desktop | /vi/admin/deposits | GET | 200 | 876 | 363 | html | https://www.tarotnow.xyz/vi/admin/deposits |
+| Critical | admin | logged-in-admin | mobile | /vi/admin/system-configs | GET | 200 | 872 | 367 | html | https://www.tarotnow.xyz/vi/admin/system-configs |
+| Critical | inventory-gacha-collection | logged-in-admin | mobile | /vi/inventory | GET | 200 | 870 | 866 | static | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Ficon%2Frare_title_lucky_star_50_20260416_165453.avif&w=96&q=75 |
+| Critical | admin | logged-in-admin | desktop | /vi/admin/users | GET | 200 | 861 | 336 | html | https://www.tarotnow.xyz/vi/admin/users |
 
 ### Duplicate API / Request Candidates
 
 | Severity | Feature | Scenario | Viewport | Route | Count | Request Key |
 | --- | --- | --- | --- | --- | ---: | --- |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/147.fw.lfq60x.css |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/themes/prismatic-royal.css |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0dg8~d_lbp93p.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/turbopack-164lj7fr~s_z4.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0a2n5k_101fwj.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0q8qdu-5ybfjk.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0boqrfoz8awwu.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0e-efl~gmt6zm.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/07c1epgcg_nj_.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/12p7z~rbu83t1.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
-| High | auth-public | logged-in-admin | desktop | /vi/login | 2 | GET https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css |
@@ -405,9 +380,9 @@
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0q8qdu-5ybfjk.js |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0boqrfoz8awwu.js |
-| High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0e-efl~gmt6zm.js |
+| High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/00xu_deqr9.nw.js |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
-| High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/07c1epgcg_nj_.js |
+| High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0mddo4pcihb63.js |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/12p7z~rbu83t1.js |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
 | High | auth-public | logged-in-admin | desktop | /vi/register | 2 | GET https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
@@ -425,18 +400,35 @@
 | High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0i.l9589uvx0j.js |
 | High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0e5kgac227qbt.js |
 | High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0a2n5k_101fwj.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0q8qdu-5ybfjk.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/123t3kd09_1tj.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0boqrfoz8awwu.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/00xu_deqr9.nw.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0umwwbfv0qsm4.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0mddo4pcihb63.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/12p7z~rbu83t1.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/153.59amsfq4f.js |
+| High | auth-public | logged-in-admin | desktop | /vi/forgot-password | 2 | GET https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516 |
+| High | community-leaderboard-quest | logged-in-admin | desktop | /vi/leaderboard | 2 | POST https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| High | community-leaderboard-quest | logged-in-admin | desktop | /vi/gamification | 2 | POST https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| High | reader-chat | logged-in-admin | desktop | /vi/readers/69d93c24bc68b27090414f6c | 2 | POST https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/media/7178b3e590c64307-s.p.11.cyxs5p-0z~.woff2 |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/147.fw.lfq60x.css |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/themes/prismatic-royal.css |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0dg8~d_lbp93p.js |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/03suy5k_kh24c.js |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/turbopack-164lj7fr~s_z4.js |
+| High | auth-public | logged-in-reader | desktop | /vi/login | 2 | GET https://www.tarotnow.xyz/_next/static/chunks/0x.73w57rn4ou.js |
 
 ### Pending Requests
 
 | Severity | Feature | Scenario | Viewport | Route | URL |
 | --- | --- | --- | --- | --- | --- |
-| Critical | auth-public | logged-in-admin | desktop | /vi/register | https://www.tarotnow.xyz/api/readers?page=1&pageSize=4 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/reader | https://www.tarotnow.xyz/api/v1/presence/negotiate?negotiateVersion=1 |
-| Critical | reader-chat | logged-in-admin | desktop | /vi/readers | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=384&q=75 |
-| Critical | auth-public | logged-out | mobile | /vi | https://www.tarotnow.xyz/api/me/runtime-policies |
-| Critical | auth-public | logged-out | mobile | /vi | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=1200&q=75 |
-| Critical | reader-chat | logged-in-reader | mobile | /vi/chat | https://www.tarotnow.xyz/_next/image?url=https%3A%2F%2Fmedia.tarotnow.xyz%2Favatars%2F86c96d40a901461f991ebcc1acb4cf48.webp&w=1200&q=75 |
+| - | - | - | - | - | - |
 
 ## Optimization Plan
 
