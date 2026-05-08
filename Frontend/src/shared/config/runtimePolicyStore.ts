@@ -105,6 +105,35 @@ export function updateRuntimePolicyStore(policies: RuntimePoliciesDto): void {
   };
 }
 
+const SESSION_CACHE_KEY = 'tn:runtime-policies:v1';
+
+interface RuntimePoliciesSessionCache {
+  cachedAt: number;
+  data: RuntimePoliciesDto;
+}
+
+export function readRuntimePolicySessionCache(staleMs: number): RuntimePoliciesDto | undefined {
+  if (typeof window === 'undefined') return undefined;
+
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_CACHE_KEY);
+    const cache = raw ? JSON.parse(raw) as RuntimePoliciesSessionCache : null;
+    if (!cache || Date.now() - cache.cachedAt >= staleMs) return undefined;
+    return cache.data;
+  } catch {
+    return undefined;
+  }
+}
+
+export function writeRuntimePolicySessionCache(data: RuntimePoliciesDto): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ cachedAt: Date.now(), data }));
+  } catch {
+  }
+}
+
 export function getRuntimePolicyStoreSnapshot(): RuntimePolicyStoreState {
   return currentState;
 }
