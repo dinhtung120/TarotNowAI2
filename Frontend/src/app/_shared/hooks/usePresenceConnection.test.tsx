@@ -143,6 +143,12 @@ describe('usePresenceConnection', () => {
   cancelWakeup.mockClear();
  });
 
+ async function flushPresenceStartup() {
+  await vi.advanceTimersByTimeAsync(3_000);
+  await Promise.resolve();
+  await Promise.resolve();
+ }
+
  afterEach(() => {
   act(() => root.unmount());
   container.remove();
@@ -162,21 +168,19 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await Promise.resolve();
-   await Promise.resolve();
+   await flushPresenceStartup();
   });
 
   expect(scheduleWakeup).toHaveBeenCalled();
 
   wakeupState.wakeupVersion = 1;
-  vi.setSystemTime(new Date('2026-04-28T08:00:00.100Z'));
+  vi.setSystemTime(new Date('2026-04-28T08:00:45.100Z'));
   act(() => {
    root.render(<Harness />);
   });
 
   await act(async () => {
-   await Promise.resolve();
-   await Promise.resolve();
+   await flushPresenceStartup();
   });
 
  expect(fakeConnection.start).toHaveBeenCalledTimes(2);
@@ -191,8 +195,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await Promise.resolve();
-   await Promise.resolve();
+   await flushPresenceStartup();
   });
 
   expect(fakeConnection.start).toHaveBeenCalledTimes(1);
@@ -223,7 +226,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await vi.advanceTimersByTimeAsync(11);
+   await vi.advanceTimersByTimeAsync(3_011);
    await Promise.resolve();
   });
 
@@ -275,8 +278,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await Promise.resolve();
-   await Promise.resolve();
+   await flushPresenceStartup();
   });
 
   fakeConnection.stop.mockRejectedValueOnce(new Error('stop failed'));
@@ -308,8 +310,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await Promise.resolve();
-   await Promise.resolve();
+   await flushPresenceStartup();
   });
 
   act(() => {
@@ -367,8 +368,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await Promise.resolve();
-   await Promise.resolve();
+   await flushPresenceStartup();
   });
 
   act(() => {
