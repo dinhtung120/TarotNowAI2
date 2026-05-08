@@ -1,0 +1,148 @@
+[
+  {
+    "scenario": "logged-out",
+    "viewport": "desktop",
+    "visitedRoutes": [],
+    "coverageNotes": [
+      "origin-discovery:/sitemap.xml:routes-22",
+      "origin-discovery:/robots.txt:routes-22",
+      "dynamic-routes: skipped for logged-out scenario.",
+      "scenario-filter:logged-out-protected-routes-skipped=4"
+    ]
+  },
+  {
+    "scenario": "logged-in-admin",
+    "viewport": "desktop",
+    "visitedRoutes": [
+      "/vi/admin",
+      "/vi/wallet/deposit/history",
+      "/vi/community",
+      "/vi/collection",
+      "/vi/reading/session/c129bc4c-42f0-48f5-b215-372df9b190ed",
+      "/vi/reading/session/6edd7197-a24d-4d21-9f84-53dcfc98ff09",
+      "/vi/reading/session/41058d9b-941d-4d9b-a905-a9f5073451ec",
+      "/vi/readers/69d93c24bc68b27090414f6c",
+      "/vi/readers/69dbe86b052d3c8f3f55e231",
+      "/vi/readers/69e7b9fa5b238c89fadb3a0b"
+    ],
+    "coverageNotes": [
+      "origin-discovery:/sitemap.xml:routes-22",
+      "origin-discovery:/robots.txt:routes-22",
+      "reading.init.daily_1: blocked (400).",
+      "reading.init.spread_3: created c129bc4c-42f0-48f5-b215-372df9b190ed.",
+      "reading.init.spread_5: created 6edd7197-a24d-4d21-9f84-53dcfc98ff09.",
+      "reading.init.spread_10: created 41058d9b-941d-4d9b-a905-a9f5073451ec.",
+      "reading-history-detail: coverage-blocked (no history id found).",
+      "chat-room-detail: coverage-blocked (no conversation id found).",
+      "reader-detail:ui-discovery-empty",
+      "chat-room-detail:ui-discovery-empty",
+      "reading-history-detail:ui-discovery-empty",
+      "community-posts:api-discovery-1",
+      "community-post-detail:69db54fc297f66f734421a3c:stale-page-404"
+    ]
+  },
+  {
+    "scenario": "logged-in-reader",
+    "viewport": "desktop",
+    "visitedRoutes": [
+      "/vi/wallet/deposit/history",
+      "/vi/community",
+      "/vi/collection",
+      "/vi/reading/session/9f154052-ee11-49da-a0c2-7e7e9619e9b7",
+      "/vi/reading/session/6824a31f-8492-49af-bf22-4d1a164b24f8",
+      "/vi/reading/session/a5f8f1c9-6d19-4afc-a247-c624365ff6bc",
+      "/vi/readers/69d93c24bc68b27090414f6c",
+      "/vi/readers/69dbe86b052d3c8f3f55e231",
+      "/vi/readers/69e7b9fa5b238c89fadb3a0b"
+    ],
+    "coverageNotes": [
+      "origin-discovery:/sitemap.xml:routes-22",
+      "origin-discovery:/robots.txt:routes-22",
+      "reading.init.daily_1: blocked (400).",
+      "reading.init.spread_3: created 9f154052-ee11-49da-a0c2-7e7e9619e9b7.",
+      "reading.init.spread_5: created 6824a31f-8492-49af-bf22-4d1a164b24f8.",
+      "reading.init.spread_10: created a5f8f1c9-6d19-4afc-a247-c624365ff6bc.",
+      "reading-history-detail: coverage-blocked (no history id found).",
+      "chat-room-detail: coverage-blocked (no conversation id found).",
+      "reader-detail:ui-discovery-empty",
+      "chat-room-detail:ui-discovery-empty",
+      "reading-history-detail:ui-discovery-empty",
+      "community-posts:api-discovery-1",
+      "community-post-detail:69db54fc297f66f734421a3c:stale-page-404",
+      "scenario-filter:reader-admin-routes-skipped=1"
+    ]
+  },
+  {
+    "scenario": "logged-out",
+    "viewport": "mobile",
+    "visitedRoutes": [],
+    "coverageNotes": [
+      "origin-discovery:/sitemap.xml:routes-22",
+      "origin-discovery:/robots.txt:routes-22",
+      "dynamic-routes: skipped for logged-out scenario.",
+      "scenario-filter:logged-out-protected-routes-skipped=4"
+    ]
+  },
+  {
+    "scenario": "logged-in-admin",
+    "viewport": "mobile",
+    "visitedRoutes": [
+      "/vi/admin",
+      "/vi/wallet/deposit/history",
+      "/vi/community",
+      "/vi/collection",
+      "/vi/reading/session/a2609bd4-44b1-4b40-a8bd-81b1980aac09",
+      "/vi/reading/session/0d01e4f9-623b-47ee-809c-5ec9d8edb6be",
+      "/vi/reading/session/18b9cb87-1bbd-4bb9-8b20-bdd137ccb0d9",
+      "/vi/readers/69d93c24bc68b27090414f6c",
+      "/vi/readers/69dbe86b052d3c8f3f55e231",
+      "/vi/readers/69e7b9fa5b238c89fadb3a0b"
+    ],
+    "coverageNotes": [
+      "origin-discovery:/sitemap.xml:routes-22",
+      "origin-discovery:/robots.txt:routes-22",
+      "reading.init.daily_1: blocked (400).",
+      "reading.init.spread_3: created a2609bd4-44b1-4b40-a8bd-81b1980aac09.",
+      "reading.init.spread_5: created 0d01e4f9-623b-47ee-809c-5ec9d8edb6be.",
+      "reading.init.spread_10: created 18b9cb87-1bbd-4bb9-8b20-bdd137ccb0d9.",
+      "reading-history-detail: coverage-blocked (no history id found).",
+      "chat-room-detail: coverage-blocked (no conversation id found).",
+      "reader-detail:ui-discovery-empty",
+      "chat-room-detail:ui-discovery-empty",
+      "reading-history-detail:ui-discovery-empty",
+      "community-posts:api-discovery-1",
+      "community-post-detail:69db54fc297f66f734421a3c:stale-page-404"
+    ]
+  },
+  {
+    "scenario": "logged-in-reader",
+    "viewport": "mobile",
+    "visitedRoutes": [
+      "/vi/wallet/deposit/history",
+      "/vi/community",
+      "/vi/collection",
+      "/vi/reading/session/9f9f51dd-a2a1-4a56-a999-a748edc14160",
+      "/vi/reading/session/b3592556-bd0f-4779-8274-a037973bd26e",
+      "/vi/reading/session/d512f861-d1df-498b-99d1-d9eb0566f847",
+      "/vi/readers/69d93c24bc68b27090414f6c",
+      "/vi/readers/69dbe86b052d3c8f3f55e231",
+      "/vi/readers/69e7b9fa5b238c89fadb3a0b"
+    ],
+    "coverageNotes": [
+      "origin-discovery:/sitemap.xml:routes-22",
+      "origin-discovery:/robots.txt:routes-22",
+      "reading.init.daily_1: blocked (400).",
+      "reading.init.spread_3: created 9f9f51dd-a2a1-4a56-a999-a748edc14160.",
+      "reading.init.spread_5: created b3592556-bd0f-4779-8274-a037973bd26e.",
+      "reading.init.spread_10: created d512f861-d1df-498b-99d1-d9eb0566f847.",
+      "reading-history-detail: coverage-blocked (no history id found).",
+      "chat-room-detail: coverage-blocked (no conversation id found).",
+      "reader-detail:ui-discovery-empty",
+      "chat-room-detail:ui-discovery-empty",
+      "reading-history-detail:ui-discovery-empty",
+      "community-posts:api-discovery-1",
+      "community-post-detail:69db54fc297f66f734421a3c:stale-page-404",
+      "scenario-filter:reader-admin-routes-skipped=1"
+    ]
+  }
+]
