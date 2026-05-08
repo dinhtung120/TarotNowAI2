@@ -94,51 +94,17 @@ describe('redirectAuthenticatedAuthEntry', () => {
   expect(mockedGetServerSessionSnapshot).not.toHaveBeenCalled();
  });
 
-  it('redirects authenticated sessions away from auth entry pages', async () => {
+ it('redirects valid access-token sessions away from auth entry pages without session lookup', async () => {
   mockedCookies.mockResolvedValue(createCookieStore({ accessToken: 'access-token' }));
   mockedResolveProtectedRouteAuthDecision.mockResolvedValue({
    decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
    redirectPath: null,
    reason: 'access_token_valid',
   });
-  mockedGetServerSessionSnapshot.mockResolvedValue({
-   authenticated: true,
-   user: {
-    id: 'user-1',
-    email: 'reader@example.com',
-    username: 'reader',
-    displayName: 'Reader',
-    avatarUrl: null,
-    level: 1,
-    exp: 0,
-    role: 'user',
-    status: 'Active',
-   },
-  });
 
   await redirectAuthenticatedAuthEntry({ locale: 'vi', fallbackPath: '/vi/profile' });
 
-  expect(mockedGetServerSessionSnapshot).toHaveBeenCalledWith({ allowRefresh: false });
+  expect(mockedGetServerSessionSnapshot).not.toHaveBeenCalled();
   expect(mockedRedirect).toHaveBeenCalledWith('/vi/profile');
- });
-
- it('keeps user on auth entry page when session lookup is unauthenticated', async () => {
-  mockedCookies.mockResolvedValue(createCookieStore({
-   accessToken: 'access-token',
-   refreshToken: 'refresh-token',
-  }));
-  mockedResolveProtectedRouteAuthDecision.mockResolvedValue({
-   decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
-   redirectPath: null,
-   reason: 'access_token_valid',
-  });
-  mockedGetServerSessionSnapshot.mockResolvedValue({
-   authenticated: false,
-   user: null,
-  });
-
-  await redirectAuthenticatedAuthEntry({ locale: 'en' });
-
-  expect(mockedRedirect).not.toHaveBeenCalled();
  });
 });

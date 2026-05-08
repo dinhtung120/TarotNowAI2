@@ -5,7 +5,6 @@ import {
  PROTECTED_ROUTE_AUTH_DECISION,
  resolveProtectedRouteAuthDecision,
 } from '@/shared/server/auth/protectedRouteAuthDecision';
-import { getCachedServerSessionSnapshot } from '@/app/_shared/server/auth/cachedSessionSnapshot';
 
 interface RedirectAuthenticatedAuthEntryOptions {
  locale: string;
@@ -34,8 +33,5 @@ export async function redirectAuthenticatedAuthEntry(
   return;
  }
 
- const sessionSnapshot = await getCachedServerSessionSnapshot();
- if (sessionSnapshot.authenticated) {
-  return redirect(nextPath);
- }
+ return redirect(nextPath);
 }
