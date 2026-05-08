@@ -12,10 +12,8 @@ import { logger } from '@/shared/gateways/logger';
 import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 import { getSignalRHubUrl } from '@/features/chat/shared/gateways/signalRUrl';
 import { ensureRealtimeSession } from '@/features/chat/shared/gateways/realtimeSessionGuard';
-import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { useReconnectWakeup } from '@/features/chat/shared/hooks/useReconnectWakeup';
 import {
-  hasSameNumberArray,
   isUnauthorizedNegotiationError,
   shouldStopConnection,
   startConnectionWithTimeout,
@@ -80,8 +78,6 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentUserId = useAuthStore((state) => state.user?.id ?? '');
-  const runtimePoliciesQuery = useRuntimePolicies(enabled && isAuthenticated);
-  const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
   const unauthorizedRetryBlockedUntilRef = useRef(0);
   const queryClient = useQueryClient();
@@ -89,7 +85,6 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   
   const appStartTimeRef = useRef(Date.now());
 
-  // Ổn định cấu hình bằng useRef để tránh phá vỡ kết nối SignalR khi component re-render.
   const reconnectScheduleRef = useRef<number[]>([...RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs]);
   const configRef = useRef({
     negotiationTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs as number,
@@ -98,24 +93,6 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
     invalidateDebounceMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs as number,
     appStartGuardMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.appStartGuardMs as number,
   });
-
-  // Đồng bộ giá trị từ runtimePolicy vào ref mà không gây ảnh hưởng đến useEffect chính.
-  useEffect(() => {
-    const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
-    if (!hasSameNumberArray(reconnectScheduleRef.current, currentSchedule)) {
-      reconnectScheduleRef.current = [...currentSchedule];
-    }
-
-    configRef.current = {
-      negotiationTimeoutMs: realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs,
-      unauthorizedCooldownMs:
-        realtimePolicy?.chatUnauthorizedCooldownMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chatUnauthorizedCooldownMs,
-      serverTimeoutMs: realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs,
-      invalidateDebounceMs:
-        realtimePolicy?.chat.invalidateDebounceMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs,
-      appStartGuardMs: realtimePolicy?.chat.appStartGuardMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.appStartGuardMs,
-    };
-  }, [realtimePolicy]);
 
   useEffect(() => {
     /*
