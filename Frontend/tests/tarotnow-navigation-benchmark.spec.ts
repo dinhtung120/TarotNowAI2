@@ -426,6 +426,11 @@ function isAdminRoutePath(route: string): boolean {
   return pathWithoutLocale === '/admin' || pathWithoutLocale.startsWith('/admin/');
 }
 
+function isAuthEntryRoutePath(route: string): boolean {
+  const pathWithoutLocale = stripLocalePath(route);
+  return ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(pathWithoutLocale);
+}
+
 function filterRoutesForScenario(
   scenario: BenchmarkScenario,
   routes: string[],
@@ -445,13 +450,20 @@ function filterRoutesForScenario(
       continue;
     }
 
+    if (scenario !== 'logged-out' && isAuthEntryRoutePath(route)) {
+      removedCount += 1;
+      continue;
+    }
+
     filteredRoutes.push(route);
   }
 
   if (scenario === 'logged-out') {
     notes.push(`scenario-filter:logged-out-protected-routes-skipped=${removedCount}`);
   } else if (scenario === 'logged-in-reader') {
-    notes.push(`scenario-filter:reader-admin-routes-skipped=${removedCount}`);
+    notes.push(`scenario-filter:reader-auth-entry-admin-routes-skipped=${removedCount}`);
+  } else {
+    notes.push(`scenario-filter:admin-auth-entry-routes-skipped=${removedCount}`);
   }
 
   return {
