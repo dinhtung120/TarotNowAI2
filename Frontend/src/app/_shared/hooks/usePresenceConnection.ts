@@ -141,10 +141,13 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       }
     };
 
-    void init();
+    const connectTimer = window.setTimeout(() => {
+      void init();
+    }, 3_000);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(connectTimer);
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       disposeRegistration();
 
