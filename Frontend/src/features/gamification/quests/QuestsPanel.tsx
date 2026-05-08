@@ -9,27 +9,18 @@ import GamificationDetailModal from "@/features/gamification/hub/GamificationDet
 import { QuestCard } from "@/features/gamification/quests/QuestCard";
 import { QuestPanelHeader } from "@/features/gamification/quests/QuestPanelHeader";
 import { useQuestClaimHandlers } from "@/features/gamification/quests/components/quest-panel/useQuestClaimHandlers";
-import { useRuntimePolicies } from "@/shared/hooks/useRuntimePolicies";
+import { RUNTIME_POLICY_FALLBACKS } from "@/shared/config/runtimePolicyFallbacks";
 import { cn } from "@/lib/utils";
 
 export default function QuestsPanel() {
  const t = useTranslations("Gamification");
- const runtimePoliciesQuery = useRuntimePolicies();
- const defaultQuestType = runtimePoliciesQuery.data?.gamification.defaultQuestType === "weekly" ? "weekly" : "daily";
+ const defaultQuestType = RUNTIME_POLICY_FALLBACKS.gamification.defaultQuestType === "weekly" ? "weekly" : "daily";
  const [selectedQuestType, setSelectedQuestType] = useState<"daily" | "weekly" | null>(null);
- const questType = selectedQuestType ?? (runtimePoliciesQuery.data ? defaultQuestType : null);
+ const questType = selectedQuestType ?? defaultQuestType;
  const { data: quests, isLoading, isError } = useQuests(questType ?? undefined);
  const { localize } = useLocalizedField();
  const [selectedQuest, setSelectedQuest] = useState<QuestWithProgress | null>(null);
  const { claimMutation, handleClaim } = useQuestClaimHandlers({ t });
-
- if (runtimePoliciesQuery.isLoading || questType === null) {
-  return <div className={cn("flex", "items-center", "justify-center", "py-12")}><div className={cn("h-10", "w-10", "animate-spin", "rounded-full", "border-4", "border-indigo-500", "border-t-transparent")} /></div>;
- }
-
- if (runtimePoliciesQuery.isError || !runtimePoliciesQuery.data) {
-  return <div className={cn("rounded-2xl", "border", "border-red-500/20", "bg-red-500/10", "p-6", "text-center", "text-red-400", "backdrop-blur-md")}><p>{t("FailedToLoadQuests")}</p></div>;
- }
 
  if (isLoading) return <div className={cn("flex", "items-center", "justify-center", "py-12")}><div className={cn("h-10", "w-10", "animate-spin", "rounded-full", "border-4", "border-indigo-500", "border-t-transparent")} /></div>;
  if (isError || !quests) return <div className={cn("rounded-2xl", "border", "border-red-500/20", "bg-red-500/10", "p-6", "text-center", "text-red-400", "backdrop-blur-md")}><p>{t("FailedToLoadQuests")}</p></div>;

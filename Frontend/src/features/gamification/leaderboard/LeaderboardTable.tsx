@@ -8,7 +8,7 @@ import { LeaderboardCurrentUserCard } from "@/features/gamification/leaderboard/
 import { LeaderboardBody } from "@/features/gamification/leaderboard/components/leaderboard/LeaderboardBody";
 import { LeaderboardCurrencyTabs } from "@/features/gamification/leaderboard/components/leaderboard/LeaderboardCurrencyTabs";
 import { LeaderboardPeriodTabs } from "@/features/gamification/leaderboard/components/leaderboard/LeaderboardPeriodTabs";
-import { useRuntimePolicies } from "@/shared/hooks/useRuntimePolicies";
+import { RUNTIME_POLICY_FALLBACKS } from "@/shared/config/runtimePolicyFallbacks";
 import { cn } from "@/lib/utils";
 
 type LeaderboardCurrency = "gold" | "diamond";
@@ -33,15 +33,9 @@ function parseLeaderboardTrack(track: string): LeaderboardSelection | null {
 
 export default function LeaderboardTable() {
  const t = useTranslations("Gamification");
- const runtimePoliciesQuery = useRuntimePolicies();
  const defaultSelection = useMemo<LeaderboardSelection | null>(() => {
-  const defaultTrack = runtimePoliciesQuery.data?.gamification.defaultLeaderboardTrack;
-  if (!defaultTrack) {
-   return null;
-  }
-
-  return parseLeaderboardTrack(defaultTrack);
- }, [runtimePoliciesQuery.data?.gamification.defaultLeaderboardTrack]);
+  return parseLeaderboardTrack(RUNTIME_POLICY_FALLBACKS.gamification.defaultLeaderboardTrack);
+ }, []);
 
  const [selectedCurrency, setSelectedCurrency] = useState<LeaderboardCurrency | null>(null);
  const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod | null>(null);
@@ -51,11 +45,7 @@ export default function LeaderboardTable() {
  const track = currency && period ? `spent_${currency}_${period}` : undefined;
  const { data, isLoading } = useLeaderboard(track);
 
- if (runtimePoliciesQuery.isLoading || !currency || !period) {
-  return <div className={cn("flex", "items-center", "justify-center", "py-12")}><div className={cn("h-10", "w-10", "animate-spin", "rounded-full", "border-4", "border-indigo-500", "border-t-transparent")} /></div>;
- }
-
- if (runtimePoliciesQuery.isError || !runtimePoliciesQuery.data || !defaultSelection) {
+ if (!currency || !period) {
   return <div className={cn("rounded-2xl", "border", "border-red-500/20", "bg-red-500/10", "p-6", "text-center", "text-red-400", "backdrop-blur-md")}><p>{t("NoLeaderboardData")}</p></div>;
  }
 

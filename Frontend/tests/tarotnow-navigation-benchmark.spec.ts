@@ -1884,6 +1884,7 @@ async function benchmarkNavigation(
   const pendingNonPersistent = requestMetrics.filter((request) =>
     request.durationMs === null
     && !request.failed
+    && request.resourceType !== 'document'
     && request.resourceType !== 'websocket'
     && request.resourceType !== 'eventsource',
   );

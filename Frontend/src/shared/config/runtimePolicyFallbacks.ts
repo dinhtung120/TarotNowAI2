@@ -36,6 +36,10 @@ export const RUNTIME_POLICY_FALLBACKS = {
     serverTimeoutMs: 8000,
     minTimeoutMs: 1000,
   },
+  gamification: {
+    defaultQuestType: 'daily',
+    defaultLeaderboardTrack: 'spent_gold_daily',
+  },
   runtimePoliciesClient: {
     timeoutMs: 8000,
     staleMs: 60000,
