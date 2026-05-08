@@ -46,7 +46,7 @@ export function useCollectionPageViewModel() {
     const summary = chunkedCatalog.cardSummaryById.get(cardId);
     if (!summary || !chunkedCatalog.manifest) return undefined;
     const sourceUrl = mode === 'full' ? summary.fullUrl : summary.thumbUrl;
-    return toCollectionImageProxyUrl(sourceUrl, chunkedCatalog.manifest.version) ?? undefined;
+    return toCollectionImageProxyUrl(sourceUrl, chunkedCatalog.manifest.version, mode) ?? undefined;
   }, [chunkedCatalog.cardSummaryById, chunkedCatalog.manifest]);
 
   const getCardImageUrl = (cardId: number): string | undefined => {

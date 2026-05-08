@@ -107,6 +107,7 @@ function buildImageRemotePatterns(): NonNullable<NextConfig['images']>['remotePa
   process.env.NEXT_PUBLIC_MEDIA_CDN_URL,
   process.env.NEXT_PUBLIC_R2_PUBLIC_URL,
   'https://img.vietqr.io',
+  'https://img.tarotnow.xyz',
   'https://media.tarotnow.xyz',
   'https://ui-avatars.com',
  ]) {

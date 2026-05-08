@@ -63,10 +63,26 @@ export function buildCollectionCatalogDetailKey(version: string, cardId: number)
 export const COLLECTION_MANIFEST_CACHE_KEY = 'collection:manifest:v1';
 export const COLLECTION_VERSION_HISTORY_KEY = 'collection:version-history:v1';
 
-export function toCollectionImageProxyUrl(sourceUrl: string | null | undefined, version: string): string | null {
+export function toCollectionImageProxyUrl(
+  sourceUrl: string | null | undefined,
+  version: string,
+  mode: 'thumb' | 'full' = 'full',
+): string | null {
   if (!sourceUrl) return null;
   const raw = sourceUrl.trim();
   if (!raw) return null;
+
+  if (mode === 'thumb') {
+    try {
+      const parsed = new URL(raw);
+      if (parsed.hostname.toLowerCase() === 'img.tarotnow.xyz') {
+        return raw;
+      }
+    } catch {
+      // fall through to proxy path
+    }
+  }
+
   const params = new URLSearchParams({
     src: raw,
     iv: version,
