@@ -17,7 +17,7 @@ function createNowSubscription(tickMs: number) {
 export function useRelativeTimeNow(tickMs = DEFAULT_TICK_MS): number {
  return useSyncExternalStore(
   createNowSubscription(tickMs),
-  () => Date.now(),
+  () => Math.floor(Date.now() / tickMs) * tickMs,
   () => SERVER_SNAPSHOT,
  );
 }

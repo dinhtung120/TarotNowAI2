@@ -72,7 +72,7 @@ export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOption
  const isBlockedPath = normalizedHref ? isPrefetchBlocked(normalizedHref) : true;
  const isSameRoute = Boolean(normalizedHref) && normalizedHref === normalizedCurrentPath;
  const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && !isSameRoute && prefetchQueries;
- const prefetchEnabled = prefetch !== false;
+ const prefetchEnabled = prefetch === true;
  const canPrefetchRouteOnIntent = Boolean(rawHref) && !isBlockedPath && !isSameRoute && prefetchEnabled;
  const routeTaskKey = normalizedHref ? `route:${locale}:${normalizedHref}` : '';
  const queryTaskKey = normalizedHref ? `query:${locale}:${normalizedHref}` : '';

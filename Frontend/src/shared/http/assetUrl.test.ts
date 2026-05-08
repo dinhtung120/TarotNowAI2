@@ -29,6 +29,10 @@ describe('resolveAvatarUrl', () => {
     expect(resolveAvatarUrl('https://cdn.example.com/avatar.png')).toBe('https://cdn.example.com/avatar.png');
   });
 
+  it('drops legacy media avatar urls that cause optimized image 404s', () => {
+    expect(resolveAvatarUrl('https://media.tarotnow.xyz/avatars/missing.webp')).toBeNull();
+  });
+
   it('keeps blob and data urls unchanged', () => {
     expect(resolveAvatarUrl('blob:http://localhost:3000/abc')).toBe('blob:http://localhost:3000/abc');
     expect(resolveAvatarUrl('data:image/png;base64,AAA')).toBe('data:image/png;base64,AAA');

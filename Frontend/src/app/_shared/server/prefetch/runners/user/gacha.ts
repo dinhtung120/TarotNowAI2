@@ -24,20 +24,10 @@ export async function prefetchGachaPage(qc: QueryClient): Promise<void> {
    return;
   }
   const firstCode = pools[0].code;
-  await Promise.all([
-   swallowPrefetch(async () => {
-    await qc.prefetchQuery({
-     queryKey: gachaQueryKeys.poolOdds(firstCode),
-     queryFn: () => fetchGachaPoolOddsServer(firstCode),
-    });
-   }),
-   swallowPrefetch(async () => {
-    await qc.prefetchQuery({
-     queryKey: gachaQueryKeys.history(1, 6),
-     queryFn: () => fetchGachaHistoryServer(1, 6),
-    });
-   }),
-  ]);
+  await qc.prefetchQuery({
+   queryKey: gachaQueryKeys.poolOdds(firstCode),
+   queryFn: () => fetchGachaPoolOddsServer(firstCode),
+  });
  });
 }
 

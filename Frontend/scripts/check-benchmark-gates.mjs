@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 function parseArgs(argv) {
@@ -160,16 +160,38 @@ function formatPercent(value) {
  return `${value.toFixed(2)}%`;
 }
 
+function resolveExistingPath(cwd, candidates) {
+ for (const candidate of candidates) {
+  if (!candidate) {
+   continue;
+  }
+  const absolutePath = resolve(cwd, candidate);
+  if (existsSync(absolutePath)) {
+   return absolutePath;
+  }
+ }
+ return resolve(cwd, candidates.find(Boolean));
+}
+
 const args = parseArgs(process.argv.slice(2));
 const cwd = process.cwd();
-const currentFile = resolve(
- cwd,
- args.current || process.env.PERF_CURRENT_BENCHMARK || 'test-results/benchmark/tarotnow-benchmark.json',
-);
-const baselineFile = resolve(
- cwd,
- args.baseline || process.env.PERF_BASELINE_BENCHMARK || 'test-results/benchmark/tarotnow-benchmark-baseline.json',
-);
+const currentFile = resolveExistingPath(cwd, [
+ args.current,
+ process.env.PERF_CURRENT_BENCHMARK,
+ 'benchmark-results/benchmark/latest/tarotnow-benchmark.json',
+ 'test-results/benchmark/latest/tarotnow-benchmark.json',
+ 'test-results/benchmark/tarotnow-benchmark.json',
+]);
+const baselineFile = resolveExistingPath(cwd, [
+ args.baseline,
+ process.env.PERF_BASELINE_BENCHMARK,
+ 'benchmark-results/benchmark/baselines/tarotnow-benchmark-baseline.json',
+ 'test-results/benchmark/baselines/tarotnow-benchmark-baseline.json',
+ 'test-results/benchmark/tarotnow-benchmark-baseline.json',
+]);
+
+console.log(`Perf gate baseline: ${baselineFile}`);
+console.log(`Perf gate current: ${currentFile}`);
 
 const minAuthMedianReductionPct = parseNumber(
  args.minAuthMedianReductionPct ?? process.env.PERF_GATE_MIN_AUTH_MEDIAN_REDUCTION_PCT,

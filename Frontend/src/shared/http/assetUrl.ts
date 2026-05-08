@@ -45,6 +45,10 @@ export function resolveAvatarUrl(value: string | null | undefined): string | nul
 
   try {
     const parsed = new URL(raw);
+    if (parsed.hostname.toLowerCase() === 'media.tarotnow.xyz' && parsed.pathname.startsWith('/avatars/')) {
+      return null;
+    }
+
     const uploadsPath = normalizeUploadsPath(parsed.pathname);
     if (!uploadsPath) return raw;
     return `${uploadsPath}${parsed.search}${parsed.hash}`;

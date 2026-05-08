@@ -4,7 +4,7 @@ import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import { CHAT_INBOX_PREFETCH_STALE_MS } from '@/app/_shared/server/prefetch/runners/user/shared';
 
 async function chatInboxActiveQueryFn() {
- const result = await listConversations('active', 1, 100);
+ const result = await listConversations('active', 1, 12);
  if (result.success && result.data) {
   return result.data;
  }

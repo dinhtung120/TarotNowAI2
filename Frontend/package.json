@@ -24,7 +24,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "perf:gate": "node scripts/check-benchmark-gates.mjs",
+    "perf:gate:latest-vs-baseline": "node scripts/check-benchmark-gates.mjs --baseline benchmark-results/benchmark/baselines/tarotnow-benchmark-baseline.json --current benchmark-results/benchmark/latest/tarotnow-benchmark.json",
     "perf:audit": "node scripts/generate-performance-audit.mjs",
+    "perf:audit:latest": "PERFORMANCE_AUDIT_INPUT=benchmark-results/benchmark/latest/tarotnow-benchmark.json node scripts/generate-performance-audit.mjs",
     "perf:prod:full": "ALLOW_PRODUCTION_BENCHMARK=true RUN_NAVIGATION_BENCHMARK=true BENCHMARK_BASE_ORIGIN=https://www.tarotnow.xyz npx playwright test tests/tarotnow-navigation-benchmark.spec.ts --project=chromium",
     "perf:prod:feature": "ALLOW_PRODUCTION_BENCHMARK=true RUN_NAVIGATION_BENCHMARK_FEATURE=true BENCHMARK_BASE_ORIGIN=https://www.tarotnow.xyz npx playwright test tests/tarotnow-navigation-benchmark.spec.ts --project=chromium"
   },

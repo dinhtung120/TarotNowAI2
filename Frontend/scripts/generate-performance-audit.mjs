@@ -1,10 +1,15 @@
+import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const rootDir = path.resolve(process.cwd(), '..');
-const benchmarkDir = path.resolve(process.cwd(), 'test-results', 'benchmark');
-const defaultInput = path.join(benchmarkDir, 'tarotnow-benchmark.json');
-const inputPath = path.resolve(process.cwd(), process.env.PERFORMANCE_AUDIT_INPUT ?? defaultInput);
+const benchmarkDir = path.resolve(process.cwd(), 'benchmark-results', 'benchmark');
+const latestInput = path.join(benchmarkDir, 'latest', 'tarotnow-benchmark.json');
+const legacyInput = path.join(process.cwd(), 'test-results', 'benchmark', 'tarotnow-benchmark.json');
+const explicitInput = process.env.PERFORMANCE_AUDIT_INPUT
+  ? path.resolve(process.cwd(), process.env.PERFORMANCE_AUDIT_INPUT)
+  : null;
+const inputPath = explicitInput ?? (existsSync(latestInput) ? latestInput : legacyInput);
 const outputPath = path.resolve(rootDir, 'PERFORMANCE-AUDIT.md');
 
 const requestHigh = 25;
@@ -147,6 +152,7 @@ function buildReport(result) {
     '',
     `- Generated at (UTC): ${new Date().toISOString()}`,
     `- Benchmark generated at (UTC): ${result.generatedAtUtc}`,
+    `- Benchmark input: ${path.relative(rootDir, inputPath)}`,
     `- Base origin: ${result.baseOrigin}`,
     `- Locale prefix: ${result.localePrefix}`,
     `- Benchmark mode: ${result.benchmarkMode}`,
@@ -228,6 +234,7 @@ function buildReport(result) {
   ].join('\n');
 }
 
+console.log(`Performance audit input: ${inputPath}`);
 const raw = await readFile(inputPath, 'utf8');
 const result = JSON.parse(raw);
 const report = buildReport(result);

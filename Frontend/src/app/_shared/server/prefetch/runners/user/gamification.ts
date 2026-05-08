@@ -1,10 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { getRuntimePoliciesAction } from '@/shared/actions/runtime-policies';
 import {
- fetchGamificationAchievements,
  fetchGamificationLeaderboard,
  fetchGamificationQuests,
- fetchGamificationTitles,
 } from '@/features/gamification/shared/gamificationServerActions';
 import { gamificationKeys } from '@/features/gamification/shared/gamificationQueryKeys';
 import { swallowPrefetch } from '@/app/_shared/server/prefetch/runners/user/shared';
@@ -16,24 +14,14 @@ export async function prefetchGamificationHubPage(qc: QueryClient): Promise<void
    ? runtimePolicies.data.gamification.defaultQuestType
    : null;
 
-  await Promise.all([
-   ...(defaultQuestType
-    ? [
-      qc.prefetchQuery({
-       queryKey: gamificationKeys.quests(defaultQuestType),
-       queryFn: () => fetchGamificationQuests(defaultQuestType),
-      }),
-     ]
-    : []),
-   qc.prefetchQuery({
-    queryKey: gamificationKeys.achievements(),
-    queryFn: () => fetchGamificationAchievements(),
-   }),
-   qc.prefetchQuery({
-    queryKey: gamificationKeys.titles(),
-    queryFn: () => fetchGamificationTitles(),
-   }),
-  ]);
+  if (!defaultQuestType) {
+   return;
+  }
+
+  await qc.prefetchQuery({
+   queryKey: gamificationKeys.quests(defaultQuestType),
+   queryFn: () => fetchGamificationQuests(defaultQuestType),
+  });
  });
 }
 

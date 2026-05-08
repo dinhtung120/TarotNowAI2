@@ -4,7 +4,6 @@ import { gachaQueryKeys } from '@/features/gacha/shared/gachaConstants';
 import { fetchJsonOrThrow } from '@/shared/http/clientFetch';
 import { inventoryQueryKeys } from '@/features/inventory/shared/inventoryConstants';
 import { isPrefetchBlocked } from '@/shared/navigation/prefetchPolicy';
-import { userStateQueryKeys } from '@/shared/query/userStateQueryKeys';
 import { useAuthStore } from '@/features/auth/session/authStore';
 
 interface RouteQuerySpec {
@@ -34,7 +33,11 @@ const stripLocalePrefix = (pathname: string): string => {
  return `/${rest}`.replace(/\/+$/, '') || '/';
 };
 
-function shouldSkipMobileHeavyPrefetch(pathname: string): boolean {
+function shouldSkipIntentPrefetch(pathname: string): boolean {
+  if (startsWithSegment(pathname, '/wallet') || startsWithSegment(pathname, '/reading')) {
+    return true;
+  }
+
   if (typeof window === 'undefined') {
     return false;
   }
@@ -44,7 +47,7 @@ function shouldSkipMobileHeavyPrefetch(pathname: string): boolean {
     return false;
   }
 
-  return startsWithSegment(pathname, '/wallet') || startsWithSegment(pathname, '/community');
+  return startsWithSegment(pathname, '/community') || startsWithSegment(pathname, '/readers');
 }
 
 async function fetchPrefetchJson<T>(apiPath: string, fallbackErrorMessage: string): Promise<T> {
@@ -74,12 +77,11 @@ export function normalizeNavigationPath(href: string): string {
 function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
   const authState = useAuthStore.getState();
   const isAuthenticated = authState.isAuthenticated;
-  const normalizedRole = authState.user?.role?.trim().toLowerCase() ?? '';
   if (!isAuthenticated) {
    return [];
   }
 
-  if (shouldSkipMobileHeavyPrefetch(pathname)) {
+  if (shouldSkipIntentPrefetch(pathname)) {
     return [];
   }
 
@@ -103,33 +105,6 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
   ];
  }
 
- if (pathname === '/reading') {
-  if (!authState.user?.role) {
-   return [];
-  }
-
-  if (normalizedRole === 'admin') {
-   return [];
-  }
-
-  return [
-   {
-    queryKey: userStateQueryKeys.reading.setupSnapshot(),
-    queryFn: () => fetchPrefetchJson('/api/reading/setup-snapshot', 'Failed to prefetch reading setup.'),
-    staleTime: 45_000,
-   },
-  ];
- }
-
- if (startsWithSegment(pathname, '/wallet')) {
-  return [
-   {
-    queryKey: userStateQueryKeys.wallet.balance(),
-    queryFn: () => fetchPrefetchJson('/api/wallet/balance', 'Failed to prefetch wallet balance.'),
-    staleTime: 20_000,
-   },
-  ];
- }
 
  return [];
 }

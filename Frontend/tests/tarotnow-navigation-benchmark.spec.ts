@@ -16,6 +16,7 @@ type BenchmarkFeature =
   | 'other';
 
 type RequestCategory = 'html' | 'api' | 'static' | 'third-party' | 'telemetry' | 'websocket' | 'other';
+type RequestFailureClass = 'none' | 'app-regression' | 'server-rate-limit' | 'expected-navigation-abort' | 'external-telemetry';
 type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
 
 interface DuplicateRequestGroup {
@@ -41,6 +42,7 @@ interface RequestMetric {
   transferBytes: number;
   failed: boolean;
   failureText: string | null;
+  failureClass: RequestFailureClass;
   waterfallDepth: number;
   pendingAgeMs: number | null;
   isDuplicate: boolean;
@@ -114,6 +116,12 @@ interface ScenarioBenchmarkResult {
 
 interface BenchmarkRunResult {
   generatedAtUtc: string;
+  runId: string;
+  artifactPaths?: {
+    immutableJson: string;
+    latestJson: string;
+    legacyJson: string;
+  };
   baseOrigin: string;
   localePrefix: string;
   benchmarkMode: BenchmarkMode;
@@ -144,6 +152,7 @@ interface MutableRequestMetric {
   transferBytes: number;
   failed: boolean;
   failureText: string | null;
+  failureClass: RequestFailureClass;
   waterfallDepth: number;
   pendingAgeMs: number | null;
   isDuplicate: boolean;
@@ -211,7 +220,11 @@ const REQUEST_COUNT_CRITICAL_THRESHOLD = 35;
 const SLOW_REQUEST_MEDIUM_THRESHOLD_MS = 400;
 const SLOW_REQUEST_HIGH_THRESHOLD_MS = 800;
 
-const OUTPUT_DIR = path.resolve(process.cwd(), 'test-results', 'benchmark');
+const OUTPUT_DIR = path.resolve(process.cwd(), 'benchmark-results', 'benchmark');
+const OUTPUT_RUN_ID = (process.env.BENCHMARK_RUN_ID?.trim() || new Date().toISOString().replace(/[:.]/g, '-'));
+const OUTPUT_RUN_DIR = path.join(OUTPUT_DIR, 'runs', OUTPUT_RUN_ID);
+const OUTPUT_LATEST_DIR = path.join(OUTPUT_DIR, 'latest');
+const OUTPUT_INDEX_JSON = path.join(OUTPUT_DIR, 'index.json');
 const OUTPUT_JSON = path.join(OUTPUT_DIR, 'tarotnow-benchmark.json');
 const OUTPUT_PAGES_CSV = path.join(OUTPUT_DIR, 'tarotnow-benchmark-pages.csv');
 const OUTPUT_REQUESTS_CSV = path.join(OUTPUT_DIR, 'tarotnow-benchmark-requests.csv');
@@ -322,6 +335,8 @@ interface BenchmarkOutputPaths {
   reportMd: string;
   analysisMd: string;
   routeMap: string;
+  latestJson: string;
+  legacyJson: string;
 }
 
 function isLoopbackHost(hostname: string): boolean {
@@ -514,12 +529,42 @@ function normalizeRequestKey(method: string, requestUrl: string): string {
   }
 }
 
-function tryParsePathnameFromUrl(requestUrl: string): string | null {
+function tryParseUrl(requestUrl: string): URL | null {
   try {
-    return new URL(requestUrl).pathname;
+    return new URL(requestUrl);
   } catch {
     return null;
   }
+}
+
+function tryParsePathnameFromUrl(requestUrl: string): string | null {
+  return tryParseUrl(requestUrl)?.pathname ?? null;
+}
+
+function classifyRequestFailure(request: Pick<RequestMetric, 'url' | 'status' | 'failed' | 'failureText' | 'category'>): RequestFailureClass {
+  if (request.category === 'telemetry') {
+    return request.failed || request.status === null || (request.status >= 400) ? 'external-telemetry' : 'none';
+  }
+
+  const parsed = tryParseUrl(request.url);
+  const isFirstParty = parsed?.origin === BASE_ORIGIN;
+  if (request.failed && request.failureText?.includes('net::ERR_ABORTED')) {
+    return isFirstParty ? 'expected-navigation-abort' : 'external-telemetry';
+  }
+
+  if (request.status === 429) {
+    return 'server-rate-limit';
+  }
+
+  if (typeof request.status === 'number' && request.status >= 400) {
+    return isFirstParty ? 'app-regression' : 'external-telemetry';
+  }
+
+  return request.failed ? 'app-regression' : 'none';
+}
+
+function isActionableFailedRequest(request: RequestMetric): boolean {
+  return request.failureClass === 'app-regression' || request.failureClass === 'server-rate-limit';
 }
 
 function classifyRequestCategory(request: Pick<Request, 'url' | 'resourceType'>): RequestCategory {
@@ -798,7 +843,7 @@ async function safeReadTransferBytes(request: Request): Promise<number> {
 }
 
 function toRequestMetric(record: MutableRequestMetric, scenario: BenchmarkScenario, viewport: BenchmarkViewportId): RequestMetric {
-  return {
+  const metric = {
     scenario,
     viewport,
     route: record.route,
@@ -816,10 +861,14 @@ function toRequestMetric(record: MutableRequestMetric, scenario: BenchmarkScenar
     transferBytes: record.transferBytes,
     failed: record.failed,
     failureText: record.failureText,
+    failureClass: 'none' as RequestFailureClass,
     waterfallDepth: record.waterfallDepth,
     pendingAgeMs: record.pendingAgeMs,
     isDuplicate: record.isDuplicate,
   };
+
+  metric.failureClass = classifyRequestFailure(metric);
+  return metric;
 }
 
 async function installPaintObservers(page: Page): Promise<void> {
@@ -1011,37 +1060,59 @@ async function collectStaticLocaleRoutes(): Promise<string[]> {
   return [...staticRoutes].sort((left, right) => left.localeCompare(right));
 }
 
+function withRunDir(filePath: string): string {
+  return path.join(OUTPUT_RUN_DIR, path.basename(filePath));
+}
+
+function withLatestDir(filePath: string): string {
+  return path.join(OUTPUT_LATEST_DIR, path.basename(filePath));
+}
+
+function buildOutputPaths(paths: Omit<BenchmarkOutputPaths, 'latestJson' | 'legacyJson'>): BenchmarkOutputPaths {
+  return {
+    ...paths,
+    json: withRunDir(paths.json),
+    pagesCsv: withRunDir(paths.pagesCsv),
+    requestsCsv: withRunDir(paths.requestsCsv),
+    reportMd: withRunDir(paths.reportMd),
+    analysisMd: withRunDir(paths.analysisMd),
+    routeMap: withRunDir(paths.routeMap),
+    latestJson: withLatestDir(paths.json),
+    legacyJson: paths.json,
+  };
+}
+
 function resolveOutputPaths(mode: BenchmarkMode): BenchmarkOutputPaths {
   if (mode === 'targeted-hotspots') {
-    return {
+    return buildOutputPaths({
       json: OUTPUT_TARGETED_JSON,
       pagesCsv: OUTPUT_TARGETED_PAGES_CSV,
       requestsCsv: OUTPUT_TARGETED_REQUESTS_CSV,
       reportMd: OUTPUT_TARGETED_MD,
       analysisMd: OUTPUT_TARGETED_ANALYSIS_MD,
       routeMap: OUTPUT_TARGETED_ROUTE_MAP,
-    };
+    });
   }
 
   if (mode === 'feature-matrix') {
-    return {
+    return buildOutputPaths({
       json: OUTPUT_FEATURE_JSON,
       pagesCsv: OUTPUT_FEATURE_PAGES_CSV,
       requestsCsv: OUTPUT_FEATURE_REQUESTS_CSV,
       reportMd: OUTPUT_FEATURE_MD,
       analysisMd: OUTPUT_FEATURE_ANALYSIS_MD,
       routeMap: OUTPUT_FEATURE_ROUTE_MAP,
-    };
+    });
   }
 
-  return {
+  return buildOutputPaths({
     json: OUTPUT_JSON,
     pagesCsv: OUTPUT_PAGES_CSV,
     requestsCsv: OUTPUT_REQUESTS_CSV,
     reportMd: OUTPUT_MD,
     analysisMd: OUTPUT_ANALYSIS_MD,
     routeMap: OUTPUT_ROUTE_MAP,
-  };
+  });
 }
 
 const BENCHMARK_FEATURES: BenchmarkFeature[] = [
@@ -1285,28 +1356,34 @@ async function collectCommunityPostIds(page: Page): Promise<string[]> {
   }
 }
 
-async function probeCommunityPostDetails(page: Page, postIds: string[]): Promise<string[]> {
+async function probeCommunityPostDetails(page: Page, postIds: string[]): Promise<{ ids: string[]; notes: string[] }> {
   if (postIds.length === 0) {
-    return ['community-post-detail:probe-skipped-no-id'];
+    return { ids: [], notes: ['community-post-detail:probe-skipped-no-id'] };
   }
 
+  const ids: string[] = [];
   const notes: string[] = [];
-  for (const postId of postIds.slice(0, 3)) {
+  for (const postId of postIds.slice(0, 6)) {
     try {
       const response = await page.request.get(
-        `${BASE_ORIGIN}/api/v1/community/posts/${encodeURIComponent(postId)}/comments?page=1&pageSize=5`,
+        `${BASE_ORIGIN}${LOCALE_PREFIX}/community/${encodeURIComponent(postId)}`,
         {
           timeout: 12_000,
           failOnStatusCode: false,
         },
       );
-      notes.push(`community-post-detail:${postId}:${response.status()}`);
+      if (response.ok()) {
+        ids.push(postId);
+        notes.push(`community-post-detail:${postId}:page-${response.status()}`);
+      } else {
+        notes.push(`community-post-detail:${postId}:stale-page-${response.status()}`);
+      }
     } catch {
       notes.push(`community-post-detail:${postId}:request-failed`);
     }
   }
 
-  return notes;
+  return { ids, notes };
 }
 
 async function createControlledReadingSessions(page: Page): Promise<{ ids: string[]; notes: string[] }> {
@@ -1415,13 +1492,14 @@ async function discoverDynamicRoutesForScenario(
   coverageNotes.push(...uiHistory.notes);
 
   const apiCommunityPostIds = await collectCommunityPostIds(page);
-  communityPostIds.push(...apiCommunityPostIds);
   if (apiCommunityPostIds.length === 0) {
     coverageNotes.push('community-posts:api-discovery-empty');
   } else {
     coverageNotes.push(`community-posts:api-discovery-${apiCommunityPostIds.length}`);
   }
-  coverageNotes.push(...await probeCommunityPostDetails(page, apiCommunityPostIds));
+  const validCommunityPosts = await probeCommunityPostDetails(page, apiCommunityPostIds);
+  communityPostIds.push(...validCommunityPosts.ids);
+  coverageNotes.push(...validCommunityPosts.notes);
 
   return {
     readingSessionIds: [...new Set(readingSessionIds)].slice(0, 6),
@@ -1819,13 +1897,7 @@ async function benchmarkNavigation(
     return pathname === '/api/auth/session';
   }).length;
 
-  const failedRequestCount = baseRequestMetrics.filter((request) => {
-    if (request.failed) {
-      return true;
-    }
-
-    return typeof request.status === 'number' && request.status >= 400;
-  }).length;
+  const failedRequestCount = baseRequestMetrics.filter(isActionableFailedRequest).length;
 
   const slowRequests = baseRequestMetrics.filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_MEDIUM_THRESHOLD_MS);
   const collectionImageRequests = requestRecords.filter((request) => isCollectionImageRequestUrl(request.url));
@@ -2095,6 +2167,7 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
     'pending_age_ms',
     'duplicate',
     'failed',
+    'failure_class',
     'url',
     'failure_text',
   ].join(','));
@@ -2119,6 +2192,7 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
           toCsvValue(formatNumber(request.pendingAgeMs)),
           toCsvValue(request.isDuplicate ? 'yes' : 'no'),
           toCsvValue(request.failed ? 'yes' : 'no'),
+          toCsvValue(request.failureClass),
           toCsvValue(request.url),
           toCsvValue(request.failureText ?? ''),
         ].join(','));
@@ -2437,14 +2511,61 @@ async function writeRouteMap(result: BenchmarkRunResult, outputPath: string): Pr
   await fs.writeFile(outputPath, JSON.stringify(map, null, 2), 'utf8');
 }
 
-async function writeBenchmarkArtifacts(result: BenchmarkRunResult, outputPaths: BenchmarkOutputPaths): Promise<void> {
+async function writeJsonAtomic(filePath: string, value: unknown): Promise<void> {
+  const tempPath = `${filePath}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify(value, null, 2), 'utf8');
+  await fs.rename(tempPath, filePath);
+}
+
+async function readBenchmarkIndex(): Promise<unknown[]> {
+  try {
+    const raw = await fs.readFile(OUTPUT_INDEX_JSON, 'utf8');
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeBenchmarkIndex(result: BenchmarkRunResult, outputPaths: BenchmarkOutputPaths): Promise<void> {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
-  await fs.writeFile(outputPaths.json, JSON.stringify(result, null, 2), 'utf8');
-  await fs.writeFile(outputPaths.pagesCsv, createPagesCsv(result), 'utf8');
-  await fs.writeFile(outputPaths.requestsCsv, createRequestsCsv(result), 'utf8');
-  await fs.writeFile(outputPaths.reportMd, createMarkdownReport(result), 'utf8');
-  await fs.writeFile(outputPaths.analysisMd, createAnalysisReport(result), 'utf8');
-  await writeRouteMap(result, outputPaths.routeMap);
+  const index = await readBenchmarkIndex();
+  index.push({
+    runId: result.runId,
+    generatedAtUtc: result.generatedAtUtc,
+    baseOrigin: result.baseOrigin,
+    benchmarkMode: result.benchmarkMode,
+    json: path.relative(process.cwd(), outputPaths.json),
+    latestJson: path.relative(process.cwd(), outputPaths.latestJson),
+    legacyJson: path.relative(process.cwd(), outputPaths.legacyJson),
+  });
+  await writeJsonAtomic(OUTPUT_INDEX_JSON, index);
+}
+
+async function writeBenchmarkArtifacts(result: BenchmarkRunResult, outputPaths: BenchmarkOutputPaths): Promise<void> {
+  await fs.mkdir(path.dirname(outputPaths.json), { recursive: true });
+  await fs.mkdir(path.dirname(outputPaths.latestJson), { recursive: true });
+  await fs.mkdir(path.dirname(outputPaths.legacyJson), { recursive: true });
+
+  const resultWithPaths: BenchmarkRunResult = {
+    ...result,
+    artifactPaths: {
+      immutableJson: path.relative(process.cwd(), outputPaths.json),
+      latestJson: path.relative(process.cwd(), outputPaths.latestJson),
+      legacyJson: path.relative(process.cwd(), outputPaths.legacyJson),
+    },
+  };
+
+  const json = JSON.stringify(resultWithPaths, null, 2);
+  await fs.writeFile(outputPaths.json, json, 'utf8');
+  await fs.writeFile(outputPaths.pagesCsv, createPagesCsv(resultWithPaths), 'utf8');
+  await fs.writeFile(outputPaths.requestsCsv, createRequestsCsv(resultWithPaths), 'utf8');
+  await fs.writeFile(outputPaths.reportMd, createMarkdownReport(resultWithPaths), 'utf8');
+  await fs.writeFile(outputPaths.analysisMd, createAnalysisReport(resultWithPaths), 'utf8');
+  await writeRouteMap(resultWithPaths, outputPaths.routeMap);
+  await writeJsonAtomic(outputPaths.latestJson, resultWithPaths);
+  await writeJsonAtomic(outputPaths.legacyJson, resultWithPaths);
+  await writeBenchmarkIndex(resultWithPaths, outputPaths);
 }
 
 test.describe('TarotNow production benchmark', () => {
@@ -2471,6 +2592,7 @@ test.describe('TarotNow production benchmark', () => {
 
     return {
       generatedAtUtc: new Date().toISOString(),
+      runId: OUTPUT_RUN_ID,
       baseOrigin: BASE_ORIGIN,
       localePrefix: LOCALE_PREFIX,
       benchmarkMode: mode,
