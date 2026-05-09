@@ -213,6 +213,30 @@ describe('usePresenceConnection', () => {
   expect(fakeConnection.stop).toHaveBeenCalled();
  });
 
+ it('starts at most one delayed presence connection for a stable route lifetime', async () => {
+  fakeConnection.start.mockImplementation(async () => {
+   fakeConnection.state = 'Connected';
+  });
+
+  act(() => {
+   root.render(<Harness />);
+  });
+
+  await act(async () => {
+   await flushPresenceStartup();
+  });
+
+  act(() => {
+   root.render(<Harness />);
+  });
+
+  await act(async () => {
+   await flushPresenceStartup();
+  });
+
+  expect(fakeConnection.start).toHaveBeenCalledTimes(1);
+ });
+
  it('does not start realtime session when disabled on auth-public routes', async () => {
   act(() => {
    root.render(<Harness enabled={false} />);

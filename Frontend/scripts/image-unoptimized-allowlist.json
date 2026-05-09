@@ -2,6 +2,7 @@
   "files": [
     "src/features/gacha/play/GachaRewardPreview.tsx",
     "src/features/inventory/use-item/UseItemCardPreview.tsx",
+    "src/features/inventory/browse/InventoryItemCard.tsx",
     "src/features/gacha/result/GachaResultItem.tsx",
     "src/features/community/post/components/comment-section/CommentItem.tsx",
     "src/features/community/post/components/post-card/PostCardHeader.tsx",

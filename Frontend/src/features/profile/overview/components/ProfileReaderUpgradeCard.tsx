@@ -19,7 +19,11 @@ export function ProfileReaderUpgradeCard({
 }: ProfileReaderUpgradeCardProps) {
   const navigation = useOptimizedNavigation();
 
-  if (isAdmin || isTarotReader || readerRequestLoading) return null;
+  if (isAdmin || isTarotReader) return null;
+
+  if (readerRequestLoading) {
+    return <GlassCard className={cn("!tn-pad-6-8-sm min-h-48")} aria-hidden="true"> </GlassCard>;
+  }
 
   const openApply = () => navigation.push("/reader/apply");
 
