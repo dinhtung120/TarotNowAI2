@@ -123,3 +123,6 @@ build_errors*.txt
 .claude/worktrees/
 .claude/*.local.json
 docs/superpowers
+claude_bridge_mini.py
+bridge_log.txt
+claude-tmux.log
