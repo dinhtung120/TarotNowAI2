@@ -123,7 +123,7 @@ describe('usePresenceConnection', () => {
  });
 
  async function flushPresenceStartup() {
-  await vi.advanceTimersByTimeAsync(3_000);
+  await vi.advanceTimersByTimeAsync(6_000);
   await Promise.resolve();
   await Promise.resolve();
  }
@@ -153,7 +153,7 @@ describe('usePresenceConnection', () => {
   expect(scheduleWakeup).toHaveBeenCalled();
 
   wakeupState.wakeupVersion = 1;
-  vi.setSystemTime(new Date('2026-04-28T08:00:48.100Z'));
+  vi.setSystemTime(new Date('2026-04-28T08:00:54.100Z'));
   act(() => {
    root.render(<Harness />);
   });
@@ -205,7 +205,7 @@ describe('usePresenceConnection', () => {
   });
 
   await act(async () => {
-   await vi.advanceTimersByTimeAsync(11_001);
+   await vi.advanceTimersByTimeAsync(17_001);
    await Promise.resolve();
   });
 
