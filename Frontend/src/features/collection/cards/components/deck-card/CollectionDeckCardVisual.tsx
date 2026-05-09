@@ -36,9 +36,8 @@ export default function CollectionDeckCardVisual({
           alt={cardName || unknownCardLabel}
           fill
           unoptimized={unoptimizedCardImage}
-          priority={isOwned && deckCard.id < 3}
-          loading={isOwned && deckCard.id < 3 ? "eager" : "lazy"}
-          sizes="(max-width: 640px) 46vw, (max-width: 1024px) 28vw, 220px"
+          loading="lazy"
+          sizes="(max-width: 640px) 46vw, (max-width: 1024px) 28vw, 160px"
           className={cn("h-full w-full object-cover", !isOwned && "blur-sm")}
         />
       ) : (

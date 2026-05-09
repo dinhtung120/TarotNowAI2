@@ -23,7 +23,7 @@ export function PostCardContent({ content }: PostCardContentProps) {
        alt={segment.alt || t("post.post_media_alt")}
        width={1200}
        height={800}
-       sizes="100vw"
+       sizes="(max-width: 768px) 92vw, (max-width: 1280px) 640px, 720px"
        unoptimized={shouldUseUnoptimizedImage(segment.url)}
        loading="lazy"
        className={cn("mt-3", "h-auto", "max-h-96", "w-full", "rounded-xl", "border", "border-slate-700", "object-cover")}

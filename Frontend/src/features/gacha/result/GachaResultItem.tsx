@@ -46,6 +46,8 @@ function GachaResultItemComponent({ reward, locale }: GachaResultItemProps) {
             className={cn("object-cover transition-transform duration-700 group-hover:scale-125")}
             onError={() => setImageError(true)}
             unoptimized={unoptimizedRewardImage}
+            loading="lazy"
+            sizes="64px"
           />
         ) : <RewardFallbackIcon reward={reward} />}
       </div>
