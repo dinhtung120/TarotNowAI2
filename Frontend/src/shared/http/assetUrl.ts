@@ -76,7 +76,7 @@ export function shouldUseUnoptimizedImage(src: string | null | undefined): boole
     if (parsed.pathname.toLowerCase().endsWith('.gif')) {
       return true;
     }
-    if (parsed.hostname.toLowerCase() === 'media.tarotnow.xyz' && parsed.pathname.startsWith('/community/')) {
+    if (parsed.hostname.toLowerCase() === 'media.tarotnow.xyz' && (parsed.pathname.startsWith('/community/') || parsed.pathname.startsWith('/icon/'))) {
       return true;
     }
     return !OPTIMIZED_REMOTE_IMAGE_HOSTS.has(parsed.hostname.toLowerCase());

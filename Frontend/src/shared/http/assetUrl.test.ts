@@ -67,8 +67,9 @@ describe('shouldUseUnoptimizedImage', () => {
     expect(shouldUseUnoptimizedImage('https://media.tarotnow.xyz/uploads/a.webp')).toBe(false);
   });
 
-  it('bypasses optimization for community CDN images', () => {
+  it('bypasses optimization for community CDN images and small item icons', () => {
     expect(shouldUseUnoptimizedImage('https://media.tarotnow.xyz/community/a.webp')).toBe(true);
+    expect(shouldUseUnoptimizedImage('https://media.tarotnow.xyz/icon/free_draw_ticket_50_20260416_165452.avif')).toBe(true);
   });
 
   it('falls back to unoptimized for non-allowlisted remote hosts', () => {
