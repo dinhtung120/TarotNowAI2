@@ -17,7 +17,7 @@ import {
 } from '@/features/chat/shared/hooks/signalRConnectionUtils';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
-const PRESENCE_CONNECT_DELAY_MS = 6_000;
+const PRESENCE_CONNECT_DELAY_MS = 10_000;
 
 interface UsePresenceConnectionOptions {
   enabled?: boolean;
