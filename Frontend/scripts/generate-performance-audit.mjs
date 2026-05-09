@@ -94,6 +94,54 @@ function tableOrEmpty(lines, emptyLine) {
   return lines.length > 0 ? lines : [emptyLine];
 }
 
+function buildOwnerSummary(pages, localePrefix) {
+  const families = new Map();
+
+  for (const page of pages) {
+    const family = routeFamily(page.route, localePrefix);
+    const current = families.get(family) ?? {
+      family,
+      pages: 0,
+      requests: 0,
+      api: 0,
+      static: 0,
+      sameSiteMedia: 0,
+      telemetry: 0,
+      websocket: 0,
+      thirdParty: 0,
+      html: 0,
+      other: 0,
+    };
+    const breakdown = page.requestBreakdown ?? {};
+    current.pages += 1;
+    current.requests += page.requestCount ?? 0;
+    current.api += breakdown.api ?? 0;
+    current.static += breakdown.static ?? 0;
+    current.sameSiteMedia += breakdown.sameSiteMedia ?? 0;
+    current.telemetry += breakdown.telemetry ?? 0;
+    current.websocket += breakdown.websocket ?? 0;
+    current.thirdParty += breakdown.thirdParty ?? 0;
+    current.html += breakdown.html ?? 0;
+    current.other += breakdown.other ?? 0;
+    families.set(family, current);
+  }
+
+  return [...families.values()].sort((left, right) => right.requests - left.requests);
+}
+
+function resolveOwnerNextAction(row) {
+  if (row.static >= row.api && row.static >= row.sameSiteMedia) return 'FE chunk/lazy-load review';
+  if (row.sameSiteMedia > 0) return 'Media CDN/data variant review';
+  if (row.api > 0 || row.html > 0) return 'Server-Timing/API trace capture';
+  if (row.websocket > 0) return 'Realtime lifecycle verification';
+  if (row.telemetry > 0) return 'Infra telemetry review';
+  return 'No dominant owner';
+}
+
+function ownerSummaryLines(pages, localePrefix) {
+  return buildOwnerSummary(pages, localePrefix).map((row) => `| ${row.family} | ${row.pages} | ${row.requests} | ${row.static} | ${row.sameSiteMedia} | ${row.api} | ${row.html} | ${row.websocket} | ${row.telemetry} | ${row.thirdParty} | ${resolveOwnerNextAction(row)} |`);
+}
+
 function topTransferRequests(requests, limit) {
   return requests
     .filter((request) => Number(request.transferBytes ?? 0) > 0)
@@ -151,7 +199,7 @@ function buildReport(result) {
       const severityRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
       return severityRank[severityForPage(left)] - severityRank[severityForPage(right)] || right.requestCount - left.requestCount;
     })
-    .map((page) => `| ${severityForPage(page)} | ${featureOf(page)} | ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestBreakdown?.api ?? 0} | ${page.requestBreakdown?.static ?? 0} | ${page.requestBreakdown?.thirdParty ?? 0} | ${format(page.navigationMs)} | ${format(page.fcpMs)} | ${format(page.lcpMs)} | ${format(page.tbt, 1)} | ${format(page.cls, 4)} | ${page.pendingCount} | ${page.failedRequestCount} | ${page.totalTransferBytes ?? 0} |`);
+    .map((page) => `| ${severityForPage(page)} | ${featureOf(page)} | ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestBreakdown?.api ?? 0} | ${page.requestBreakdown?.static ?? 0} | ${page.requestBreakdown?.sameSiteMedia ?? 0} | ${page.requestBreakdown?.thirdParty ?? 0} | ${format(page.navigationMs)} | ${format(page.fcpMs)} | ${format(page.lcpMs)} | ${format(page.tbt, 1)} | ${format(page.cls, 4)} | ${page.pendingCount} | ${page.failedRequestCount} | ${page.totalTransferBytes ?? 0} |`);
 
   const slowLines = [...slowCriticalRequests, ...slowMediumRequests]
     .sort((left, right) => (right.durationMs ?? 0) - (left.durationMs ?? 0))
@@ -218,11 +266,17 @@ function buildReport(result) {
     '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |',
     ...tableOrEmpty(routeFamilyLines(result, pages), '| - | - | - | - | - | - | - | - |'),
     '',
+    '## Owner Summary by Route Family',
+    '',
+    '| Route family | Pages | Requests | Static | Same-site media | API | HTML | Websocket | Telemetry | Third-party | Likely next action |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
+    ...tableOrEmpty(ownerSummaryLines(pages, result.localePrefix ?? '/vi'), '| - | - | - | - | - | - | - | - | - | - | - |'),
+    '',
     '## Detailed Metrics Table',
     '',
-    '| Severity | Feature | Scenario | Viewport | Route | Requests | API | Static | Third-party | Nav (ms) | FCP (ms) | LCP (ms) | TBT (ms) | CLS | Pending | Failed | Transfer bytes |',
-    '| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
-    ...tableOrEmpty(metricLines, '| - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |'),
+    '| Severity | Feature | Scenario | Viewport | Route | Requests | API | Static | Same-site media | Third-party | Nav (ms) | FCP (ms) | LCP (ms) | TBT (ms) | CLS | Pending | Failed | Transfer bytes |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ...tableOrEmpty(metricLines, '| - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |'),
     '',
     '## Major Issues Found',
     '',

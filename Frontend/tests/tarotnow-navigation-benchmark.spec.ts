@@ -15,7 +15,7 @@ type BenchmarkFeature =
   | 'admin'
   | 'other';
 
-type RequestCategory = 'html' | 'api' | 'static' | 'third-party' | 'telemetry' | 'websocket' | 'other';
+type RequestCategory = 'html' | 'api' | 'static' | 'same-site-media' | 'third-party' | 'telemetry' | 'websocket' | 'other';
 type RequestFailureClass = 'none' | 'app-regression' | 'server-rate-limit' | 'expected-navigation-abort' | 'external-telemetry';
 type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
 
@@ -63,6 +63,7 @@ interface PageBreakdown {
   html: number;
   api: number;
   static: number;
+  sameSiteMedia: number;
   thirdParty: number;
   telemetry: number;
   websocket: number;
@@ -239,6 +240,7 @@ const REQUEST_COUNT_HIGH_THRESHOLD = 25;
 const REQUEST_COUNT_CRITICAL_THRESHOLD = 35;
 const SLOW_REQUEST_MEDIUM_THRESHOLD_MS = 400;
 const SLOW_REQUEST_HIGH_THRESHOLD_MS = 800;
+const SAME_SITE_MEDIA_HOSTS = new Set(['img.tarotnow.xyz', 'media.tarotnow.xyz']);
 
 const OUTPUT_DIR = path.resolve(process.cwd(), 'benchmark-results', 'benchmark');
 const OUTPUT_RUN_ID = (process.env.BENCHMARK_RUN_ID?.trim() || new Date().toISOString().replace(/[:.]/g, '-'));
@@ -615,13 +617,13 @@ function classifyRequestCategory(request: Pick<Request, 'url' | 'resourceType'>)
     return 'api';
   }
 
-  const isSameOrigin = (() => {
-    try {
-      return new URL(url).origin === BASE_ORIGIN;
-    } catch {
-      return false;
-    }
-  })();
+  const parsedUrl = tryParseUrl(url);
+
+  if (parsedUrl && SAME_SITE_MEDIA_HOSTS.has(parsedUrl.hostname.toLowerCase())) {
+    return 'same-site-media';
+  }
+
+  const isSameOrigin = parsedUrl?.origin === BASE_ORIGIN;
 
   if (!isSameOrigin) {
     return 'third-party';
@@ -646,7 +648,7 @@ function classifyCacheIssue(category: RequestCategory, status: number | null, ca
   }
 
   const normalized = cacheControl?.toLowerCase() ?? '';
-  if (category === 'static' || category === 'third-party') {
+  if (category === 'static' || category === 'same-site-media' || category === 'third-party') {
     if (!normalized) return 'missing-cache-control';
     if (normalized.includes('no-store')) return 'no-store-static';
     if (!normalized.includes('max-age') && !normalized.includes('s-maxage')) return 'missing-max-age';
@@ -667,6 +669,7 @@ function buildBreakdown(requests: RequestMetric[]): PageBreakdown {
     html: 0,
     api: 0,
     static: 0,
+    sameSiteMedia: 0,
     thirdParty: 0,
     telemetry: 0,
     websocket: 0,
@@ -683,6 +686,9 @@ function buildBreakdown(requests: RequestMetric[]): PageBreakdown {
         break;
       case 'static':
         breakdown.static += 1;
+        break;
+      case 'same-site-media':
+        breakdown.sameSiteMedia += 1;
         break;
       case 'third-party':
         breakdown.thirdParty += 1;
@@ -2774,6 +2780,19 @@ async function writeBenchmarkArtifacts(result: BenchmarkRunResult, outputPaths: 
   await writeJsonAtomic(outputPaths.legacyJson, resultWithPaths);
   await writeBenchmarkIndex(resultWithPaths, outputPaths);
 }
+
+test.describe('request classification helpers', () => {
+  test('classifies tarot media hosts as same-site media', () => {
+    const createRequestLike = (url: string, resourceType: string): Pick<Request, 'url' | 'resourceType'> => ({
+      url: () => url,
+      resourceType: () => resourceType,
+    });
+
+    expect(classifyRequestCategory(createRequestLike('https://img.tarotnow.xyz/light-god-50/a.avif', 'image'))).toBe('same-site-media');
+    expect(classifyRequestCategory(createRequestLike('https://media.tarotnow.xyz/community/a.webp', 'image'))).toBe('same-site-media');
+    expect(classifyRequestCategory(createRequestLike('https://static.vendor.example/a.js', 'script'))).toBe('third-party');
+  });
+});
 
 test.describe('TarotNow production benchmark', () => {
   test.describe.configure({ mode: 'serial' });
