@@ -94,6 +94,37 @@ function tableOrEmpty(lines, emptyLine) {
   return lines.length > 0 ? lines : [emptyLine];
 }
 
+function topTransferRequests(requests, limit) {
+  return requests
+    .filter((request) => Number(request.transferBytes ?? 0) > 0)
+    .sort((left, right) => Number(right.transferBytes ?? 0) - Number(left.transferBytes ?? 0))
+    .slice(0, limit);
+}
+
+function cacheIssueRequests(requests, limit) {
+  return requests
+    .filter((request) => request.cacheIssue)
+    .sort((left, right) => Number(right.transferBytes ?? 0) - Number(left.transferBytes ?? 0))
+    .slice(0, limit);
+}
+
+function waterfallRequests(requests, limit) {
+  return requests
+    .filter((request) => Number.isFinite(Number(request.startedAtOffsetMs)))
+    .sort((left, right) => Number(left.startedAtOffsetMs ?? 0) - Number(right.startedAtOffsetMs ?? 0))
+    .slice(0, limit);
+}
+
+function shortUrl(value) {
+  if (typeof value !== 'string') return '-';
+  try {
+    const parsed = new URL(value);
+    return `${parsed.hostname}${parsed.pathname}${parsed.search}`;
+  } catch {
+    return value;
+  }
+}
+
 function buildReport(result) {
   const pages = allPages(result);
   const requests = allRequests(result);
@@ -136,6 +167,15 @@ function buildReport(result) {
   const pendingLines = pendingPages.flatMap((page) =>
     (page.pendingUrls ?? []).map((url) => `| Critical | ${featureOf(page)} | ${page.scenario} | ${page.viewport} | ${page.route} | ${url} |`),
   );
+
+  const topTransferLines = topTransferRequests(requests, 80)
+    .map((request) => `| ${featureOf(request.page)} | ${request.page.scenario} | ${request.page.viewport} | ${request.page.route} | ${request.category} | ${format(request.transferBytes)} | ${format(request.durationMs)} | ${request.cacheControl ?? '-'} | ${shortUrl(request.url)} |`);
+
+  const cacheIssueLines = cacheIssueRequests(requests, 80)
+    .map((request) => `| ${featureOf(request.page)} | ${request.page.scenario} | ${request.page.viewport} | ${request.page.route} | ${request.category} | ${request.cacheIssue} | ${format(request.transferBytes)} | ${request.cacheControl ?? '-'} | ${shortUrl(request.url)} |`);
+
+  const waterfallLines = waterfallRequests(requests, 120)
+    .map((request) => `| ${featureOf(request.page)} | ${request.page.scenario} | ${request.page.viewport} | ${request.page.route} | ${format(request.startedAtOffsetMs)} | ${format(request.finishedAtOffsetMs)} | ${format(request.durationMs)} | ${request.resourceType} | ${request.category} | ${shortUrl(request.url)} |`);
 
   const issueBullets = [
     criticalPages.length > 0 ? `- Critical: ${criticalPages.length} page(s) có request count >${requestCritical}, pending request, failed request, hoặc issue nghiêm trọng.` : '- Critical: chưa phát hiện page Critical theo benchmark hiện tại.',
@@ -205,6 +245,24 @@ function buildReport(result) {
     '| Severity | Feature | Scenario | Viewport | Route | URL |',
     '| --- | --- | --- | --- | --- | --- |',
     ...tableOrEmpty(pendingLines, '| - | - | - | - | - | - |'),
+    '',
+    '### Top Transfer Contributors',
+    '',
+    '| Feature | Scenario | Viewport | Route | Category | Transfer bytes | Duration (ms) | Cache-Control | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | --- | --- |',
+    ...tableOrEmpty(topTransferLines, '| - | - | - | - | - | - | - | - | - |'),
+    '',
+    '### Cacheability Issues',
+    '',
+    '| Feature | Scenario | Viewport | Route | Category | Issue | Transfer bytes | Cache-Control | URL |',
+    '| --- | --- | --- | --- | --- | --- | ---: | --- | --- |',
+    ...tableOrEmpty(cacheIssueLines, '| - | - | - | - | - | - | - | - | - |'),
+    '',
+    '### Waterfall Sample',
+    '',
+    '| Feature | Scenario | Viewport | Route | Start (ms) | End (ms) | Duration (ms) | Type | Category | URL |',
+    '| --- | --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |',
+    ...tableOrEmpty(waterfallLines, '| - | - | - | - | - | - | - | - | - | - |'),
     '',
     '## Optimization Plan',
     '',

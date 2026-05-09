@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-- Generated at (UTC): 2026-05-09T01:19:25.562Z
+- Generated at (UTC): 2026-05-09T10:57:24.485Z
 - Benchmark generated at (UTC): 2026-05-09T01:19:17.648Z
 - Benchmark input: Frontend/benchmark-results/benchmark/latest/tarotnow-benchmark.json
 - Base origin: https://www.tarotnow.xyz
@@ -347,6 +347,103 @@
 | Severity | Feature | Scenario | Viewport | Route | URL |
 | --- | --- | --- | --- | --- | --- |
 | - | - | - | - | - | - |
+
+### Top Transfer Contributors
+
+| Feature | Scenario | Viewport | Route | Category | Transfer bytes | Duration (ms) | Cache-Control | URL |
+| --- | --- | --- | --- | --- | ---: | ---: | --- | --- |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 325846 | 881 | - | img.tarotnow.xyz/light-god-50/04_The_Empress_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 325839 | 220 | - | img.tarotnow.xyz/light-god-50/04_The_Empress_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 325838 | 874 | - | img.tarotnow.xyz/light-god-50/04_The_Empress_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 325811 | 250 | - | img.tarotnow.xyz/light-god-50/04_The_Empress_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 259812 | 180 | - | img.tarotnow.xyz/light-god-50/01_The_Fool_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 259789 | 552 | - | img.tarotnow.xyz/light-god-50/01_The_Fool_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 259787 | 176 | - | img.tarotnow.xyz/light-god-50/01_The_Fool_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 259780 | 711 | - | img.tarotnow.xyz/light-god-50/01_The_Fool_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 231152 | 909 | - | img.tarotnow.xyz/light-god-50/06_The_Hierophant_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 231149 | 1094 | - | img.tarotnow.xyz/light-god-50/06_The_Hierophant_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | third-party | 231117 | 760 | - | img.tarotnow.xyz/light-god-50/06_The_Hierophant_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | third-party | 231115 | 619 | - | img.tarotnow.xyz/light-god-50/06_The_Hierophant_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 226228 | 150 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 226196 | 446 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | third-party | 226130 | 551 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 226128 | 600 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | third-party | 226127 | 667 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | third-party | 226126 | 185 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 226125 | 671 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | third-party | 226119 | 323 | - | img.tarotnow.xyz/light-god-50/02_The_Magician_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | third-party | 211489 | 866 | - | img.tarotnow.xyz/light-god-50/07_The_Lovers_50_20260325_181351.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 211476 | 1203 | - | img.tarotnow.xyz/light-god-50/07_The_Lovers_50_20260325_181351.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | third-party | 211474 | 626 | - | img.tarotnow.xyz/light-god-50/07_The_Lovers_50_20260325_181351.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 211454 | 977 | - | img.tarotnow.xyz/light-god-50/07_The_Lovers_50_20260325_181351.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 186966 | 675 | - | img.tarotnow.xyz/light-god-50/05_The_Emperor_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 186963 | 862 | - | img.tarotnow.xyz/light-god-50/05_The_Emperor_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 186857 | 163 | - | img.tarotnow.xyz/light-god-50/05_The_Emperor_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 186831 | 130 | - | img.tarotnow.xyz/light-god-50/05_The_Emperor_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | third-party | 173420 | 155 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | third-party | 173417 | 865 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 173311 | 331 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 173297 | 695 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 173286 | 286 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/collection | third-party | 173265 | 157 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 173262 | 127 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/collection | third-party | 173260 | 145 | - | img.tarotnow.xyz/light-god-50/03_The_High%20Priestess%20_50_20260325_181348.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/collection | third-party | 155855 | 1223 | - | img.tarotnow.xyz/light-god-50/08_The_Chariot_50_20260325_181351.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/collection | third-party | 155844 | 987 | - | img.tarotnow.xyz/light-god-50/08_The_Chariot_50_20260325_181351.avif?iv=81a3d9698977fda2&variant=thumb |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | static | 89038 | 127 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | static | 89036 | 172 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha | static | 89035 | 115 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha/history | static | 89035 | 101 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha/history | static | 89033 | 167 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-admin | mobile | /vi/gacha | static | 89033 | 122 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | static | 89033 | 125 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | static | 89028 | 126 | - | www.tarotnow.xyz/_next/static/chunks/0to-xfrh5ita1.js |
+| reading | logged-in-admin | desktop | /vi/reading | static | 81457 | 335 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reading | logged-in-admin | mobile | /vi/reading | static | 81456 | 343 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-reader | mobile | /vi | static | 81449 | 329 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/inventory | static | 81445 | 417 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| profile-wallet-notifications | logged-in-admin | desktop | /vi/wallet | static | 81442 | 352 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-reader | desktop | /vi | static | 81442 | 356 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reader-chat | logged-in-admin | mobile | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | static | 81442 | 321 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/inventory | static | 81442 | 459 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reader-chat | logged-in-admin | mobile | /vi/chat | static | 81441 | 371 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| admin | logged-in-admin | mobile | /vi/admin | static | 81441 | 337 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reader-chat | logged-in-admin | mobile | /vi/readers/69d93c24bc68b27090414f6c | static | 81441 | 381 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-admin | desktop | /vi/gacha/history | static | 81440 | 331 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/inventory | static | 81440 | 402 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reader-chat | logged-in-reader | desktop | /vi/readers/69d93c24bc68b27090414f6c | static | 81440 | 314 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-admin | mobile | /vi/legal/privacy | static | 81440 | 256 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reading | logged-in-admin | mobile | /vi/reading/session/6f8210b4-a511-4ee4-99a7-e0730efe4828 | static | 81440 | 328 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-out | desktop | /vi/register | static | 81439 | 339 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reading | logged-in-admin | desktop | /vi/reading/session/dbbf695c-841c-43a9-87a6-6f163bb469cd | static | 81439 | 333 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reader-chat | logged-in-reader | desktop | /vi/readers/97410d49-ab32-469d-b421-f57321b262a2 | static | 81439 | 386 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| profile-wallet-notifications | logged-in-admin | mobile | /vi/profile/reader | static | 81439 | 307 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-admin | mobile | /vi/legal/ai-disclaimer | static | 81439 | 378 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-reader | desktop | /vi/legal/tos | static | 81438 | 372 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reading | logged-in-reader | desktop | /vi/reading/session/5c925eeb-da7f-4823-b37a-ed1b218d0992 | static | 81438 | 365 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| admin | logged-in-admin | mobile | /vi/admin/system-configs | static | 81438 | 312 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| profile-wallet-notifications | logged-in-admin | desktop | /vi/profile/mfa | static | 81437 | 405 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| reader-chat | logged-in-admin | desktop | /vi/reader/apply | static | 81437 | 519 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-reader | desktop | /vi/gacha | static | 81437 | 458 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-reader | desktop | /vi/legal/privacy | static | 81437 | 294 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| admin | logged-in-admin | mobile | /vi/admin/disputes | static | 81437 | 369 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha | static | 81437 | 451 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| inventory-gacha-collection | logged-in-reader | mobile | /vi/gacha/history | static | 81437 | 294 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| profile-wallet-notifications | logged-in-reader | mobile | /vi/wallet | static | 81437 | 489 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-in-reader | mobile | /vi/legal/tos | static | 81437 | 292 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+| auth-public | logged-out | desktop | /vi/reset-password | static | 81436 | 437 | - | www.tarotnow.xyz/_next/static/chunks/16683zycjf2di.js |
+
+### Cacheability Issues
+
+| Feature | Scenario | Viewport | Route | Category | Issue | Transfer bytes | Cache-Control | URL |
+| --- | --- | --- | --- | --- | --- | ---: | --- | --- |
+| - | - | - | - | - | - | - | - | - |
+
+### Waterfall Sample
+
+| Feature | Scenario | Viewport | Route | Start (ms) | End (ms) | Duration (ms) | Type | Category | URL |
+| --- | --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |
+| - | - | - | - | - | - | - | - | - | - |
 
 ## Optimization Plan
 
