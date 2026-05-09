@@ -30,7 +30,7 @@ export function AdminSidebarMenu({
     const active = isRouteActive(pathname, item.href);
     const Icon = item.icon;
     return (
-     <Link key={item.href} href={item.href} onClick={onClose} className={cn('group flex items-center justify-between tn-px-5-6-sm py-4 rounded-2xl transition-all duration-300 relative overflow-hidden', active ? 'tn-bg-elevated tn-text-ink tn-shadow-glow-purple-sm border tn-border-strong' : 'tn-hover-surface-hover tn-hover-text-ink tn-text-secondary border border-transparent')}>
+     <Link key={item.href} href={item.href} prefetch={false} onClick={onClose} className={cn('group flex items-center justify-between tn-px-5-6-sm py-4 rounded-2xl transition-all duration-300 relative overflow-hidden', active ? 'tn-bg-elevated tn-text-ink tn-shadow-glow-purple-sm border tn-border-strong' : 'tn-hover-surface-hover tn-hover-text-ink tn-text-secondary border border-transparent')}>
       <div className={cn('flex items-center gap-4 relative z-10 font-bold')}>
        <Icon className={cn('w-5 h-5 transition-all duration-300', active ? 'tn-text-accent scale-110' : 'tn-group-text-ink')} />
        <span className={cn('tn-text-11 uppercase tracking-widest', active ? 'font-black' : 'font-bold')}>{item.name}</span>

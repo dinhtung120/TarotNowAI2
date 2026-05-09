@@ -47,17 +47,21 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
   },
  });
 
+ const prefetchDisabled = prefetch === false;
+
  const handleMouseEnter = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
   onMouseEnter?.(event);
+  if (prefetchDisabled) return;
   runRoutePrefetch();
   runQueryPrefetch();
- }, [onMouseEnter, runQueryPrefetch, runRoutePrefetch]);
+ }, [onMouseEnter, prefetchDisabled, runQueryPrefetch, runRoutePrefetch]);
 
  const handleFocus = useCallback((event: FocusEvent<HTMLAnchorElement>) => {
   onFocus?.(event);
+  if (prefetchDisabled) return;
   runRoutePrefetch();
   runQueryPrefetch();
- }, [onFocus, runQueryPrefetch, runRoutePrefetch]);
+ }, [onFocus, prefetchDisabled, runQueryPrefetch, runRoutePrefetch]);
 
  const nativePrefetchEnabled = prefetch === true;
 

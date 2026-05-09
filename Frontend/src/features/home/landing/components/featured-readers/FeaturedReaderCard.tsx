@@ -26,6 +26,7 @@ export default function FeaturedReaderCard({
     >
       <Link
         href={`/readers/${reader.userId}`}
+        prefetch={false}
         aria-label={`${profileCta} ${reader.displayName}`}
         className={cn(
           "absolute inset-0 z-20 rounded-[2.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
