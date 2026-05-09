@@ -362,8 +362,8 @@ Suspicious headers to verify:
 ### 1. High-impact, low-risk FE changes
 
 1. **Measure per-route chunk graph.** Use Next build artifacts to map 24/44 chunk routes to imports. Target public exports and shared shell imports first.
-2. **Dedupe auth full→lite session snapshot.** Keep no-store semantics; reuse only fresh/in-flight full snapshot for lite checks.
-3. **Defer/dedupe presence connection.** Keep realtime enabled, but ensure one negotiate per route lifetime and connect after first route settles.
+2. **Verify auth full→lite session snapshot dedupe in production.** Current code already reuses fresh/in-flight full snapshots for lite checks while keeping `no-store`; next step is benchmark confirmation and trace coverage.
+3. **Verify and harden presence defer/dedupe.** Current code delays presence startup by 10s; next step is confirming negotiate leaves the initial benchmark window and ensuring only one negotiate occurs per route lifetime.
 4. **Fix profile mobile CLS.** Reserve above-fold media/panel sizes on `/vi/profile` mobile.
 5. **Classify media hosts separately in benchmark.** Split `same-site-media` from true third-party to avoid wrong owner decisions.
 
