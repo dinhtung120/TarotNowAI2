@@ -68,6 +68,19 @@ function normalizeMode(mode: ClientSessionSnapshotMode | undefined): ClientSessi
  return SESSION_MODE_FULL;
 }
 
+function resolveReusableSessionState(mode: ClientSessionSnapshotMode, now: number): SessionCacheState | Promise<ClientSessionSnapshot> | null {
+ if (mode !== SESSION_MODE_LITE) {
+  return null;
+ }
+
+ const fullCacheState = sessionCache[SESSION_MODE_FULL];
+ if (fullCacheState && fullCacheState.expiresAt > now) {
+  return fullCacheState;
+ }
+
+ return sessionInFlight[SESSION_MODE_FULL];
+}
+
 async function fetchClientSessionSnapshot(mode: ClientSessionSnapshotMode): Promise<ClientSessionSnapshot> {
  try {
   const response = await fetchWithTimeout(
@@ -129,6 +142,16 @@ export async function getClientSessionSnapshot(options: GetClientSessionSnapshot
 
  if (!options.force && cacheState && cacheState.expiresAt > now) {
   return cacheState.snapshot;
+ }
+
+ if (!options.force) {
+  const reusableState = resolveReusableSessionState(mode, now);
+  if (reusableState instanceof Promise) {
+   return reusableState;
+  }
+  if (reusableState) {
+   return reusableState.snapshot;
+  }
  }
 
  if (!options.force && inFlightState) {
