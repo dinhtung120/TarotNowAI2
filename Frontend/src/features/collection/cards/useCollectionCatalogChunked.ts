@@ -23,7 +23,7 @@ import {
 import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
 
 const DEFAULT_VISIBLE_CHUNK_WINDOW = 1;
-const INITIAL_VISIBLE_CARD_COUNT = 8;
+const INITIAL_VISIBLE_CARD_COUNT = 4;
 const CHUNK_WINDOW_EXPAND_COOLDOWN_MS = 600;
 
 interface UseCollectionCatalogChunkedOptions {
