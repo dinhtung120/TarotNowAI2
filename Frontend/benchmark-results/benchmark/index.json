@@ -169,5 +169,41 @@
     "json": "benchmark-results/benchmark/runs/prod-collection-window-restore-20260509T0110Z/tarotnow-benchmark.json",
     "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
     "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "2026-05-09T17-41-26-992Z",
+    "generatedAtUtc": "2026-05-09T17:45:12.276Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "targeted-hotspots",
+    "json": "benchmark-results/benchmark/runs/2026-05-09T17-41-26-992Z/tarotnow-benchmark-hotspots.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark-hotspots.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark-hotspots.json"
+  },
+  {
+    "runId": "2026-05-09T17-41-26-989Z",
+    "generatedAtUtc": "2026-05-09T17:45:24.275Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "targeted-hotspots",
+    "json": "benchmark-results/benchmark/runs/2026-05-09T17-41-26-989Z/tarotnow-benchmark-hotspots.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark-hotspots.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark-hotspots.json"
+  },
+  {
+    "runId": "2026-05-09T17-45-37-129Z",
+    "generatedAtUtc": "2026-05-09T17:48:35.206Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "targeted-hotspots",
+    "json": "benchmark-results/benchmark/runs/2026-05-09T17-45-37-129Z/tarotnow-benchmark-hotspots.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark-hotspots.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark-hotspots.json"
+  },
+  {
+    "runId": "2026-05-09T17-48-59-781Z",
+    "generatedAtUtc": "2026-05-09T17:57:59.244Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/2026-05-09T17-48-59-781Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
   }
 ]
