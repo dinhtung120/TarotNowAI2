@@ -2270,8 +2270,18 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
     'ttfb_ms',
     'response_bytes',
     'transfer_bytes',
+    'encoded_body_bytes',
+    'decoded_body_bytes',
+    'started_at_offset_ms',
+    'finished_at_offset_ms',
     'waterfall_depth',
     'pending_age_ms',
+    'cache_control',
+    'content_type',
+    'etag',
+    'last_modified',
+    'likely_cacheable',
+    'cache_issue',
     'duplicate',
     'failed',
     'failure_class',
@@ -2295,8 +2305,18 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
           toCsvValue(formatNumber(request.ttfbMs)),
           toCsvValue(request.responseBytes),
           toCsvValue(request.transferBytes),
+          toCsvValue(request.encodedBodyBytes),
+          toCsvValue(request.decodedBodyBytes),
+          toCsvValue(formatNumber(request.startedAtOffsetMs)),
+          toCsvValue(formatNumber(request.finishedAtOffsetMs)),
           toCsvValue(request.waterfallDepth),
           toCsvValue(formatNumber(request.pendingAgeMs)),
+          toCsvValue(request.cacheControl ?? ''),
+          toCsvValue(request.contentType ?? ''),
+          toCsvValue(request.etag ?? ''),
+          toCsvValue(request.lastModified ?? ''),
+          toCsvValue(request.likelyCacheable ? 'yes' : 'no'),
+          toCsvValue(request.cacheIssue ?? ''),
           toCsvValue(request.isDuplicate ? 'yes' : 'no'),
           toCsvValue(request.failed ? 'yes' : 'no'),
           toCsvValue(request.failureClass),
@@ -2312,6 +2332,7 @@ function createRequestsCsv(result: BenchmarkRunResult): string {
 
 function createMarkdownReport(result: BenchmarkRunResult): string {
   const allPages = result.scenarios.flatMap((scenario) => scenario.pages);
+  const allRequests = allPages.flatMap((page) => page.requests.map((request) => ({ ...request, page })));
   const suspiciousPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_HIGH_THRESHOLD);
   const criticalPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_CRITICAL_THRESHOLD);
   const pendingPages = allPages.filter((page) => page.pendingCount > 0);
@@ -2388,6 +2409,30 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     )
     : ['| - | - | - | - |'];
 
+  const cacheIssueLines = allRequests
+    .filter((request) => request.cacheIssue)
+    .sort((left, right) => right.transferBytes - left.transferBytes)
+    .slice(0, 80)
+    .map((request) =>
+      `| ${request.page.scenario} | ${request.page.viewport} | ${request.page.feature} | ${request.page.route} | ${request.category} | ${request.cacheIssue ?? '-'} | ${request.transferBytes} | ${request.cacheControl ?? '-'} | ${request.url} |`,
+    );
+
+  const topTransferLines = allRequests
+    .filter((request) => request.transferBytes > 0)
+    .sort((left, right) => right.transferBytes - left.transferBytes)
+    .slice(0, 80)
+    .map((request) =>
+      `| ${request.page.scenario} | ${request.page.viewport} | ${request.page.feature} | ${request.page.route} | ${request.category} | ${request.transferBytes} | ${formatNumber(request.durationMs)} | ${request.cacheControl ?? '-'} | ${request.url} |`,
+    );
+
+  const waterfallLines = allRequests
+    .filter((request) => Number.isFinite(request.startedAtOffsetMs))
+    .sort((left, right) => left.startedAtOffsetMs - right.startedAtOffsetMs)
+    .slice(0, 120)
+    .map((request) =>
+      `| ${request.page.scenario} | ${request.page.viewport} | ${request.page.route} | ${formatNumber(request.startedAtOffsetMs)} | ${formatNumber(request.finishedAtOffsetMs)} | ${formatNumber(request.durationMs)} | ${request.resourceType} | ${request.category} | ${request.url} |`,
+    );
+
   const coverageLines = result.scenarios.flatMap((scenario) =>
     scenario.coverageNotes.map((note) => `| ${scenario.scenario} | ${scenario.viewport} | ${note} |`),
   );
@@ -2444,6 +2489,21 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     '| --- | --- | --- | --- |',
     ...pendingLines,
     '',
+    '## Top Transfer Contributors',
+    '| Scenario | Viewport | Feature | Route | Category | Transfer Bytes | Duration (ms) | Cache-Control | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | --- | --- |',
+    ...(topTransferLines.length > 0 ? topTransferLines : ['| - | - | - | - | - | - | - | - | - |']),
+    '',
+    '## Cacheability Issues',
+    '| Scenario | Viewport | Feature | Route | Category | Issue | Transfer Bytes | Cache-Control | URL |',
+    '| --- | --- | --- | --- | --- | --- | ---: | --- | --- |',
+    ...(cacheIssueLines.length > 0 ? cacheIssueLines : ['| - | - | - | - | - | - | - | - | - |']),
+    '',
+    '## Waterfall Sample',
+    '| Scenario | Viewport | Route | Start (ms) | End (ms) | Duration (ms) | Type | Category | URL |',
+    '| --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |',
+    ...(waterfallLines.length > 0 ? waterfallLines : ['| - | - | - | - | - | - | - | - | - |']),
+    '',
     '## Coverage Notes',
     '| Scenario | Viewport | Note |',
     '| --- | --- | --- |',
@@ -2464,6 +2524,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
 
 function createAnalysisReport(result: BenchmarkRunResult): string {
   const allPages = result.scenarios.flatMap((scenario) => scenario.pages);
+  const allRequests = allPages.flatMap((page) => page.requests.map((request) => ({ ...request, page })));
   const collectionPages = allPages.filter((page) => page.route === `${LOCALE_PREFIX}/collection`);
   const highRequestPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_HIGH_THRESHOLD);
   const criticalRequestPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_CRITICAL_THRESHOLD);
@@ -2525,6 +2586,30 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
   const duplicateLines = duplicateSummary.map((entry) =>
     `| ${entry.scenario} | ${entry.viewport} | ${entry.feature} | ${entry.route} | ${entry.count} | ${entry.key} |`,
   );
+
+  const topTransferLines = allRequests
+    .filter((request) => request.transferBytes > 0)
+    .sort((left, right) => right.transferBytes - left.transferBytes)
+    .slice(0, 20)
+    .map((request) =>
+      `| ${request.page.scenario} | ${request.page.viewport} | ${request.page.feature} | ${request.page.route} | ${request.category} | ${request.transferBytes} | ${formatNumber(request.durationMs)} | ${request.cacheControl ?? '-'} | ${request.url} |`,
+    );
+
+  const cacheIssueLines = allRequests
+    .filter((request) => request.cacheIssue)
+    .sort((left, right) => right.transferBytes - left.transferBytes)
+    .slice(0, 20)
+    .map((request) =>
+      `| ${request.page.scenario} | ${request.page.viewport} | ${request.page.feature} | ${request.page.route} | ${request.category} | ${request.cacheIssue ?? '-'} | ${request.transferBytes} | ${request.cacheControl ?? '-'} | ${request.url} |`,
+    );
+
+  const waterfallLines = allRequests
+    .filter((request) => Number.isFinite(request.startedAtOffsetMs))
+    .sort((left, right) => left.startedAtOffsetMs - right.startedAtOffsetMs)
+    .slice(0, 30)
+    .map((request) =>
+      `| ${request.page.scenario} | ${request.page.viewport} | ${request.page.route} | ${formatNumber(request.startedAtOffsetMs)} | ${formatNumber(request.finishedAtOffsetMs)} | ${formatNumber(request.durationMs)} | ${request.resourceType} | ${request.category} | ${request.url} |`,
+    );
 
   const keyFindings = [
     criticalRequestPages.length > 0
@@ -2600,6 +2685,21 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     '| Scenario | Viewport | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reopen Img Requests | 304 Cache Hits |',
     '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...collectionImageSummaryLines,
+    '',
+    '## Top Transfer Contributors',
+    '| Scenario | Viewport | Feature | Route | Category | Transfer Bytes | Duration (ms) | Cache-Control | URL |',
+    '| --- | --- | --- | --- | --- | ---: | ---: | --- | --- |',
+    ...(topTransferLines.length > 0 ? topTransferLines : ['| - | - | - | - | - | - | - | - | - |']),
+    '',
+    '## Cacheability Issues',
+    '| Scenario | Viewport | Feature | Route | Category | Issue | Transfer Bytes | Cache-Control | URL |',
+    '| --- | --- | --- | --- | --- | --- | ---: | --- | --- |',
+    ...(cacheIssueLines.length > 0 ? cacheIssueLines : ['| - | - | - | - | - | - | - | - | - |']),
+    '',
+    '## Waterfall Sample',
+    '| Scenario | Viewport | Route | Start (ms) | End (ms) | Duration (ms) | Type | Category | URL |',
+    '| --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |',
+    ...(waterfallLines.length > 0 ? waterfallLines : ['| - | - | - | - | - | - | - | - | - |']),
     '',
     '## Notes',
     '- Duplicate `/cdn-cgi/rum` được xem là telemetry của Cloudflare, không coi là business over-fetch.',
