@@ -4,6 +4,7 @@ import { memo } from 'react';
 import { Package2 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { shouldUseUnoptimizedImage } from '@/shared/http/assetUrl';
 import type { InventoryItem } from '@/features/inventory/shared/inventoryTypes';
 import GlassCard from '@/shared/ui/GlassCard';
 import Badge from '@/shared/ui/Badge';
@@ -24,6 +25,7 @@ function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCar
   const text = getLocalizedInventoryText(item, locale);
   const rarity = resolveInventoryRarity(item.rarity);
   const config = inventoryRarityConfig[rarity];
+  const unoptimizedIcon = shouldUseUnoptimizedImage(item.iconUrl);
 
   return (
     <div className={cn('group relative')}>
@@ -49,7 +51,7 @@ function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCar
             <div className={cn('flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border bg-gradient-to-br from-white/[0.05] to-transparent shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:shadow-violet-500/10', rarity === 'legendary' ? 'border-amber-500/30' : rarity === 'epic' ? 'border-purple-500/30' : 'tn-border-soft')}>
               <div className={cn('relative flex h-full w-full items-center justify-center')}>
                 {item.iconUrl ? (
-                  <Image src={item.iconUrl} alt={text.name} width={36} height={36} className={cn('h-9 w-9 object-contain transition-transform duration-500 group-hover:scale-110')} />
+                  <Image src={item.iconUrl} alt={text.name} width={36} height={36} unoptimized={unoptimizedIcon} loading="lazy" className={cn('h-9 w-9 object-contain transition-transform duration-500 group-hover:scale-110')} />
                 ) : (
                   <Package2 className={cn('h-6 w-6 opacity-40 transition-opacity group-hover:opacity-80')} />
                 )}
