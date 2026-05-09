@@ -151,5 +151,14 @@
     "json": "benchmark-results/benchmark/runs/prod-community-image-bypass-20260509T0036Z/tarotnow-benchmark.json",
     "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
     "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-collection-burst-4-20260509T0054Z",
+    "generatedAtUtc": "2026-05-09T01:03:31.379Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-collection-burst-4-20260509T0054Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
   }
 ]
