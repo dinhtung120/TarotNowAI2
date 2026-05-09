@@ -40,6 +40,16 @@ interface RequestMetric {
   ttfbMs: number | null;
   responseBytes: number;
   transferBytes: number;
+  startedAtOffsetMs: number;
+  finishedAtOffsetMs: number | null;
+  encodedBodyBytes: number;
+  decodedBodyBytes: number;
+  cacheControl: string | null;
+  contentType: string | null;
+  etag: string | null;
+  lastModified: string | null;
+  likelyCacheable: boolean;
+  cacheIssue: string | null;
   failed: boolean;
   failureText: string | null;
   failureClass: RequestFailureClass;
@@ -150,6 +160,16 @@ interface MutableRequestMetric {
   ttfbMs: number | null;
   responseBytes: number;
   transferBytes: number;
+  startedAtOffsetMs: number;
+  finishedAtOffsetMs: number | null;
+  encodedBodyBytes: number;
+  decodedBodyBytes: number;
+  cacheControl: string | null;
+  contentType: string | null;
+  etag: string | null;
+  lastModified: string | null;
+  likelyCacheable: boolean;
+  cacheIssue: string | null;
   failed: boolean;
   failureText: string | null;
   failureClass: RequestFailureClass;
@@ -616,6 +636,31 @@ function classifyRequestCategory(request: Pick<Request, 'url' | 'resourceType'>)
   return 'other';
 }
 
+function classifyCacheIssue(category: RequestCategory, status: number | null, cacheControl: string | null): string | null {
+  if (category === 'api' || category === 'websocket' || category === 'telemetry') {
+    return null;
+  }
+
+  if (status === 304) {
+    return null;
+  }
+
+  const normalized = cacheControl?.toLowerCase() ?? '';
+  if (category === 'static' || category === 'third-party') {
+    if (!normalized) return 'missing-cache-control';
+    if (normalized.includes('no-store')) return 'no-store-static';
+    if (!normalized.includes('max-age') && !normalized.includes('s-maxage')) return 'missing-max-age';
+  }
+
+  return null;
+}
+
+function isLikelyCacheable(category: RequestCategory, cacheControl: string | null): boolean {
+  if (category === 'api' || category === 'websocket') return false;
+  const normalized = cacheControl?.toLowerCase() ?? '';
+  return normalized.includes('max-age') || normalized.includes('immutable') || normalized.includes('public');
+}
+
 function buildBreakdown(requests: RequestMetric[]): PageBreakdown {
   const breakdown: PageBreakdown = {
     total: requests.length,
@@ -844,13 +889,17 @@ async function safeReadResponseBytes(response: Response | null): Promise<number>
   }
 }
 
-async function safeReadTransferBytes(request: Request): Promise<number> {
+async function safeReadRequestSizes(request: Request): Promise<{ transferBytes: number; encodedBodyBytes: number; decodedBodyBytes: number }> {
   try {
     const sizes = await request.sizes();
-    const total = sizes.responseBodySize + sizes.responseHeadersSize;
-    return Number.isFinite(total) && total > 0 ? total : 0;
+    const transferBytes = sizes.responseBodySize + sizes.responseHeadersSize;
+    return {
+      transferBytes: Number.isFinite(transferBytes) && transferBytes > 0 ? transferBytes : 0,
+      encodedBodyBytes: Number.isFinite(sizes.responseBodySize) && sizes.responseBodySize > 0 ? sizes.responseBodySize : 0,
+      decodedBodyBytes: 0,
+    };
   } catch {
-    return 0;
+    return { transferBytes: 0, encodedBodyBytes: 0, decodedBodyBytes: 0 };
   }
 }
 
@@ -871,6 +920,16 @@ function toRequestMetric(record: MutableRequestMetric, scenario: BenchmarkScenar
     ttfbMs: record.ttfbMs,
     responseBytes: record.responseBytes,
     transferBytes: record.transferBytes,
+    startedAtOffsetMs: record.startedAtOffsetMs,
+    finishedAtOffsetMs: record.finishedAtOffsetMs,
+    encodedBodyBytes: record.encodedBodyBytes,
+    decodedBodyBytes: record.decodedBodyBytes,
+    cacheControl: record.cacheControl,
+    contentType: record.contentType,
+    etag: record.etag,
+    lastModified: record.lastModified,
+    likelyCacheable: record.likelyCacheable,
+    cacheIssue: record.cacheIssue,
     failed: record.failed,
     failureText: record.failureText,
     failureClass: 'none' as RequestFailureClass,
@@ -1672,6 +1731,7 @@ async function benchmarkNavigation(
   const finalizeTasks: Array<Promise<void>> = [];
   const coverageBlocked: string[] = [];
   const runtimeConsoleErrors = new Set<string>();
+  const startedAtMs = Date.now();
   let inFlightCounter = 0;
 
   const onRoute = async (routeHandler: Parameters<Parameters<Page['route']>[1]>[0]): Promise<void> => {
@@ -1703,8 +1763,19 @@ async function benchmarkNavigation(
         ttfbMs: null,
         responseBytes: 0,
         transferBytes: 0,
+        startedAtOffsetMs: Date.now() - startedAtMs,
+        finishedAtOffsetMs: null,
+        encodedBodyBytes: 0,
+        decodedBodyBytes: 0,
+        cacheControl: null,
+        contentType: null,
+        etag: null,
+        lastModified: null,
+        likelyCacheable: false,
+        cacheIssue: null,
         failed: false,
         failureText: null,
+        failureClass: 'none',
         waterfallDepth: inFlightCounter,
         pendingAgeMs: null,
         isDuplicate: false,
@@ -1741,8 +1812,19 @@ async function benchmarkNavigation(
         ttfbMs: null,
         responseBytes: 0,
         transferBytes: 0,
+        startedAtOffsetMs: Date.now() - startedAtMs,
+        finishedAtOffsetMs: null,
+        encodedBodyBytes: 0,
+        decodedBodyBytes: 0,
+        cacheControl: null,
+        contentType: null,
+        etag: null,
+        lastModified: null,
+        likelyCacheable: false,
+        cacheIssue: null,
         failed: false,
         failureText: null,
+        failureClass: 'none',
         waterfallDepth: inFlightCounter,
         pendingAgeMs: null,
         isDuplicate: false,
@@ -1759,6 +1841,13 @@ async function benchmarkNavigation(
 
     const timing = request.timing();
     record.status = response.status();
+    const headers = response.headers();
+    record.cacheControl = headers['cache-control'] ?? null;
+    record.contentType = headers['content-type'] ?? null;
+    record.etag = headers.etag ?? null;
+    record.lastModified = headers['last-modified'] ?? null;
+    record.likelyCacheable = isLikelyCacheable(record.category, record.cacheControl);
+    record.cacheIssue = classifyCacheIssue(record.category, record.status, record.cacheControl);
     record.ttfbMs = timing.requestStart >= 0 && timing.responseStart >= 0
       ? Math.max(0, timing.responseStart - timing.requestStart)
       : null;
@@ -1774,12 +1863,16 @@ async function benchmarkNavigation(
 
       record.status = response?.status() ?? null;
       record.finishedAtMs = Date.now();
+      record.finishedAtOffsetMs = record.finishedAtMs - startedAtMs;
       record.durationMs = Math.max(0, record.finishedAtMs - record.startedAtMs);
       record.ttfbMs = timing.requestStart >= 0 && timing.responseStart >= 0
         ? Math.max(0, timing.responseStart - timing.requestStart)
         : record.ttfbMs;
       record.responseBytes = await safeReadResponseBytes(response);
-      record.transferBytes = await safeReadTransferBytes(request);
+      const sizes = await safeReadRequestSizes(request);
+      record.transferBytes = sizes.transferBytes;
+      record.encodedBodyBytes = sizes.encodedBodyBytes;
+      record.decodedBodyBytes = sizes.decodedBodyBytes;
       inFlightCounter = Math.max(0, inFlightCounter - 1);
     })();
 
@@ -1791,6 +1884,7 @@ async function benchmarkNavigation(
     if (!record) return;
     record.failed = true;
     record.finishedAtMs = Date.now();
+    record.finishedAtOffsetMs = record.finishedAtMs - startedAtMs;
     record.durationMs = Math.max(0, record.finishedAtMs - record.startedAtMs);
     record.failureText = request.failure()?.errorText ?? 'Request failed';
     inFlightCounter = Math.max(0, inFlightCounter - 1);
@@ -1819,7 +1913,6 @@ async function benchmarkNavigation(
   page.on('requestfailed', onRequestFailed);
   page.on('console', onConsoleMessage);
 
-  const startedAtMs = Date.now();
   try {
     await page.goto(routeUrl, {
       waitUntil: 'domcontentloaded',
