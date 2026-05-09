@@ -133,5 +133,14 @@
     "json": "benchmark-results/benchmark/runs/prod-chat-runtime-policy-removal-rerun2-20260509T0330Z/tarotnow-benchmark.json",
     "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
     "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
+  },
+  {
+    "runId": "prod-narrow-public-exports-20260509T0018Z",
+    "generatedAtUtc": "2026-05-09T00:26:06.346Z",
+    "baseOrigin": "https://www.tarotnow.xyz",
+    "benchmarkMode": "full-matrix",
+    "json": "benchmark-results/benchmark/runs/prod-narrow-public-exports-20260509T0018Z/tarotnow-benchmark.json",
+    "latestJson": "benchmark-results/benchmark/latest/tarotnow-benchmark.json",
+    "legacyJson": "benchmark-results/benchmark/tarotnow-benchmark.json"
   }
 ]

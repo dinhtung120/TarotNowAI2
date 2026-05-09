@@ -67,6 +67,10 @@ describe('shouldUseUnoptimizedImage', () => {
     expect(shouldUseUnoptimizedImage('https://media.tarotnow.xyz/uploads/a.webp')).toBe(false);
   });
 
+  it('bypasses optimization for community CDN images', () => {
+    expect(shouldUseUnoptimizedImage('https://media.tarotnow.xyz/community/a.webp')).toBe(true);
+  });
+
   it('falls back to unoptimized for non-allowlisted remote hosts', () => {
     expect(shouldUseUnoptimizedImage('https://cdn.example.com/avatar.png')).toBe(true);
   });
