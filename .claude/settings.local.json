@@ -6,7 +6,11 @@
       "Bash(*)",
       "Skill(*)",
       "mcp__plugin_context7_*",
-      "mcp__plugin_playwright_*"
+      "mcp__plugin_playwright_*",
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages"
     ]
   }
 }
