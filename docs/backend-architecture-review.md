@@ -59,8 +59,8 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 ## H-04 AI streaming có policy consume escrow khi client disconnect sau first token
 
 - **Severity:** High
-- **Confidence:** Medium
-- **Evidence:** `Backend/src/TarotNow.Api/Services/AiStreamSseOrchestrator.Completion.cs` có `FailedAfterFirstToken`, `clientDisconnected`, và final status/finish reason logic; grep thấy nhánh `FailedAfterFirstToken` gắn với disconnect. Evidence cần đọc sâu thêm settlement handler để xác nhận exact consume path.
+- **Confidence:** High
+- **Evidence:** `Backend/src/TarotNow.Api/Services/AiStreamSseOrchestrator.Completion.cs:15-21,52-64` gán `FailedAfterFirstToken` khi stream đã có content và request bị hủy; `Backend/src/TarotNow.Application/Features/Reading/Commands/CompleteAiStream/CompleteAiStreamCommandHandler.Processing.cs:100-108` consume escrow khi `FailedAfterFirstToken` và `IsClientDisconnect` là true, còn provider fail sau first token thì refund.
 - **Root cause:** hệ thống dùng “đã có token đầu tiên” như proxy cho delivered value khi client disconnect.
 - **Impact:** mạng chập chờn/browser close có thể bị tính phí dù user nhận quá ít nội dung hữu ích; tăng dispute/refund thủ công.
 - **Fix direction:** chuyển sang threshold settlement: min output tokens/chunks/time + terminal evidence; hoặc partial refund matrix. Log proof fields: first-token time, emitted chunks, output tokens, disconnect source.
@@ -73,7 +73,7 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 
 - **Severity:** Medium
 - **Confidence:** High
-- **Evidence:** `Backend/src/TarotNow.Api/Middlewares/GlobalExceptionHandler.cs` trả ProblemDetails; `Backend/src/TarotNow.Api/Controllers/ReaderController.ReaderFlow.cs` dùng `Problem()`; `Backend/src/TarotNow.Api/Controllers/TarotController.cs` trả anonymous error object; `Backend/src/TarotNow.Api/Controllers/GamificationController.cs` dùng plain detail code như `QUEST_ALREADY_CLAIMED`.
+- **Evidence:** `Backend/src/TarotNow.Api/Middlewares/GlobalExceptionHandler.cs:32-40` và `Backend/src/TarotNow.Api/Middlewares/GlobalExceptionHandler.Mapping.cs:13-24` chuẩn hóa exception thành ProblemDetails; nhưng `Backend/src/TarotNow.Api/Controllers/TarotController.cs:114-126,142-154` vẫn trả anonymous error payload, và `Backend/src/TarotNow.Api/Controllers/GamificationController.cs:79-81,116` encode business code trong `Problem().detail`.
 - **Root cause:** controller tự quyết định error shape thay vì đi qua contract/helper thống nhất.
 - **Impact:** frontend phải special-case; telemetry/error tracking khó group; API client khó dự đoán response.
 - **Fix direction:** chuẩn hóa mọi non-2xx về ProblemDetails có `errorCode`, `correlationId`, `details`; thêm architecture/API tests cấm anonymous error object trong controller public endpoints.
@@ -82,7 +82,7 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 
 - **Severity:** Medium
 - **Confidence:** High
-- **Evidence:** `Backend/src/TarotNow.Api/Extensions/ClaimsPrincipalExtensions.cs` có `TryGetUserId` fallback `NameIdentifier`/`sub`; nhưng `Backend/src/TarotNow.Api/Controllers/GamificationController.cs:44`, `Backend/src/TarotNow.Api/Controllers/InventoryController.cs:83`, `Backend/src/TarotNow.Api/Controllers/HistoryController.cs:54-56` parse `ClaimTypes.NameIdentifier` trực tiếp.
+- **Evidence:** `Backend/src/TarotNow.Api/Extensions/ClaimsPrincipalExtensions.cs:16-20,30-42` có `TryGetUserId` fallback `NameIdentifier`/`sub`; nhưng `Backend/src/TarotNow.Api/Controllers/GamificationController.cs:43-45`, `Backend/src/TarotNow.Api/Controllers/InventoryController.cs:82-84`, `Backend/src/TarotNow.Api/Controllers/HistoryController.cs:54-56,90-92` parse `ClaimTypes.NameIdentifier` trực tiếp.
 - **Root cause:** không có guard test/code convention bắt buộc dùng extension canonical.
 - **Impact:** nếu claim mapping thay đổi hoặc token chỉ có `sub`, một số endpoint fail 401/400 trong khi endpoint khác hoạt động.
 - **Fix direction:** thay direct claim parsing bằng `User.TryGetUserId`; thêm architecture test cấm `FindFirstValue(ClaimTypes.NameIdentifier)` trong controllers/hubs trừ extension file.
@@ -91,7 +91,7 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 
 - **Severity:** Medium
 - **Confidence:** High
-- **Evidence:** `Backend/src/TarotNow.Api/Services/AuthCookieService.cs:107` đọc `x-forwarded-proto`; `:118` đọc `x-forwarded-host` trực tiếp. Subagent scan xác định `ForwardedHeaderTrustEvaluator` được dùng ở `AuthService` cho forwarded user-agent, nhưng không dùng trong `AuthCookieService`.
+- **Evidence:** `Backend/src/TarotNow.Api/Services/AuthCookieService.cs:106-113,117-121` đọc `x-forwarded-proto` và `x-forwarded-host` trực tiếp mà không dùng `IForwardedHeaderTrustEvaluator`; trong khi trust evaluation đã có và được dùng ở `Backend/src/TarotNow.Api/Services/AuthService.cs:80-86` qua `Backend/src/TarotNow.Api/Services/ForwardedHeaderTrustEvaluator.cs:8-10,16,32`.
 - **Root cause:** trust boundary logic bị phân tán theo service.
 - **Impact:** trong deployment không chuẩn proxy/header sanitize, spoofed forwarded headers có thể ảnh hưởng cookie secure/domain behavior.
 - **Fix direction:** inject `IForwardedHeaderTrustEvaluator` vào `AuthCookieService`; bỏ qua forwarded headers nếu remote IP không trusted; ưu tiên server features sau `UseForwardedHeaders`.
@@ -105,21 +105,21 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 - **Impact:** đổi constructor/event notification làm request fail khi dispatch event, có thể chỉ lộ ở path runtime hiếm.
 - **Fix direction:** build registry/factory tại startup, validate tất cả domain event notification constructors; hoặc dùng generic/static factory thay reflection mỗi dispatch.
 
-## M-05 Provider/config validation fail-fast nhưng thiếu preflight report rõ ràng
+## M-05 OpenAI provider fail-fast đúng, nhưng thiếu readiness signal chuyên biệt
 
-- **Severity:** Medium
-- **Confidence:** Medium
-- **Evidence:** subagent scan xác định `Backend/src/TarotNow.Infrastructure/Services/Ai/OpenAiProvider.cs` throw khi thiếu key/model/baseUrl. Đây là fail-safe, nhưng operationally sharp.
-- **Root cause:** DI constructor validation là nơi phát hiện config thay vì centralized options validation/readiness.
-- **Impact:** secret rotation/config typo có thể brick full app startup với diagnostic khó gom nếu nhiều provider/options lỗi cùng lúc.
-- **Fix direction:** thêm `IValidateOptions`/startup preflight tổng hợp lỗi config; health/readiness expose provider disabled/misconfigured rõ ràng; vẫn fail closed cho production.
+- **Severity:** Low
+- **Confidence:** High
+- **Evidence:** `Backend/src/TarotNow.Infrastructure/Services/Ai/OpenAiProvider.cs:51-56,59-63,73-82` fail-fast khi thiếu API key/model/base URL. Đây là fail-closed hợp lý, nhưng chưa thấy readiness/health signal riêng để phân biệt AI capability unavailable với app-wide startup failure.
+- **Root cause:** provider config validation nằm trong DI constructor thay vì một options/preflight/readiness layer có thông báo vận hành rõ.
+- **Impact:** lỗi cấu hình AI được chặn an toàn, nhưng diagnostics vận hành cho trạng thái misconfigured/disabled chưa tách bạch.
+- **Fix direction:** thêm `IValidateOptions` hoặc startup preflight cho AI provider; readiness expose trạng thái AI unavailable/misconfigured rõ ràng; vẫn fail closed ở production khi config bắt buộc.
 
 ## M-06 Telemetry write nuốt exception, chỉ warning
 
 - **Severity:** Medium
 - **Confidence:** High
-- **Evidence:** `Backend/src/TarotNow.Infrastructure/Services/Ai/OpenAiProvider.Telemetry.cs:33` catch `Exception`; subagent scan thấy catch-all warning-only.
-- **Root cause:** telemetry được thiết kế non-blocking nhưng thiếu backpressure/alert/counter.
+- **Evidence:** `Backend/src/TarotNow.Infrastructure/Services/Ai/OpenAiProvider.Telemetry.cs:15-39` bọc telemetry write bằng catch-all `Exception`, chỉ ghi warning, không rethrow/counter/health propagation.
+- **Root cause:** non-blocking telemetry là đúng chủ đích, nhưng thiếu explicit failure signal như counter/metric/health dimension.
 - **Impact:** cost/audit trace thiếu mà request vẫn thành công; khó phát hiện provider/db telemetry outage.
 - **Fix direction:** giữ non-blocking nhưng emit metric/counter, structured event, health signal; cân nhắc retry/buffer bounded cho telemetry critical fields.
 
@@ -127,7 +127,7 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 
 - **Severity:** Medium
 - **Confidence:** High
-- **Evidence:** `Backend/src/TarotNow.Api/Constants/ApiRoutes.cs` có `/api/v1/deposits` plural, `/api/v1/withdrawal` singular, `/api/v1/reading` singular; nhiều controller dùng route constants, một số dùng `[Route(ApiRoutes.Controller)]`.
+- **Evidence:** `Backend/src/TarotNow.Api/Constants/ApiRoutes.cs:28,43,58` trộn singular/plural resources: `/api/v1/reading`, `/api/v1/deposits`, `/api/v1/withdrawal`.
 - **Root cause:** route style guide chưa enforce bằng test.
 - **Impact:** API client và docs khó nhất quán; versioning/deprecation khó quản lý.
 - **Fix direction:** chuẩn hóa plural noun resources cho v2 hoặc alias/deprecation cho v1; add API route snapshot test.
@@ -135,8 +135,8 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 ## M-08 Middleware/security behavior thiếu test trực tiếp
 
 - **Severity:** Medium
-- **Confidence:** High
-- **Evidence:** subagent scan không thấy tests trực tiếp cho `GlobalExceptionHandler`, `CorrelationIdMiddleware`, `ChatFeatureGateMiddleware`, forwarded-header trust cases trong `Backend/tests`; architecture/order checks có nhưng không thay thế behavior tests.
+- **Confidence:** Medium
+- **Evidence:** middleware/security test coverage hiện chỉ partial: `Backend/tests/TarotNow.Api.Tests/Middleware/ChatFeatureGateMiddlewareTests.cs` có dedicated tests cho `ChatFeatureGateMiddleware`, nhưng không thấy behavior tests riêng cho `GlobalExceptionHandler`, `CorrelationIdMiddleware`, hoặc forwarded-header trust trong auth cookie/header handling.
 - **Root cause:** cross-cutting middleware dựa vào integration smoke thay vì matrix tests.
 - **Impact:** regression security/error/observability dễ lọt qua unit test feature.
 - **Fix direction:** thêm test matrix: exception → status/title/errorCode, correlation ID sanitization/propagation, chat feature gate 404, trusted/untrusted proxy header cases.
@@ -166,8 +166,8 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 ## L-03 Controller surface lớn, partial split giúp nhưng vẫn tăng drift
 
 - **Severity:** Low
-- **Confidence:** Medium
-- **Evidence:** `Backend/src/TarotNow.Api/Controllers` có 55 controller files; `ConversationController` split nhiều partial: `Acceptance`, `Completion`, `Finance`, `Inbox`, `MediaUpload`, `Messages`, `Review`.
+- **Confidence:** High
+- **Evidence:** `Backend/src/TarotNow.Api/Controllers` có 55 controller files; nhiều controller dùng partial pattern như `ConversationController`, `CommunityController`, `DepositController`, `NotificationController`, `ReaderController`, `DiagController`. Riêng `ConversationController` có base + 7 partial files: `Acceptance`, `Completion`, `Finance`, `Inbox`, `MediaUpload`, `Messages`, `Review`.
 - **Root cause:** API layer theo domain lớn nhưng consistency rules cho auth/error/idempotency chưa centralized đủ.
 - **Impact:** cùng domain dễ lệch user extraction, error shape, authorization policy, response codes.
 - **Fix direction:** giữ partial nếu size guard cần, nhưng thêm shared helper/action filter/test guard cho cross-cutting rules.
@@ -175,8 +175,8 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 ## L-04 `Common`/`Helpers` sprawl ở Application làm mờ boundary
 
 - **Severity:** Low
-- **Confidence:** Medium
-- **Evidence:** `Backend/src/TarotNow.Application/Common` có 55 file; có `Common/Helpers`, `Application/Helpers`; helper-suffixed files rải ở Application/Infrastructure/Api.
+- **Confidence:** High
+- **Evidence:** `Backend/src/TarotNow.Application/Common` có 55 file; `Backend/src/TarotNow.Application/Common/Helpers` có 4 file; `Backend/src/TarotNow.Application/Helpers` có 1 file; toàn `Backend/src` có 24 file tên chứa `Helper`, cho thấy utility đang phân tán đa layer.
 - **Root cause:** code reuse gom theo kỹ thuật thay vì bounded-context responsibility.
 - **Impact:** dễ biến thành god shared layer, coupling ngược giữa feature domains.
 - **Fix direction:** khi chạm code, kéo helper về feature/context nếu chỉ dùng cục bộ; chỉ giữ shared abstractions có contract rõ và nhiều bounded contexts dùng.
@@ -185,12 +185,12 @@ Không ghi nhận issue Critical chắc chắn trong phạm vi audit rộng này
 
 # Dead Code Report
 
-Audit này là scan rộng, không chạy IDE/compiler reference analysis. Các mục dưới đây là **candidate**, không phải proof tuyệt đối.
+Audit này là scan rộng, không chạy IDE/compiler reference analysis. Các mục dưới đây là **maintainability/debt candidates**, không phải proof tuyệt đối về unreachable code.
 
 | Candidate | Path | Evidence | Confidence | Recommendation |
 |---|---|---|---|---|
-| Commented/temporary debt markers | `Backend/src`, `Backend/tests` | Scan marker nợ kỹ thuật, obsolete APIs, unsupported/not-implemented paths, và commented-out code; cần chạy sâu hơn nếu muốn xóa hàng loạt. | Low | Tạo task riêng dùng Roslyn/IDE references + compiler warnings trước khi delete. |
-| Generic helpers/common files | `Backend/src/TarotNow.Application/Common`, `Backend/src/TarotNow.Application/Common/Helpers`, `Backend/src/TarotNow.Application/Helpers` | Inventory thấy 55 file trong `Common`, helper folder ở Application, helper suffix rải nhiều layer. | Medium | Không xóa ngay; phân loại helper theo bounded context và move dần khi có change liên quan. |
+| Commented/temporary debt markers | `Backend/src`, `Backend/tests` | Có technical-debt markers trong `RedisRealtimeSignalRBridgeService.cs`, `ReportController.cs`, `PaymentGatewayService.cs`, `AuthSessionSecurityTests.cs`, `EventDrivenArchitectureRulesTests.cs`; đây là debt marker, không phải proof dead code. | Low | Tạo task riêng dùng Roslyn/IDE references + compiler warnings trước khi delete. |
+| Generic helpers/common files | `Backend/src/TarotNow.Application/Common`, `Backend/src/TarotNow.Application/Common/Helpers`, `Backend/src/TarotNow.Application/Helpers` | `Common` có 55 file, `Common/Helpers` có 4 file, `Application/Helpers` có 1 file, toàn `Backend/src` có 24 `*Helper*.cs`. | Medium | Không xóa ngay; phân loại helper theo bounded context và move dần khi có change liên quan. |
 | Route/error custom payload patterns | `Backend/src/TarotNow.Api/Controllers/TarotController.cs`, `Backend/src/TarotNow.Api/Controllers/GamificationController.cs` | Anonymous error/plain detail code có thể là legacy API contract. | Medium | Verify frontend consumers trước khi thay bằng ProblemDetails chuẩn. |
 | EF migration designer bulk | `Backend/src/TarotNow.Infrastructure/Migrations/*.Designer.cs` | Top 25 largest C# files chủ yếu là migration designer/snapshot. | High (not dead code) | Không xóa nếu migrations còn cần; cân nhắc migration squashing chỉ khi deployment policy cho phép. |
 
@@ -210,10 +210,10 @@ Audit này là scan rộng, không chạy IDE/compiler reference analysis. Các 
    - Vấn đề: persistence contract không stable qua refactor.
    - Hướng sửa: stable event names + versions + registry.
 
-3. **Controller auth/error conventions không enforced**
-   - Path: `Backend/src/TarotNow.Api/Controllers/*`, `Backend/src/TarotNow.Api/Extensions/ClaimsPrincipalExtensions.cs`
-   - Vấn đề: API layer tự parse claims/return errors nhiều kiểu.
-   - Hướng sửa: architecture tests + endpoint behavior tests.
+3. **Controller auth/error conventions enforced chưa đủ kín**
+   - Path: `Backend/src/TarotNow.Api/Controllers/*`, `Backend/src/TarotNow.Api/Extensions/ClaimsPrincipalExtensions.cs`, `Backend/tests/TarotNow.ArchitectureTests/*`
+   - Vấn đề: architecture tests đã tồn tại, nhưng vẫn còn residual gaps ở một số controller parse claim trực tiếp và một số endpoint trả error shape riêng.
+   - Hướng sửa: mở rộng architecture tests + endpoint behavior tests để cover phần drift còn lại.
 
 4. **Config safety phụ thuộc environment string**
    - Path: `Backend/src/TarotNow.Infrastructure/DependencyInjection.Cache.cs`
