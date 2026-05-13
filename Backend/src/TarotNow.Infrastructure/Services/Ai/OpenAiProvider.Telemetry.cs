@@ -34,9 +34,11 @@ public partial class OpenAiProvider
         {
             _logger.LogWarning(
                 exception,
-                "Failed to write AI provider telemetry. RequestId={RequestId}, UserId={UserId}",
+                "ai.telemetry.write_failed Provider={Provider} RequestId={RequestId} Status={Status} FailureCategory={FailureCategory}",
+                ProviderName,
                 logEntry.RequestId,
-                logEntry.UserId);
+                logEntry.Status,
+                exception.GetType().Name);
         }
     }
 }

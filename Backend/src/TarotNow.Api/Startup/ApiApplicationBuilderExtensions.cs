@@ -11,10 +11,6 @@ namespace TarotNow.Api.Startup;
 // Chuẩn hóa cách ghép pipeline middleware/endpoint của API để giữ thứ tự thực thi nhất quán.
 public static class ApiApplicationBuilderExtensions
 {
-    // Tên thư mục upload public nằm dưới wwwroot.
-    private const string UploadsFolderName = "uploads";
-    // Tên thư mục web root mặc định của ứng dụng.
-    private const string WebRootFolderName = "wwwroot";
     // Endpoint hub presence dùng đường dẫn cố định để client subscription ổn định.
     private const string PresenceHubPath = "/api/v1/presence";
     // Extension cần map MIME thủ công cho static file provider.
@@ -135,45 +131,22 @@ public static class ApiApplicationBuilderExtensions
 
     /// <summary>
     /// Cấu hình phục vụ static file cho web root mặc định và thư mục uploads.
-    /// Luồng xử lý: bật static files mặc định, đảm bảo thư mục uploads tồn tại, map MIME type đặc thù.
+    /// Luồng xử lý: bật static files mặc định, dùng upload storage đã bootstrap, map MIME type đặc thù.
     /// </summary>
     private static void ConfigureStaticFiles(WebApplication app)
     {
         app.UseStaticFiles();
 
-        var uploadsPath = EnsureUploadsDirectory(app);
         var contentTypeProvider = CreateUploadsContentTypeProvider();
 
         // Khai báo static file source riêng cho uploads để client truy cập tài nguyên người dùng upload.
         app.UseStaticFiles(new StaticFileOptions
         {
-            FileProvider = new PhysicalFileProvider(uploadsPath),
-            RequestPath = "/" + UploadsFolderName,
+            FileProvider = UploadStorageBootstrapExtensions.CreateUploadsFileProvider(app.Configuration, app.Environment.ContentRootPath),
+            RequestPath = "/" + UploadStorageBootstrapExtensions.UploadsFolderName,
             ContentTypeProvider = contentTypeProvider,
             ServeUnknownFileTypes = false,
         });
-    }
-
-    /// <summary>
-    /// Đảm bảo thư mục uploads tồn tại trước khi static file middleware hoạt động.
-    /// Luồng xử lý: dựng path tuyệt đối theo content root, tạo thư mục nếu chưa có, trả path kết quả.
-    /// </summary>
-    private static string EnsureUploadsDirectory(WebApplication app)
-    {
-        var configuredStorageRoot = app.Configuration["FileStorage:RootPath"]?.Trim();
-        var storageRoot = string.IsNullOrWhiteSpace(configuredStorageRoot)
-            ? Path.Combine(app.Environment.ContentRootPath, WebRootFolderName)
-            : configuredStorageRoot;
-        var uploadsPath = Path.Combine(storageRoot, UploadsFolderName);
-        if (Directory.Exists(uploadsPath))
-        {
-            // Nhánh đã tồn tại: tái sử dụng trực tiếp để tránh thao tác I/O dư thừa.
-            return uploadsPath;
-        }
-
-        // Nhánh chưa tồn tại: tạo thư mục để tránh 404 khi ứng dụng vừa deploy lần đầu.
-        Directory.CreateDirectory(uploadsPath);
-        return uploadsPath;
     }
 
     /// <summary>

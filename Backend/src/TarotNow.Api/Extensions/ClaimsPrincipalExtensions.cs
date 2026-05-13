@@ -18,7 +18,7 @@ public static class ClaimsPrincipalExtensions
                        ?? user?.FindFirstValue("sub")
                        ?? user?.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
 
-        return Guid.TryParse(userIdValue, out var userId) ? userId : null;
+        return Guid.TryParse(userIdValue, out var userId) && userId != Guid.Empty ? userId : null;
     }
 
     /// <summary>

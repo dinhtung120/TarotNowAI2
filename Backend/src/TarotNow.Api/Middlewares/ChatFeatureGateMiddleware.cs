@@ -7,9 +7,9 @@ namespace TarotNow.Api.Middlewares;
 public class ChatFeatureGateMiddleware
 {
     // Prefix endpoint conversation cần đi qua cơ chế bật/tắt chat.
-    private static readonly PathString ConversationsPrefix = "/" + ApiRoutes.Conversations;
+    private static readonly PathString ConversationsPrefix = ToRuntimePath(ApiRoutes.Conversations);
     // Prefix endpoint hub realtime chat cũng phải chịu cùng feature gate.
-    private static readonly PathString ChatHubPrefix = "/" + ApiRoutes.ChatHub;
+    private static readonly PathString ChatHubPrefix = ToRuntimePath(ApiRoutes.ChatHub);
 
     private readonly RequestDelegate _next;
 
@@ -66,5 +66,10 @@ public class ChatFeatureGateMiddleware
     {
         return path.StartsWithSegments(ConversationsPrefix)
             || path.StartsWithSegments(ChatHubPrefix);
+    }
+
+    private static PathString ToRuntimePath(string route)
+    {
+        return "/" + route.Replace("{version:apiVersion}", "1", StringComparison.Ordinal);
     }
 }

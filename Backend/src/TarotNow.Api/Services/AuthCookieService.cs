@@ -12,10 +12,15 @@ public sealed class AuthCookieService : IAuthCookieService
     private readonly string? _cookieDomain;
     private readonly bool? _cookieSecureOverride;
     private readonly IHostEnvironment _hostEnvironment;
+    private readonly IForwardedHeaderTrustEvaluator _forwardedHeaderTrustEvaluator;
 
-    public AuthCookieService(IConfiguration configuration, IHostEnvironment hostEnvironment)
+    public AuthCookieService(
+        IConfiguration configuration,
+        IHostEnvironment hostEnvironment,
+        IForwardedHeaderTrustEvaluator forwardedHeaderTrustEvaluator)
     {
         _hostEnvironment = hostEnvironment;
+        _forwardedHeaderTrustEvaluator = forwardedHeaderTrustEvaluator;
         _cookieDomain = NormalizeNullable(configuration["Auth:CookieDomain"]);
         _cookieSecureOverride = ParseBoolean(configuration["Auth:CookieSecure"]);
     }
@@ -104,6 +109,11 @@ public sealed class AuthCookieService : IAuthCookieService
             return true;
         }
 
+        if (!_forwardedHeaderTrustEvaluator.IsTrustedProxy(request.HttpContext.Connection.RemoteIpAddress))
+        {
+            return false;
+        }
+
         var forwardedProto = request.Headers["x-forwarded-proto"].ToString();
         if (string.IsNullOrWhiteSpace(forwardedProto))
         {
@@ -113,12 +123,15 @@ public sealed class AuthCookieService : IAuthCookieService
         return string.Equals(forwardedProto.Split(',')[0].Trim(), "https", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string? ResolveRequestHost(HttpRequest request)
+    private string? ResolveRequestHost(HttpRequest request)
     {
-        var forwardedHost = request.Headers["x-forwarded-host"].ToString();
-        if (!string.IsNullOrWhiteSpace(forwardedHost))
+        if (_forwardedHeaderTrustEvaluator.IsTrustedProxy(request.HttpContext.Connection.RemoteIpAddress))
         {
-            return forwardedHost.Split(',')[0].Trim().Split(':')[0].Trim().ToLowerInvariant();
+            var forwardedHost = request.Headers["x-forwarded-host"].ToString();
+            if (!string.IsNullOrWhiteSpace(forwardedHost))
+            {
+                return forwardedHost.Split(',')[0].Trim().Split(':')[0].Trim().ToLowerInvariant();
+            }
         }
 
         var host = request.Host.Host?.Trim();

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -80,8 +79,7 @@ public sealed class InventoryController : ControllerBase
 
     private bool TryGetCurrentUserId(out Guid userId)
     {
-        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(claim, out userId);
+        return User.TryGetUserId(out userId);
     }
 
     private string ResolveIdempotencyKey(string? bodyKey)

@@ -2,10 +2,12 @@ using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Infrastructure.Services;
@@ -21,6 +23,7 @@ public sealed class ReadinessService : IReadinessService
     private readonly CacheBackendState _cacheBackendState;
     private readonly IConnectionMultiplexer? _redisConnectionMultiplexer;
     private readonly ILogger<ReadinessService> _logger;
+    private readonly AiProviderOptions _aiProviderOptions;
     private readonly bool _redisRequiredForPresence;
 
     public ReadinessService(
@@ -29,12 +32,14 @@ public sealed class ReadinessService : IReadinessService
         CacheBackendState cacheBackendState,
         IHostEnvironment hostEnvironment,
         ILogger<ReadinessService> logger,
+        IOptions<AiProviderOptions> aiProviderOptions,
         IConnectionMultiplexer? redisConnectionMultiplexer = null)
     {
         _dbContext = dbContext;
         _mongoDatabase = mongoDatabase;
         _cacheBackendState = cacheBackendState;
         _logger = logger;
+        _aiProviderOptions = aiProviderOptions.Value;
         _redisConnectionMultiplexer = redisConnectionMultiplexer;
         _redisRequiredForPresence = !IsLocalPresenceFallbackAllowed(hostEnvironment.EnvironmentName);
     }
@@ -48,8 +53,15 @@ public sealed class ReadinessService : IReadinessService
         var mongoReady = await CheckMongoDbAsync(cancellationToken);
         var redisReady = await CheckRedisAsync();
         var redisRequired = _cacheBackendState.UsesRedis || _redisRequiredForPresence;
+        var (aiProviderReady, aiProviderMessage) = CheckAiProviderConfiguration(_aiProviderOptions);
 
-        return new ReadinessStatus(postgresReady, mongoReady, redisReady, redisRequired);
+        return new ReadinessStatus(
+            postgresReady,
+            mongoReady,
+            redisReady,
+            redisRequired,
+            aiProviderReady,
+            aiProviderMessage);
     }
 
     private static bool IsLocalPresenceFallbackAllowed(string environmentName)
@@ -142,6 +154,27 @@ public sealed class ReadinessService : IReadinessService
             _logger.LogError(ex, "Readiness check failed for MongoDB.");
             return false;
         }
+    }
+
+    public static (bool Ready, string? Message) CheckAiProviderConfiguration(AiProviderOptions aiProviderOptions)
+    {
+        var missingKeys = new List<string>();
+        if (string.IsNullOrWhiteSpace(aiProviderOptions.ApiKey))
+        {
+            missingKeys.Add(nameof(AiProviderOptions.ApiKey));
+        }
+
+        if (string.IsNullOrWhiteSpace(aiProviderOptions.Model))
+        {
+            missingKeys.Add(nameof(AiProviderOptions.Model));
+        }
+
+        if (missingKeys.Count == 0)
+        {
+            return (true, null);
+        }
+
+        return (false, $"AI provider configuration is incomplete: {string.Join(", ", missingKeys)}");
     }
 
     private async Task<bool> CheckRedisAsync()

@@ -22,25 +22,30 @@ public static partial class DependencyInjection
         var redisConnectionString = configuration.GetConnectionString("Redis");
         var postgreSqlConnectionString = configuration.GetConnectionString("PostgreSQL");
         var redisInstanceName = configuration["Redis:InstanceName"]?.Trim();
+        var redisRequirement = configuration.GetSection(RedisRequirementOptions.SectionName).Get<RedisRequirementOptions>()
+            ?? new RedisRequirementOptions();
         var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? string.Empty;
-        var requiresRedis = string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase);
+        var requiresRedis = ShouldRequireRedis(configuration, redisRequirement, environmentName);
 
         if (!string.IsNullOrWhiteSpace(redisConnectionString) && string.IsNullOrWhiteSpace(redisInstanceName))
         {
             throw new InvalidOperationException("Missing required configuration Redis:InstanceName (env: REDIS__INSTANCENAME).");
         }
 
+        string? bootstrapSettingsFailureType = null;
+        string? redisInitializationFailureType = null;
+        string? redisEndpointSummary = null;
         var redisBootstrap = !string.IsNullOrWhiteSpace(postgreSqlConnectionString)
-            ? TryLoadRedisBootstrapSettings(postgreSqlConnectionString)
+            ? TryLoadRedisBootstrapSettings(postgreSqlConnectionString, out bootstrapSettingsFailureType)
             : null;
         var redisMultiplexer = !string.IsNullOrWhiteSpace(redisConnectionString)
-            ? TryCreateRedisMultiplexer(redisConnectionString, redisBootstrap)
+            ? TryCreateRedisMultiplexer(redisConnectionString, redisBootstrap, out redisInitializationFailureType, out redisEndpointSummary)
             : null;
 
         if (requiresRedis && redisMultiplexer is null)
         {
             throw new InvalidOperationException(
-                "Redis is required in Production for realtime consistency. Check ConnectionStrings:Redis and Redis availability.");
+                "Redis is required but Redis configuration is missing. Check Redis:RequireRedis and ConnectionStrings:Redis.");
         }
 
         var usesRedisCache = redisMultiplexer != null;
@@ -64,9 +69,33 @@ public static partial class DependencyInjection
 
         RegisterRealtimePublishers(services);
 
-        services.AddSingleton(new CacheBackendState(usesRedisCache));
+        services.AddSingleton(new CacheBackendState(
+            usesRedisCache,
+            bootstrapSettingsFailureType,
+            redisInitializationFailureType,
+            redisEndpointSummary));
         services.AddHostedService<CacheBackendStartupLogger>();
         services.AddScoped<ICacheService, RedisCacheService>();
+    }
+
+    private static bool ShouldRequireRedis(
+        IConfiguration configuration,
+        RedisRequirementOptions redisRequirement,
+        string environmentName)
+    {
+        if (redisRequirement.RequireRedis.HasValue)
+        {
+            return redisRequirement.RequireRedis.Value;
+        }
+
+        if (configuration.GetValue<bool>("AuthSecurity:RequireRedisForRefreshConsistency"))
+        {
+            return true;
+        }
+
+        return !string.Equals(environmentName, "Development", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(environmentName, "Test", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(environmentName, "Testing", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void RegisterRealtimePublishers(IServiceCollection services)
@@ -103,8 +132,12 @@ public static partial class DependencyInjection
     /// </summary>
     private static IConnectionMultiplexer? TryCreateRedisMultiplexer(
         string connectionString,
-        RedisBootstrapSettings? bootstrapSettings)
+        RedisBootstrapSettings? bootstrapSettings,
+        out string? failureType,
+        out string? endpointSummary)
     {
+        failureType = null;
+        endpointSummary = ResolveRedisEndpointSummary(connectionString);
         try
         {
             var options = ConfigurationOptions.Parse(connectionString);
@@ -122,26 +155,27 @@ public static partial class DependencyInjection
             }
 
             multiplexer.Dispose();
+            failureType = "RedisNotConnected";
             // Kết nối tạo được nhưng chưa connected thì dispose và fallback an toàn.
             return null;
         }
         catch (Exception ex)
         {
-            var endpointSummary = "unknown";
-            try
-            {
-                var parsed = ConfigurationOptions.Parse(connectionString);
-                endpointSummary = string.Join(",", parsed.EndPoints.Select(endpoint => endpoint.ToString()));
-            }
-            catch
-            {
-                // Ignore parse failures in fallback logger path.
-            }
-
-            Console.Error.WriteLine(
-                $"[RedisBootstrap] Failed to initialize Redis multiplexer for endpoint(s) {endpointSummary}. " +
-                $"Falling back to distributed memory cache. Reason={ex.GetType().Name}: {ex.Message}");
+            failureType = ex.GetType().Name;
             return null;
+        }
+    }
+
+    private static string ResolveRedisEndpointSummary(string connectionString)
+    {
+        try
+        {
+            var parsed = ConfigurationOptions.Parse(connectionString);
+            return string.Join(",", parsed.EndPoints.Select(endpoint => endpoint.ToString()));
+        }
+        catch
+        {
+            return "unknown";
         }
     }
 

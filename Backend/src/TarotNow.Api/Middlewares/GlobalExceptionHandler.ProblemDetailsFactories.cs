@@ -12,6 +12,7 @@ public partial class GlobalExceptionHandler
         => CreateClientProblem(
             StatusCodes.Status400BadRequest,
             "Bad Request",
+            "BAD_REQUEST",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
             string.IsNullOrWhiteSpace(detail)
                 ? "Request payload is invalid or unsupported."
@@ -25,6 +26,7 @@ public partial class GlobalExceptionHandler
         => CreateClientProblem(
             StatusCodes.Status404NotFound,
             "Not Found",
+            "NOT_FOUND",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4",
             string.IsNullOrWhiteSpace(detail)
                 ? "Requested resource was not found."
@@ -38,6 +40,7 @@ public partial class GlobalExceptionHandler
         => CreateClientProblem(
             StatusCodes.Status409Conflict,
             "Conflict",
+            "CONFLICT",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.8",
             detail);
 
@@ -49,6 +52,7 @@ public partial class GlobalExceptionHandler
         => CreateClientProblem(
             StatusCodes.Status401Unauthorized,
             "Unauthorized",
+            "UNAUTHORIZED",
             "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1",
             string.IsNullOrWhiteSpace(detail)
                 ? "You are not authorized to access this resource."
@@ -61,6 +65,7 @@ public partial class GlobalExceptionHandler
         => CreateClientProblem(
             StatusCodes.Status403Forbidden,
             "Forbidden",
+            "FORBIDDEN",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3",
             string.IsNullOrWhiteSpace(detail)
                 ? "You do not have permission to access this resource."
@@ -72,27 +77,33 @@ public partial class GlobalExceptionHandler
     /// </summary>
     private static ProblemDetails CreateServerProblem()
     {
-        return new ProblemDetails
+        var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
             Title = "Internal Server Error",
             Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
             Detail = "An unexpected error occurred while processing your request. Please try again later."
         };
+
+        problemDetails.Extensions["errorCode"] = "INTERNAL_SERVER_ERROR";
+        return problemDetails;
     }
 
     /// <summary>
     /// Factory chung tạo ProblemDetails cho nhóm lỗi phía client.
     /// Luồng xử lý: nhận đầy đủ thành phần chuẩn rồi trả object dùng lại cho các nhánh mapping.
     /// </summary>
-    private static ProblemDetails CreateClientProblem(int status, string title, string type, string detail)
+    private static ProblemDetails CreateClientProblem(int status, string title, string errorCode, string type, string detail)
     {
-        return new ProblemDetails
+        var problemDetails = new ProblemDetails
         {
             Status = status,
             Title = title,
             Type = type,
             Detail = detail
         };
+
+        problemDetails.Extensions["errorCode"] = errorCode;
+        return problemDetails;
     }
 }

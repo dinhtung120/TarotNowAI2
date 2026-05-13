@@ -91,8 +91,9 @@ public sealed partial class AiStreamSseOrchestrator
 
     private async Task CompleteStreamAsync(StreamCompletionDispatch completion)
     {
+        var completedAt = DateTimeOffset.UtcNow;
         var latencyMs = completion.State.FirstTokenAt.HasValue
-            ? (int)(DateTimeOffset.UtcNow - completion.State.FirstTokenAt.Value).TotalMilliseconds
+            ? (int)(completedAt - completion.State.FirstTokenAt.Value).TotalMilliseconds
             : 0;
 
         await _mediator.Send(new CompleteAiStreamCommand
@@ -104,6 +105,9 @@ public sealed partial class AiStreamSseOrchestrator
             IsClientDisconnect = completion.IsClientDisconnect,
             FirstTokenAt = completion.State.FirstTokenAt,
             OutputTokens = completion.State.OutputTokens,
+            EmittedChunkCount = completion.State.EmittedChunkCount,
+            StreamElapsed = completedAt - completion.State.StartedAt,
+            DisconnectSource = completion.IsClientDisconnect ? "client_disconnect" : completion.ErrorMessage,
             InputTokens = completion.State.ResolveInputTokens(completion.InputTokens),
             LatencyMs = latencyMs,
             FullResponse = completion.State.FullResponseBuilder.ToString(),

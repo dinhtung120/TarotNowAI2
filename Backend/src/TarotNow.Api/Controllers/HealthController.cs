@@ -92,9 +92,15 @@ public class HealthController : ControllerBase
                 : "Skipped",
             required = readiness.RedisRequired
         };
+        checks["aiProvider"] = new
+        {
+            status = readiness.AiProviderReady ? "Healthy" : "Unhealthy",
+            message = readiness.AiProviderMessage
+        };
 
         var allReady = readiness.PostgreSqlReady
                        && readiness.MongoDbReady
+                       && readiness.AiProviderReady
                        && (!readiness.RedisRequired || readiness.RedisReady);
         var payload = new
         {

@@ -50,6 +50,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddSingleton<IUserPresenceTracker>(CreateUserPresenceTracker);
         services.AddHostedService<PresenceTimeoutBackgroundService>();
         services.AddSingleton<IRealtimeBridgeSource>(CreateRealtimeBridgeSource);
+        services.AddSingleton<IRealtimeDedupStore>(CreateRealtimeDedupStore);
         services.AddHostedService<RedisRealtimeSignalRBridgeService>();
     }
 
@@ -87,6 +88,18 @@ public static partial class ApiServiceCollectionExtensions
         var logger = serviceProvider.GetRequiredService<ILogger<RedisUserPresenceTracker>>();
         tracker = new RedisUserPresenceTracker(multiplexer, systemConfigSettings, logger);
         return true;
+    }
+
+    private static IRealtimeDedupStore CreateRealtimeDedupStore(IServiceProvider serviceProvider)
+    {
+        var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+        if (multiplexer is not null)
+        {
+            var logger = serviceProvider.GetRequiredService<ILogger<RedisRealtimeDedupStore>>();
+            return new RedisRealtimeDedupStore(multiplexer, logger);
+        }
+
+        return new NoOpRealtimeDedupStore();
     }
 
     private static IRealtimeBridgeSource CreateRealtimeBridgeSource(IServiceProvider serviceProvider)

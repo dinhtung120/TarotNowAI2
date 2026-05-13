@@ -7,7 +7,9 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Events;
 using TarotNow.Infrastructure.BackgroundJobs.Outbox;
+using TarotNow.Infrastructure.Events;
 using TarotNow.Infrastructure.Options;
+using TarotNow.Infrastructure.Services;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
 using TarotNow.Infrastructure.Services.Configuration;
@@ -136,6 +138,75 @@ public sealed class OutboxBatchProcessorIntegrationTests
 
         Assert.Equal(OutboxMessageStatus.Processed, updated.Status);
         Assert.Equal(0, probe.ExecutionCount);
+    }
+
+    [Fact]
+    public async Task OutboxPublisher_ShouldStoreStableEventNameAndVersion_ForNewRows()
+    {
+        await _fixture.ResetOutboxAsync();
+        await using var dbContext = _fixture.CreateDbContext();
+        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        var publisher = new MediatRDomainEventPublisher(dbContext);
+        var domainEvent = new MoneyChangedDomainEvent
+        {
+            UserId = Guid.NewGuid(),
+            Currency = "gold",
+            ChangeType = "credit",
+            ReferenceId = Guid.NewGuid().ToString("N")
+        };
+
+        await publisher.PublishAsync(domainEvent);
+        await dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        var message = await dbContext.OutboxMessages.SingleAsync();
+        var contract = OutboxEventContractRegistry.GetByType(typeof(MoneyChangedDomainEvent));
+        Assert.Equal(contract.StoredValue, message.EventType);
+    }
+
+    [Fact]
+    public async Task OutboxProcessor_ShouldProcessLegacyClrFullNameRows()
+    {
+        await _fixture.ResetOutboxAsync();
+        var nowUtc = DateTime.UtcNow;
+        var message = CreateOutboxMessage(
+            status: OutboxMessageStatus.Pending,
+            attemptCount: 0,
+            nextAttemptAtUtc: nowUtc,
+            createdAtUtc: nowUtc.AddMinutes(-1));
+        message.EventType = typeof(MoneyChangedDomainEvent).FullName!;
+
+        await SeedOutboxMessageAsync(message);
+
+        using var serviceProvider = BuildServiceProvider();
+        await ProcessOnceAsync(serviceProvider);
+
+        await using var assertContext = _fixture.CreateDbContext();
+        var updated = await assertContext.OutboxMessages.SingleAsync(x => x.Id == message.Id);
+        Assert.Equal(OutboxMessageStatus.Processed, updated.Status);
+    }
+
+    [Fact]
+    public async Task OutboxProcessor_ShouldDeadLetterUnknownEventContract()
+    {
+        await _fixture.ResetOutboxAsync();
+        var nowUtc = DateTime.UtcNow;
+        var message = CreateOutboxMessage(
+            status: OutboxMessageStatus.Failed,
+            attemptCount: 11,
+            nextAttemptAtUtc: nowUtc.AddSeconds(-10),
+            createdAtUtc: nowUtc.AddMinutes(-20));
+        message.EventType = "unknown.contract.v1";
+
+        await SeedOutboxMessageAsync(message);
+
+        using var serviceProvider = BuildServiceProvider();
+        await ProcessOnceAsync(serviceProvider);
+
+        await using var assertContext = _fixture.CreateDbContext();
+        var updated = await assertContext.OutboxMessages.SingleAsync(x => x.Id == message.Id);
+        Assert.Equal(OutboxMessageStatus.DeadLetter, updated.Status);
+        Assert.Contains("Unknown domain event contract", updated.LastError);
     }
 
     private ServiceProvider BuildServiceProvider(bool shouldThrow = false)

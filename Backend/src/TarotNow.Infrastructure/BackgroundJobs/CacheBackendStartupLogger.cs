@@ -32,17 +32,31 @@ public sealed class CacheBackendStartupLogger : IHostedService
     /// </summary>
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        if (_cacheBackendState.BootstrapSettingsFailureType is not null)
+        {
+            _logger.LogWarning(
+                "[RedisBootstrap] Unable to load bootstrap tuning values from PostgreSQL. Using static fallback values. ReasonType={ReasonType}",
+                _cacheBackendState.BootstrapSettingsFailureType);
+        }
+
+        if (_cacheBackendState.RedisInitializationFailureType is not null)
+        {
+            _logger.LogWarning(
+                "[RedisBootstrap] Failed to initialize Redis multiplexer. Endpoints={RedisEndpoints}. FallingBackTo={CacheBackend}. ReasonType={ReasonType}",
+                _cacheBackendState.RedisEndpointSummary ?? "unknown",
+                "DistributedMemoryCache",
+                _cacheBackendState.RedisInitializationFailureType);
+        }
+
         if (_cacheBackendState.UsesRedis)
         {
             // Nhánh chuẩn: Redis khả dụng nên cache phân tán hoạt động đầy đủ.
             _logger.LogInformation("Cache backend initialized with Redis.");
-        }
-        else
-        {
-            // Edge case quan trọng: fallback memory làm giảm tính nhất quán trong môi trường nhiều instance.
-            _logger.LogWarning("Redis unavailable at startup. Falling back to in-memory cache; distributed rate limiting/quota consistency is reduced.");
+            return Task.CompletedTask;
         }
 
+        // Edge case quan trọng: fallback memory làm giảm tính nhất quán trong môi trường nhiều instance.
+        _logger.LogWarning("Redis unavailable at startup. Falling back to in-memory cache; distributed rate limiting/quota consistency is reduced.");
         return Task.CompletedTask;
     }
 

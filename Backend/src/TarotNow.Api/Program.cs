@@ -53,6 +53,7 @@ builder.Services
 var app = builder.Build();
 
 await app.EnsureDatabaseSchemaIsCurrentAsync();
+await app.EnsureUploadStorageIsReadyAsync();
 
 // Ghép middleware pipeline và endpoint mapping theo cấu hình startup chuẩn hóa.
 app.UseApiPipeline();

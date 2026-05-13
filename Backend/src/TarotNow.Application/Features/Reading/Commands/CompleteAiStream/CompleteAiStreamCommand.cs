@@ -27,6 +27,18 @@ public class CompleteAiStreamCommand : IRequest<bool>
     // Tổng output token đã sinh từ provider.
     public int OutputTokens { get; set; }
 
+    // Số chunk nội dung đã gửi về client.
+    public int EmittedChunkCount { get; set; }
+
+    // Tổng thời gian stream đã chạy.
+    public TimeSpan StreamElapsed { get; set; }
+
+    // Nguồn ngắt kết nối hoặc lỗi kết thúc stream.
+    public string? DisconnectSource { get; set; }
+
+    // Lý do settlement cuối cùng.
+    public string? SettlementReason { get; set; }
+
     // Tổng input token ước lượng đã gửi lên provider.
     public int InputTokens { get; set; }
 

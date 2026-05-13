@@ -52,8 +52,7 @@ public class HistoryController : ControllerBase
         [FromQuery] string? spreadType = null,
         [FromQuery] DateTime? date = null)
     {
-        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
             // Chặn truy cập lịch sử khi claim định danh không hợp lệ.
             return this.UnauthorizedProblem();
@@ -88,8 +87,7 @@ public class HistoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSessionDetails([FromRoute] string id)
     {
-        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
             // Chặn truy vấn chi tiết khi user id không hợp lệ.
             return this.UnauthorizedProblem();

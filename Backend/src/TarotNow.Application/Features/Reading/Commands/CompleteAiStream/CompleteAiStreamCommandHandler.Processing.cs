@@ -24,7 +24,9 @@ public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
         }
 
         ApplyRecordFinalState(record, request);
-        var wasRefunded = await ApplyWalletSettlementAsync(request, record, cancellationToken);
+        var settlementDecision = new AiStreamSettlementPolicy().Decide(request);
+        request.SettlementReason = settlementDecision.Reason;
+        var wasRefunded = await ApplyWalletSettlementAsync(request, record, settlementDecision, cancellationToken);
         // Chốt trạng thái record trước, sau đó xử lý settlement theo final status để đồng bộ billing.
 
         await _aiRequestRepo.UpdateAsync(record, cancellationToken);
@@ -36,7 +38,7 @@ public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
         context.RequestId = record.Id.ToString();
         context.SessionRef = record.ReadingSessionRef.ToString("D");
         context.TelemetryStatus = request.FinalStatus == AiStreamFinalStatuses.Completed ? "completed" : "failed";
-        context.TelemetryErrorCode = context.TelemetryStatus == "failed" ? request.ErrorMessage : null;
+        context.TelemetryErrorCode = request.SettlementReason ?? (context.TelemetryStatus == "failed" ? request.ErrorMessage : null);
         context.PromptVersion = record.PromptVersion;
         // Ghi context phục vụ log telemetry và quyết định hậu xử lý ngoài transaction.
     }
@@ -73,6 +75,7 @@ public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
     private async Task<bool> ApplyWalletSettlementAsync(
         CompleteAiStreamCommand request,
         AiRequest record,
+        AiStreamSettlementDecision settlementDecision,
         CancellationToken cancellationToken)
     {
         if (record.ChargeDiamond <= 0)
@@ -81,41 +84,19 @@ public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
             return false;
         }
 
-        switch (request.FinalStatus)
+        if (settlementDecision.ShouldConsumeEscrow)
         {
-            case var status when status == AiStreamFinalStatuses.Completed:
-                await ConsumeEscrowAsync(request.UserId, record, "AiRequestCompletedConsume", cancellationToken);
-                // Hoàn tất thành công thì consume toàn bộ escrow.
-                return false;
-
-            case var status when status == AiStreamFinalStatuses.FailedBeforeFirstToken:
-                await RefundEscrowAsync(
-                    request.UserId,
-                    record,
-                    "Auto refund for AI stream failure before first token",
-                    cancellationToken);
-                // Lỗi trước token đầu tiên được hoàn toàn bộ để bảo vệ trải nghiệm người dùng.
-                return true;
-
-            case var status when status == AiStreamFinalStatuses.FailedAfterFirstToken:
-                if (request.IsClientDisconnect)
-                {
-                    await ConsumeEscrowAsync(request.UserId, record, "AiRequestDisconnectConsume", cancellationToken);
-                    // Client tự ngắt kết nối sau khi đã có token thì coi là đã tiêu thụ dịch vụ.
-                    return false;
-                }
-
-                await RefundEscrowAsync(
-                    request.UserId,
-                    record,
-                    "Auto refund for AI stream failure after first token",
-                    cancellationToken);
-                // Lỗi hệ thống sau khi đã có token nhưng không phải client disconnect thì hoàn tiền.
-                return true;
-
-            default:
-                // Trạng thái ngoài nhánh xử lý settlement thì không thay đổi ví.
-                return false;
+            var referenceSource = request.FinalStatus == AiStreamFinalStatuses.Completed
+                ? "AiRequestCompletedConsume"
+                : "AiRequestDisconnectConsume";
+            await ConsumeEscrowAsync(request.UserId, record, referenceSource, cancellationToken);
+            return false;
         }
+
+        var refundDescription = request.FinalStatus == AiStreamFinalStatuses.FailedBeforeFirstToken
+            ? "Auto refund for AI stream failure before first token"
+            : "Auto refund for AI stream failure after first token";
+        await RefundEscrowAsync(request.UserId, record, refundDescription, cancellationToken);
+        return true;
     }
 }

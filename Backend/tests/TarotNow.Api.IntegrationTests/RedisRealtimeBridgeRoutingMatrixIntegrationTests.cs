@@ -26,6 +26,7 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
     private static readonly TimeSpan NegativeTimeout = TimeSpan.FromMilliseconds(500);
 
     private readonly InMemoryRealtimeBridgeSource _bridgeSource = new();
+    private readonly InMemoryRealtimeDedupStore _dedupStore = new();
     private readonly WebApplicationFactory<Program> _factory;
 
     /// <summary>
@@ -41,6 +42,8 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
                 RemoveHostedServicesExcept<RedisRealtimeSignalRBridgeService>(services);
                 services.RemoveAll<IRealtimeBridgeSource>();
                 services.AddSingleton<IRealtimeBridgeSource>(_bridgeSource);
+                services.RemoveAll<IRealtimeDedupStore>();
+                services.AddSingleton<IRealtimeDedupStore>(_dedupStore);
                 services.RemoveAll<IRedisPublisher>();
                 services.AddSingleton<IRedisPublisher, NoOpRedisPublisher>();
 
@@ -125,6 +128,60 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         await AssertUserStatusChangedRoutingAsync(userId, "online", presenceUserStatusProbe, presenceReaderStatusProbe, presenceOtherStatusProbe);
         await AssertGamificationRoutingAsync(userId, presenceUserProbe, presenceReaderProbe, presenceOtherProbe);
         await AssertInvalidPayloadDroppedAsync(userId, readerId, presenceUserProbe, presenceReaderProbe, presenceOtherProbe, chatUserProbe, chatReaderProbe, chatOtherProbe);
+    }
+
+    [Fact]
+    public async Task RedisRealtimeSignalRBridge_ShouldForwardDuplicateEventIdOnce()
+    {
+        _ = _factory.CreateClient();
+        var subscribed = await _bridgeSource.WaitForSubscriptionCountAsync(6, TimeSpan.FromSeconds(5));
+        Assert.True(subscribed);
+
+        var conversationId = Guid.NewGuid().ToString("N");
+        await using var chatUser = CreateHubConnection("/api/v1/chat", "11111111-1111-1111-1111-111111111111");
+        using var chatProbe = new HubEventProbe(chatUser, RealtimeEventNames.ChatMessageCreatedFast);
+        await AddConnectionToConversationGroupAsync(chatUser, conversationId);
+
+        var payload = new
+        {
+            eventId = "event-duplicate-once",
+            conversationId,
+            payload = new
+            {
+                message = new
+                {
+                    id = "msg-fast-001",
+                    content = "hello"
+                }
+            }
+        };
+
+        await _bridgeSource.PublishEnvelopeAsync(RealtimeChannelNames.ChatFast, RealtimeEventNames.ChatMessageCreatedFast, payload);
+        await _bridgeSource.PublishEnvelopeAsync(RealtimeChannelNames.ChatFast, RealtimeEventNames.ChatMessageCreatedFast, payload);
+
+        var delivered = await chatProbe.WaitForAsync(RealtimeEventNames.ChatMessageCreatedFast, PositiveTimeout);
+        Assert.Equal("msg-fast-001", delivered.GetProperty("id").GetString());
+        await chatProbe.AssertNoEventAsync(RealtimeEventNames.ChatMessageCreatedFast, NegativeTimeout);
+    }
+
+    [Fact]
+    public async Task RedisRealtimeSignalRBridge_ShouldDeduplicateAcrossBridgeInstances()
+    {
+        var claimedFirst = await _dedupStore.TryClaimAsync("event-cross-instance", TimeSpan.FromMinutes(10));
+        var claimedSecond = await _dedupStore.TryClaimAsync("event-cross-instance", TimeSpan.FromMinutes(10));
+
+        Assert.True(claimedFirst);
+        Assert.False(claimedSecond);
+    }
+
+    [Fact]
+    public async Task RedisRealtimeSignalRBridge_ShouldFollowConfiguredBehavior_WhenRedisUnavailable()
+    {
+        var store = new NoOpRealtimeDedupStore();
+
+        var claimed = await store.TryClaimAsync("event-no-redis", TimeSpan.FromMinutes(10));
+
+        Assert.True(claimed);
     }
 
     private async Task AssertNotificationRoutingAsync(
@@ -493,6 +550,25 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
+        }
+    }
+
+    private sealed class InMemoryRealtimeDedupStore : IRealtimeDedupStore
+    {
+        private readonly ConcurrentDictionary<string, DateTimeOffset> _claims = new(StringComparer.Ordinal);
+
+        public Task<bool> TryClaimAsync(string eventId, TimeSpan ttl, CancellationToken cancellationToken = default)
+        {
+            var now = DateTimeOffset.UtcNow;
+            foreach (var claim in _claims)
+            {
+                if (claim.Value <= now)
+                {
+                    _claims.TryRemove(claim.Key, out _);
+                }
+            }
+
+            return Task.FromResult(_claims.TryAdd(eventId, now.Add(ttl)));
         }
     }
 

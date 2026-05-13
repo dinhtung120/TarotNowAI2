@@ -12,7 +12,10 @@ public sealed partial class AiStreamSseOrchestrator
         HttpContext httpContext,
         CancellationToken requestToken)
     {
-        var state = new StreamExecutionState();
+        var state = new StreamExecutionState
+        {
+            StartedAt = DateTimeOffset.UtcNow
+        };
         var completionContext = new StreamCompletionContext(
             streamResult.AiRequestId,
             request.UserId,
@@ -77,6 +80,7 @@ public sealed partial class AiStreamSseOrchestrator
             state.HasStreamedContent = true;
             state.FullResponseBuilder.Append(content);
             state.EstimatedOutputTokens += EstimateTokenCount(content);
+            state.EmittedChunkCount++;
 
             var sanitizedChunk = content
                 .Replace("\r", "\\r")
@@ -98,11 +102,15 @@ public sealed partial class AiStreamSseOrchestrator
 
     private sealed class StreamExecutionState
     {
+        public DateTimeOffset StartedAt { get; set; }
+
         public DateTimeOffset? FirstTokenAt { get; set; }
 
         public bool HasStreamedContent { get; set; }
 
         public int EstimatedOutputTokens { get; set; }
+
+        public int EmittedChunkCount { get; set; }
 
         public int? ProviderOutputTokens { get; set; }
 

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
+using TarotNow.Infrastructure.Events;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
 
@@ -35,17 +36,12 @@ public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
                 "Domain events must be published inside an active transaction to guarantee atomic outbox writes.");
         }
 
-        var eventType = domainEvent.GetType().FullName;
-        if (string.IsNullOrWhiteSpace(eventType))
-        {
-            throw new InvalidOperationException($"Cannot resolve event type name for {domainEvent.GetType().Name}.");
-        }
-
+        var contract = OutboxEventContractRegistry.GetByType(domainEvent.GetType());
         var now = DateTime.UtcNow;
         var outboxMessage = new OutboxMessage
         {
             Id = Guid.NewGuid(),
-            EventType = eventType,
+            EventType = contract.StoredValue,
             PayloadJson = JsonSerializer.Serialize(domainEvent, domainEvent.GetType(), JsonOptions),
             OccurredAtUtc = domainEvent.OccurredAtUtc,
             Status = OutboxMessageStatus.Pending,

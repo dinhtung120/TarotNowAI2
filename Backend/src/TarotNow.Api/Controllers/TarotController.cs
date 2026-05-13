@@ -112,18 +112,27 @@ public class TarotController : ControllerBase
     {
         if (chunkId < 0)
         {
-            return BadRequest(new { error = "chunkId must be >= 0." });
+            return this.ApiProblem(
+                StatusCodes.Status400BadRequest,
+                "INVALID_CATALOG_CHUNK_ID",
+                "chunkId must be >= 0.");
         }
 
         var projection = await BuildCollectionCatalogProjectionAsync(cancellationToken);
         if (!VersionMatches(version, projection.Version))
         {
-            return Conflict(new { error = "Catalog version mismatch.", currentVersion = projection.Version });
+            return this.ApiProblem(
+                StatusCodes.Status409Conflict,
+                "CATALOG_VERSION_MISMATCH",
+                $"Catalog version mismatch. Current version: {projection.Version}.");
         }
 
         if (!projection.TryGetChunk(chunkId, out var chunk))
         {
-            return NotFound(new { error = "Chunk not found.", chunkId, version = projection.Version });
+            return this.ApiProblem(
+                StatusCodes.Status404NotFound,
+                "CATALOG_CHUNK_NOT_FOUND",
+                $"Chunk {chunkId} not found for catalog version {projection.Version}.");
         }
 
         ApplyImmutableCacheHeaders();
@@ -140,18 +149,27 @@ public class TarotController : ControllerBase
     {
         if (cardId < 0)
         {
-            return BadRequest(new { error = "cardId must be >= 0." });
+            return this.ApiProblem(
+                StatusCodes.Status400BadRequest,
+                "INVALID_CATALOG_CARD_ID",
+                "cardId must be >= 0.");
         }
 
         var projection = await BuildCollectionCatalogProjectionAsync(cancellationToken);
         if (!VersionMatches(version, projection.Version))
         {
-            return Conflict(new { error = "Catalog version mismatch.", currentVersion = projection.Version });
+            return this.ApiProblem(
+                StatusCodes.Status409Conflict,
+                "CATALOG_VERSION_MISMATCH",
+                $"Catalog version mismatch. Current version: {projection.Version}.");
         }
 
         if (!projection.TryGetDetail(cardId, out var detail))
         {
-            return NotFound(new { error = "Card not found.", cardId, version = projection.Version });
+            return this.ApiProblem(
+                StatusCodes.Status404NotFound,
+                "CATALOG_CARD_NOT_FOUND",
+                $"Card {cardId} not found for catalog version {projection.Version}.");
         }
 
         ApplyImmutableCacheHeaders();

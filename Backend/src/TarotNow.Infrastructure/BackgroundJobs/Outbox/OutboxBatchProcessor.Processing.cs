@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Domain.Events;
+using TarotNow.Infrastructure.Events;
 using TarotNow.Infrastructure.Messaging.DomainEvents;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
@@ -55,10 +56,7 @@ public sealed partial class OutboxBatchProcessor
 
     private async Task DispatchAsync(IMediator mediator, OutboxMessage outboxMessage, CancellationToken cancellationToken)
     {
-        if (DomainEventTypeRegistry.TryResolve(outboxMessage.EventType, out var eventClrType) == false)
-        {
-            throw new InvalidOperationException($"Unknown domain event type '{outboxMessage.EventType}'.");
-        }
+        var eventClrType = ResolveEventType(outboxMessage);
 
         var deserialized = JsonSerializer.Deserialize(outboxMessage.PayloadJson, eventClrType, JsonOptions);
         if (deserialized is not IDomainEvent domainEvent)
@@ -79,6 +77,21 @@ public sealed partial class OutboxBatchProcessor
         }
 
         await mediator.Publish(notification, cancellationToken);
+    }
+
+    private static Type ResolveEventType(OutboxMessage outboxMessage)
+    {
+        if (OutboxEventContractRegistry.TryGetByStoredValue(outboxMessage.EventType, out var contract))
+        {
+            return contract.EventType;
+        }
+
+        if (DomainEventTypeRegistry.TryResolve(outboxMessage.EventType, out var legacyEventType))
+        {
+            return legacyEventType;
+        }
+
+        throw new InvalidOperationException($"Unknown domain event contract '{outboxMessage.EventType}'.");
     }
 
     private void MarkProcessed(OutboxMessage message)

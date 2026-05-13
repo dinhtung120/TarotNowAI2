@@ -9,7 +9,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService
     private async Task ForwardChatFastLaneEventAsync(string eventName, JsonElement payload)
     {
         var eventId = GetStringProperty(payload, "eventId");
-        if (ShouldSkipDuplicatedFastLaneEvent(eventId))
+        if (await ShouldSkipDuplicatedFastLaneEventAsync(eventId))
         {
             return;
         }

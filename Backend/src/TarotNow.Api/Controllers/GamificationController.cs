@@ -2,8 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Security.Claims;
 using TarotNow.Api.Constants;
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Gamification.Commands;
 using TarotNow.Application.Features.Gamification.Queries;
 using TarotNow.Application.Interfaces;
@@ -41,8 +41,7 @@ public class GamificationController : ControllerBase
     /// <returns>User id của request hiện tại.</returns>
     private Guid GetUserId()
     {
-        var rawUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(rawUserId, out var userId) || userId == Guid.Empty)
+        if (!User.TryGetUserId(out var userId))
         {
             throw new UnauthorizedAccessException("Invalid authenticated user context.");
         }
@@ -77,8 +76,22 @@ public class GamificationController : ControllerBase
     {
         var result = await _mediator.SendWithRequestCancellation(HttpContext, new ClaimQuestRewardCommand(GetUserId(), questCode, request.PeriodKey));
         // Tách mã lỗi chi tiết để client phân biệt quest đã claim và quest chưa đủ điều kiện.
-        if (!result.Success && result.AlreadyClaimed) return Problem(statusCode: 400, detail: "QUEST_ALREADY_CLAIMED");
-        if (!result.Success) return Problem(statusCode: 400, detail: "QUEST_NOT_COMPLETED_OR_FAILED");
+        if (!result.Success && result.AlreadyClaimed)
+        {
+            return this.ApiProblem(
+                StatusCodes.Status400BadRequest,
+                "QUEST_ALREADY_CLAIMED",
+                "Quest reward has already been claimed.");
+        }
+
+        if (!result.Success)
+        {
+            return this.ApiProblem(
+                StatusCodes.Status400BadRequest,
+                "QUEST_NOT_COMPLETED_OR_FAILED",
+                "Quest is not completed or claim failed.");
+        }
+
         return Ok(result);
     }
 
@@ -114,7 +127,14 @@ public class GamificationController : ControllerBase
     {
         var success = await _mediator.SendWithRequestCancellation(HttpContext, new SetActiveTitleCommand(GetUserId(), request.TitleCode));
         // Rule nghiệp vụ: chỉ cho phép set active title khi user đã sở hữu title đó.
-        if (!success) return Problem(statusCode: 400, detail: "TITLE_NOT_OWNED");
+        if (!success)
+        {
+            return this.ApiProblem(
+                StatusCodes.Status400BadRequest,
+                "TITLE_NOT_OWNED",
+                "Title is not owned by the current user.");
+        }
+
         return Ok(new { message = "Cập nhật danh hiệu thành công." });
     }
 

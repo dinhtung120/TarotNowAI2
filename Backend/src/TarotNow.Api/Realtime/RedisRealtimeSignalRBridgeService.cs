@@ -27,7 +27,10 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
     private readonly IRealtimeBridgeSource _realtimeBridgeSource;
     private readonly IHubContext<PresenceHub> _presenceHubContext;
     private readonly IHubContext<ChatHub> _chatHubContext;
+    private static readonly TimeSpan FastLaneDedupTtl = TimeSpan.FromMinutes(10);
+
     private readonly ILogger<RedisRealtimeSignalRBridgeService> _logger;
+    private readonly IRealtimeDedupStore _realtimeDedupStore;
     private readonly ConcurrentDictionary<string, DateTime> _bridgeDedupByEventId = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -37,12 +40,14 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
         IHubContext<PresenceHub> presenceHubContext,
         IHubContext<ChatHub> chatHubContext,
         ILogger<RedisRealtimeSignalRBridgeService> logger,
-        IRealtimeBridgeSource realtimeBridgeSource)
+        IRealtimeBridgeSource realtimeBridgeSource,
+        IRealtimeDedupStore realtimeDedupStore)
     {
         _presenceHubContext = presenceHubContext;
         _chatHubContext = chatHubContext;
         _logger = logger;
         _realtimeBridgeSource = realtimeBridgeSource;
+        _realtimeDedupStore = realtimeDedupStore;
     }
 
     /// <inheritdoc />
@@ -123,7 +128,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
         }
     }
 
-    private bool ShouldSkipDuplicatedFastLaneEvent(string? eventId)
+    private async Task<bool> ShouldSkipDuplicatedFastLaneEventAsync(string? eventId)
     {
         if (string.IsNullOrWhiteSpace(eventId))
         {
@@ -131,7 +136,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
         }
 
         var now = DateTime.UtcNow;
-        var ttlCutoff = now.AddMinutes(-10);
+        var ttlCutoff = now - FastLaneDedupTtl;
         foreach (var pair in _bridgeDedupByEventId)
         {
             if (pair.Value < ttlCutoff)
@@ -140,6 +145,11 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
             }
         }
 
-        return !_bridgeDedupByEventId.TryAdd(eventId, now);
+        if (!_bridgeDedupByEventId.TryAdd(eventId, now))
+        {
+            return true;
+        }
+
+        return !await _realtimeDedupStore.TryClaimAsync(eventId, FastLaneDedupTtl);
     }
 }

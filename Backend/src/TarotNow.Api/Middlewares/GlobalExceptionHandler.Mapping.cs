@@ -116,6 +116,7 @@ public partial class GlobalExceptionHandler
         var problemDetails = CreateClientProblem(
             StatusCodes.Status400BadRequest,
             "Validation Failed",
+            "VALIDATION_FAILED",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
             "One or more validation errors occurred.");
 
@@ -139,6 +140,7 @@ public partial class GlobalExceptionHandler
         var problemDetails = CreateClientProblem(
             status,
             title,
+            string.IsNullOrWhiteSpace(exception.ErrorCode) ? "DOMAIN_RULE_VIOLATION" : exception.ErrorCode,
             status == StatusCodes.Status429TooManyRequests
                 ? "https://datatracker.ietf.org/doc/html/rfc6585#section-4"
                 : status == StatusCodes.Status401Unauthorized

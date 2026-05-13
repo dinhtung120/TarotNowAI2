@@ -5,8 +5,11 @@ namespace TarotNow.Infrastructure;
 
 public static partial class DependencyInjection
 {
-    private static RedisBootstrapSettings? TryLoadRedisBootstrapSettings(string postgreSqlConnectionString)
+    private static RedisBootstrapSettings? TryLoadRedisBootstrapSettings(
+        string postgreSqlConnectionString,
+        out string? failureType)
     {
+        failureType = null;
         try
         {
             var data = LoadRedisBootstrapRawValues(postgreSqlConnectionString);
@@ -14,9 +17,7 @@ public static partial class DependencyInjection
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(
-                "[RedisBootstrap] Unable to load bootstrap tuning values from PostgreSQL. " +
-                $"Using static fallback values. Reason={ex.GetType().Name}: {ex.Message}");
+            failureType = ex.GetType().Name;
             return null;
         }
     }

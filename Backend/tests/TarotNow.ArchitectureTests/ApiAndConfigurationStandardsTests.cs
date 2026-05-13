@@ -287,6 +287,43 @@ public class ApiAndConfigurationStandardsTests
     }
 
     /// <summary>
+    /// Xác nhận controller và hub lấy user id qua helper canonical thay vì parse claim trực tiếp.
+    /// </summary>
+    [Fact]
+    public void ApiControllersAndHubs_ShouldUseCanonicalUserIdExtraction()
+    {
+        var backendRoot = FindBackendRoot();
+        var scanRoots = new[]
+        {
+            Path.Combine(backendRoot, "src", "TarotNow.Api", "Controllers"),
+            Path.Combine(backendRoot, "src", "TarotNow.Api", "Hubs")
+        };
+        var forbiddenPatterns = new[]
+        {
+            "FindFirstValue(ClaimTypes.NameIdentifier)",
+            "FindFirst(ClaimTypes.NameIdentifier)",
+            "FindFirstValue(\"sub\")",
+            "FindFirst(\"sub\")",
+            "ClaimTypes.NameIdentifier"
+        };
+
+        var violations = scanRoots
+            .Where(Directory.Exists)
+            .SelectMany(root => Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+            .Where(path =>
+            {
+                var content = File.ReadAllText(path);
+                return forbiddenPatterns.Any(pattern => content.Contains(pattern, StringComparison.Ordinal));
+            })
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "Controllers and hubs must use User.TryGetUserId(out var userId) from ClaimsPrincipalExtensions instead of direct ClaimTypes.NameIdentifier parsing.");
+    }
+
+    /// <summary>
     /// Xác nhận partition key của auth rate-limit ưu tiên user claim trước khi fallback về IP.
     /// </summary>
     [Fact]
@@ -304,6 +341,162 @@ public class ApiAndConfigurationStandardsTests
         content.Should().Contain("ClaimTypes.NameIdentifier");
         content.Should().Contain("return $\"user:{userId}\";");
         content.Should().Contain("return $\"ip:{ResolveClientIp(httpContext)}\";");
+    }
+
+    /// <summary>
+    /// Xác nhận controller không tạo payload lỗi ẩn danh ngoài allowlist legacy.
+    /// </summary>
+    [Fact]
+    public void ApiControllers_ShouldUseProblemDetails_ForErrorResponses()
+    {
+        var backendRoot = FindBackendRoot();
+        var controllersRoot = Path.Combine(backendRoot, "src", "TarotNow.Api", "Controllers");
+        var forbiddenPatterns = new[]
+        {
+            "BadRequest(new { error =",
+            "Conflict(new { error =",
+            "NotFound(new { error =",
+            "Unauthorized(new { error =",
+            "Forbid(new { error =",
+            "BadRequest(new { message =",
+            "Conflict(new { message =",
+            "NotFound(new { message =",
+            "Unauthorized(new { message ="
+        };
+        var violations = Directory
+            .GetFiles(controllersRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var content = File.ReadAllText(path);
+                return forbiddenPatterns.Any(pattern => content.Contains(pattern, StringComparison.Ordinal));
+            })
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "API error responses should use ControllerProblemDetailsExtensions or ProblemDetails instead of anonymous error payloads.");
+    }
+
+    /// <summary>
+    /// Xác nhận route collection mới dùng danh từ số nhiều, giữ allowlist cho legacy v1 route.
+    /// </summary>
+    [Fact]
+    public void ApiRoutes_ShouldUsePluralResourceNames_ForNewCollectionRoutes()
+    {
+        var backendRoot = FindBackendRoot();
+        var routesFile = Path.Combine(backendRoot, "src", "TarotNow.Api", "Constants", "ApiRoutes.cs");
+        var content = File.ReadAllText(routesFile);
+        var legacySingularRoutes = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "api/" + "v{version:apiVersion}" + "/reading",
+            "api/" + "v{version:apiVersion}" + "/withdrawal"
+        };
+        var allowedSingletonRoutes = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "api/" + "v{version:apiVersion}" + "/admin",
+            "api/" + "v{version:apiVersion}" + "/auth",
+            "api/" + "v{version:apiVersion}" + "/chat",
+            "api/" + "v{version:apiVersion}" + "/checkin",
+            "api/" + "v{version:apiVersion}" + "/user-context",
+            "api/" + "v{version:apiVersion}" + "/me",
+            "api/" + "v{version:apiVersion}" + "/inventory",
+            "api/" + "v{version:apiVersion}" + "/home",
+            "api/" + "v{version:apiVersion}" + "/gamification",
+            "api/" + "v{version:apiVersion}" + "/gacha",
+            "api/" + "v{version:apiVersion}" + "/community",
+            "api/" + "v{version:apiVersion}" + "/legal",
+            "api/" + "v{version:apiVersion}" + "/reader",
+            "api/" + "v{version:apiVersion}" + "/profile",
+            "api/" + "v{version:apiVersion}" + "/media",
+            "api/" + "v{version:apiVersion}" + "/notifications"
+        };
+        var routeRegex = new Regex(@"public const string \w+ = (?:\w+ \+ )?""(?<suffix>/[a-z-]+)"";", RegexOptions.Compiled);
+
+        var violations = routeRegex
+            .Matches(content)
+            .Select(match => ResolveRouteLiteral(match.Value, match.Groups["suffix"].Value))
+            .Where(route => route.StartsWith("api/" + "v{version:apiVersion}" + "/", StringComparison.Ordinal))
+            .Where(route => !route.StartsWith("api/v{version:apiVersion}/admin/", StringComparison.Ordinal))
+            .Where(route => !legacySingularRoutes.Contains(route))
+            .Where(route => !allowedSingletonRoutes.Contains(route))
+            .Where(route =>
+            {
+                var segment = route.Split('/').Last();
+                return !segment.EndsWith('s');
+            })
+            .OrderBy(route => route, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "new collection routes should use plural noun resource names; legacy v1 singular routes must stay allowlisted.");
+    }
+
+    /// <summary>
+    /// Xác nhận Application không thêm shared Helpers mới ngoài allowlist đã triage.
+    /// </summary>
+    [Fact]
+    public void ApplicationSharedHelpers_ShouldStayInTriageAllowlist()
+    {
+        var backendRoot = FindBackendRoot();
+        var applicationRoot = Path.Combine(backendRoot, "src", "TarotNow.Application");
+        var allowedSharedHelpers = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "src/TarotNow.Application/Common/Helpers/AccountHolderNameValidator.cs",
+            "src/TarotNow.Application/Common/Helpers/ProfileHelper.cs",
+            "src/TarotNow.Application/Common/Helpers/ReaderSocialUrlValidator.cs",
+            "src/TarotNow.Application/Common/Helpers/VietQrHelper.cs",
+            "src/TarotNow.Application/Helpers/PeriodKeyHelper.cs"
+        };
+
+        var violations = Directory
+            .GetFiles(applicationRoot, "*.cs", SearchOption.AllDirectories)
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .Where(path => path.Contains("/Helpers/", StringComparison.Ordinal))
+            .Where(path => !allowedSharedHelpers.Contains(path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "new shared Helpers files must be feature-local or explicitly triaged before becoming cross-context helpers.");
+    }
+
+    /// <summary>
+    /// Xác nhận controller partial family có đúng một root kế thừa ControllerBase để gom helper cross-cutting.
+    /// </summary>
+    [Fact]
+    public void PartialControllerFamilies_ShouldHaveSingleControllerBaseRoot()
+    {
+        var backendRoot = FindBackendRoot();
+        var controllersRoot = Path.Combine(backendRoot, "src", "TarotNow.Api", "Controllers");
+        var declarations = Directory
+            .GetFiles(controllersRoot, "*.cs", SearchOption.TopDirectoryOnly)
+            .SelectMany(path =>
+            {
+                var root = CSharpSyntaxTree.ParseText(File.ReadAllText(path)).GetRoot();
+                return root.DescendantNodes()
+                    .OfType<ClassDeclarationSyntax>()
+                    .Where(node => node.Identifier.Text.EndsWith("Controller", StringComparison.Ordinal))
+                    .Select(node => new
+                    {
+                        File = ToBackendRelativePath(backendRoot, path),
+                        Name = node.Identifier.Text,
+                        IsPartial = node.Modifiers.Any(SyntaxKind.PartialKeyword),
+                        InheritsControllerBase = node.BaseList?.Types.Any(type => type.ToString().Contains("ControllerBase", StringComparison.Ordinal)) == true
+                    });
+            })
+            .ToArray();
+
+        var violations = declarations
+            .Where(item => item.IsPartial)
+            .GroupBy(item => item.Name, StringComparer.Ordinal)
+            .Where(group => group.Count(item => item.InheritsControllerBase) != 1)
+            .Select(group => $"{group.Key}: {string.Join(", ", group.Select(item => item.File).OrderBy(file => file, StringComparer.Ordinal))}")
+            .OrderBy(item => item, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "partial controller families must keep one ControllerBase root file for shared authorization, user extraction, and ProblemDetails helpers.");
     }
 
     /// <summary>
@@ -401,6 +594,22 @@ public class ApiAndConfigurationStandardsTests
                     || name.EndsWith(candidate, StringComparison.Ordinal)
                     || name.EndsWith($"{candidate}Attribute", StringComparison.Ordinal));
             });
+    }
+
+
+    private static string ResolveRouteLiteral(string declaration, string suffix)
+    {
+        if (declaration.Contains("Prefix +", StringComparison.Ordinal))
+        {
+            return "api/v{version:apiVersion}" + suffix;
+        }
+
+        if (declaration.Contains("Admin +", StringComparison.Ordinal))
+        {
+            return "api/v{version:apiVersion}/admin" + suffix;
+        }
+
+        return suffix.TrimStart('/');
     }
 
     /// <summary>
