@@ -1,4 +1,0 @@
-@TarotNow.Api_HostAddress = {{$processEnv ASPNETCORE_URLS}}
-
-GET {{TarotNow.Api_HostAddress}}/weatherforecast/
-Accept: application/json
